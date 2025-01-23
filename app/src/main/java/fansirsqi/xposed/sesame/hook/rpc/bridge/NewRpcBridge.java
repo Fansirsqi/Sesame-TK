@@ -124,7 +124,16 @@ public class NewRpcBridge implements RpcBridge {
                     RpcIntervalLimit.enterIntervalLimit(rpcEntity.getRequestMethod());
                     newRpcCallMethod.invoke(
                             newRpcInstance, rpcEntity.getRequestMethod(), false, false, "json", parseObjectMethod.invoke(null, rpcEntity.getRpcFullRequestData()), "", null, true, false, 0, false, "", null, null, null, Proxy.newProxyInstance(loader, bridgeCallbackClazzArray, (proxy, innerMethod, args) -> {
-                                if (args.length == 1 && "sendJSONResponse".equals(innerMethod.getName())) {
+                                if ("equals".equals(innerMethod.getName())) {
+                                    return proxy == args[0];
+                                }
+                                if ("hashCode".equals(innerMethod.getName())) {
+                                    return System.identityHashCode(proxy);
+                                }
+                                if ("toString".equals(innerMethod.getName())) {
+                                    return "Proxy for " + bridgeCallbackClazzArray[0].getName();
+                                }
+                                if (args != null && args.length == 1 && "sendJSONResponse".equals(innerMethod.getName())) {
                                     try {
                                         Object obj = args[0];
                                         rpcEntity.setResponseObject(obj, (String) XposedHelpers.callMethod(obj, "toJSONString"));
