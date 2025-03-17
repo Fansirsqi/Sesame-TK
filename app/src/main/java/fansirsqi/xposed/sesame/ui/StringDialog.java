@@ -89,7 +89,7 @@ public class StringDialog {
             // 设置确认按钮颜色
             Button positiveButton = editDialog.getButton(DialogInterface.BUTTON_POSITIVE);
             if (positiveButton != null) {
-                positiveButton.setTextColor(ContextCompat.getColor(c, R.color.button));
+                positiveButton.setTextColor(ContextCompat.getColor(c, R.color.selection_color));
             }
         });
         edt.setText(String.valueOf(modelField.getConfigValue()));
@@ -176,9 +176,9 @@ public class StringDialog {
         Button button = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
         if (button != null) {
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                button.setTextColor(ContextCompat.getColor(c, R.color.button)); // 自定义按钮颜色
+                button.setTextColor(ContextCompat.getColor(c, R.color.textColorPrimary)); // 自定义按钮颜色
             } else {
-                button.setTextColor(ContextCompat.getColor(c,R.color.button)); // 自定义按钮颜色
+                button.setTextColor(ContextCompat.getColor(c,R.color.textColorPrimary)); // 自定义按钮颜色
             }
         }
     }
@@ -205,7 +205,7 @@ public class StringDialog {
         // 获取并设置确认按钮的颜色
         Button button = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
         if (button != null) {
-            button.setTextColor(ContextCompat.getColor(c,R.color.button));
+            button.setTextColor(ContextCompat.getColor(c,R.color.selection_color));
         }
         return alertDialog;
     }

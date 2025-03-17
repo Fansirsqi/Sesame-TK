@@ -26,7 +26,7 @@ public class ChoiceDialog {
             // 设置确认按钮颜色
             Button positiveButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
             if (positiveButton != null) {
-                positiveButton.setTextColor(ContextCompat.getColor(context, R.color.button));
+                positiveButton.setTextColor(ContextCompat.getColor(context, R.color.selection_color));
             }
         });
         dialog.show();
