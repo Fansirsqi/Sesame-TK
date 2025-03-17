@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <include layout="@layout/base_title" />
@@ -25,7 +26,7 @@
             android:lineSpacingMultiplier="1.5"
             android:text="@string/normal_text"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="#5A5A5A"
+            android:textColor="?android:attr/textColorSecondary"
             android:textSize="14sp" />
 
         <ImageView
@@ -51,7 +52,7 @@
             android:onClick="onClick"
             android:text="@string/text_api"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="#5A5A5A"
+            android:textColor="?android:attr/textColorSecondary"
             android:textSize="12sp"
             tools:ignore="UsingOnClickInXml,TouchTargetSizeCheck" />
 
@@ -77,7 +78,6 @@
             android:lineSpacingExtra="12sp"
             android:text="@string/build_version_1_0_0"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="#FF5722"
             android:textSize="12sp"
             android:typeface="sans"
             tools:ignore="TextContrastCheck" />
@@ -111,7 +111,7 @@
                 android:paddingBottom="10dp"
                 android:text="@string/forest_log"
                 android:textAlignment="gravity"
-                android:textColor="@color/main_button_text"
+                android:textColor="@color/textColorPrimary"
                 android:textSize="14sp"
                 tools:ignore="UsingOnClickInXml" />
 
@@ -132,7 +132,7 @@
                 android:paddingBottom="10dp"
                 android:text="@string/farm_log"
                 android:textAlignment="gravity"
-                android:textColor="@color/main_button_text"
+                android:textColor="@color/textColorPrimary"
                 android:textSize="14sp"
                 tools:ignore="UsingOnClickInXml" />
 
@@ -153,7 +153,7 @@
                 android:paddingBottom="10dp"
                 android:text="@string/other_log"
                 android:textAlignment="gravity"
-                android:textColor="@color/main_button_text"
+                android:textColor="@color/textColorPrimary"
                 android:textSize="14sp"
                 tools:ignore="UsingOnClickInXml" />
         </LinearLayout>
@@ -186,7 +186,7 @@
                 android:text="@string/friend_watch"
                 android:textAlignment="gravity"
                 android:textAllCaps="false"
-                android:textColor="@color/main_button_text"
+                android:textColor="@color/textColorPrimary"
                 android:textSize="14sp"
                 tools:ignore="UsingOnClickInXml" />
 
@@ -208,7 +208,7 @@
                 android:text="@string/visit_github"
                 android:textAlignment="gravity"
                 android:textAllCaps="false"
-                android:textColor="@color/main_button_text"
+                android:textColor="@color/textColorPrimary"
                 android:textSize="14sp"
                 tools:ignore="UsingOnClickInXml" />
 
@@ -230,7 +230,7 @@
                 android:text="@string/settings"
                 android:textAlignment="gravity"
                 android:textAllCaps="false"
-                android:textColor="@color/main_button_text"
+                android:textColor="@color/textColorPrimary"
                 android:textSize="14sp"
                 tools:ignore="UsingOnClickInXml" />
         </LinearLayout>
