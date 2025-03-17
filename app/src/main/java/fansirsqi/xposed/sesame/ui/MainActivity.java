@@ -74,7 +74,6 @@ public class MainActivity extends BaseActivity {
         // 获取并设置一言句子
         ViewAppInfo.checkRunType();
         updateSubTitle(ViewAppInfo.getRunType());
-//        viewHandler = new Handler(Looper.getMainLooper());
         titleRunner = () -> updateSubTitle(RunType.DISABLE);
         if (mainImage != null) {
             mainImage.setOnLongClickListener(
