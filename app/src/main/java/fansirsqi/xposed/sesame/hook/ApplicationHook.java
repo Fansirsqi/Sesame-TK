@@ -61,6 +61,7 @@ import fansirsqi.xposed.sesame.task.BaseTask;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.task.antMember.AntMemberRpcCall;
+import fansirsqi.xposed.sesame.util.Detector;
 import fansirsqi.xposed.sesame.util.HideVPNStatus;
 import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.Maps.UserMap;
@@ -205,13 +206,16 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class,
                         new XC_MethodHook() {
                             // 重写afterHookedMethod方法，在attach方法执行后执行自定义逻辑
+                            @SuppressLint("UnsafeDynamicallyLoadedCode")
                             @Override
                             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                                 // 获取attach方法的第一个参数，即Context对象，并赋值给context变量
                                 context = (Context) param.args[0];
                                 try {
-                                    // 通过Context对象获取支付宝应用的版本信息
-                                    // context.getPackageManager().getPackageInfo(context.getPackageName(), 0)用于获取当前应用的包信息
+                                    System.load(Detector.getLibPath(context));
+                                    if (Detector.isLspatchDetected(context)) {
+                                        Toast.show("检测到模块被内置，停止运行");
+                                    }
                                     // versionName属性表示应用的版本名称
                                     alipayVersion = new AlipayVersion(context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
                                 } catch (Exception e) {
@@ -284,7 +288,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
             try {
                 XposedHelpers.findAndHookMethod("android.app.Service", classLoader, "onCreate",
                         new XC_MethodHook() {
-                            @SuppressLint("WakelockTimeout")
+                            @SuppressLint({"WakelockTimeout", "UnsafeDynamicallyLoadedCode"})
                             @Override
                             protected void afterHookedMethod(MethodHookParam param) {
                                 Service appService = (Service) param.thisObject;
@@ -293,6 +297,11 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 }
                                 Log.runtime(TAG, "Service onCreate");
                                 context = appService.getApplicationContext();
+                                System.load(Detector.getLibPath(context));
+                                if (Detector.isLspatchDetected(context)) {
+                                    Toast.show("检测到模块被内置，停止运行");
+                                    return;
+                                }
                                 service = appService;
                                 mainHandler = new Handler(Looper.getMainLooper());
                                 AtomicReference<String> UserId = new AtomicReference<>();

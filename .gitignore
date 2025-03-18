@@ -69,3 +69,11 @@ demo/*
 *.txt
 *.py
 *.json
+
+# CPP source code
+#C++源代码
+/app/src/main/cpp/ 
+
+#编译缓存
+/app/.cxx/* 
+
