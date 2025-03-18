@@ -111,6 +111,10 @@ public class FriendWatch extends MapperEntity {
 
     public static synchronized Boolean load(String userId) {
         try {
+            if (userId == null) {
+                return false;
+            }
+
             String strFriendWatch = Files.readFromFile(Files.getFriendWatchFile(userId));
             if (!strFriendWatch.isEmpty()) {
                 joFriendWatch = new JSONObject(strFriendWatch);
