@@ -191,6 +191,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         if ("fansirsqi.xposed.sesame".equals(lpparam.packageName)) {
+            Log.runtime(TAG, "handleLoadPackage start:" + lpparam);
             try {
                 XposedHelpers.callStaticMethod(lpparam.classLoader.loadClass(ViewAppInfo.class.getName()), "setRunTypeByCode", RunType.MODEL.getCode());
             } catch (ClassNotFoundException e) {
@@ -212,10 +213,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 // 获取attach方法的第一个参数，即Context对象，并赋值给context变量
                                 context = (Context) param.args[0];
                                 try {
-                                    System.load(Detector.getLibPath(context));
-                                    if (Detector.isLspatchDetected(context)) {
-                                        Toast.show("检测到模块被内置，停止运行");
-                                    }
                                     // versionName属性表示应用的版本名称
                                     alipayVersion = new AlipayVersion(context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
                                 } catch (Exception e) {
