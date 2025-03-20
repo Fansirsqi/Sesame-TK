@@ -144,10 +144,12 @@ android {
     }
 
 
-    externalNativeBuild {
-        cmake {
-            path file("src/main/cpp/CMakeLists.txt")
-            version "3.31.6"
+    if (!System.getenv('CI')) {
+        externalNativeBuild {
+            cmake {
+                path file("src/main/cpp/CMakeLists.txt")
+                version "3.31.6"
+            }
         }
     }
     sourceSets {
