@@ -7,7 +7,6 @@ import java.io.File;
 
 import fansirsqi.xposed.sesame.ui.SettingActivity;
 import fansirsqi.xposed.sesame.ui.WebSettingsActivity;
-import fansirsqi.xposed.sesame.ui.OldSettingsActivity;
 import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.Log;
@@ -23,7 +22,6 @@ public class UIConfig {
     private boolean init;
 
 
-    public static final String UI_OPTION_OLD = "old";
     public static final String UI_OPTION_WEB = "web"; //webUI
     public static final String UI_OPTION_NEW = "new";
 
@@ -81,7 +79,6 @@ public class UIConfig {
     @JsonIgnore
     public Class<?> getTargetActivityClass() {
         return switch (uiOption) {
-            case UI_OPTION_OLD -> OldSettingsActivity.class;
             case UI_OPTION_WEB -> WebSettingsActivity.class;
             case UI_OPTION_NEW -> SettingActivity.class;
             default -> {

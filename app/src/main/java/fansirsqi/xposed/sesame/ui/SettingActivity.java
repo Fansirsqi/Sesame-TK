@@ -153,6 +153,7 @@ public class SettingActivity extends BaseActivity {
         menu.add(0, 3, 3, "删除配置");
         menu.add(0, 4, 4, "单向好友");
         menu.add(0, 5, 5, "切换WEBUI");
+        menu.add(0, 6, 6, "保存");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -210,6 +211,9 @@ public class SettingActivity extends BaseActivity {
                 } else {
                     ToastUtil.makeText(this, "切换失败", Toast.LENGTH_SHORT).show();
                 }
+                break;
+            case 6:
+                save();
                 break;
         }
         return super.onOptionsItemSelected(item);
