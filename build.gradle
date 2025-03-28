@@ -1,6 +1,5 @@
 buildscript {
     ext.kotlin_version = '1.9.10' // Kotlin 版本
-
     repositories {
         // 阿里云镜像仓库
         maven { url 'https://maven.aliyun.com/repository/public/' }
@@ -17,7 +16,6 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:8.5.2" // Android Gradle 插件
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version" // Kotlin Gradle 插件
-        // classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version" // Kotlin 序列化插件（注释掉，未使用）
     }
 }
 
@@ -46,6 +44,7 @@ allprojects {
         }
     }
 }
+
 
 // 注册 clean 任务，删除构建目录
 tasks.register('clean', Delete) {

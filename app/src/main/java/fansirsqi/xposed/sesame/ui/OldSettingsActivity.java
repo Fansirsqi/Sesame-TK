@@ -35,6 +35,7 @@ import fansirsqi.xposed.sesame.model.ModelField;
 import fansirsqi.xposed.sesame.model.ModelFields;
 import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
 import fansirsqi.xposed.sesame.task.ModelTask;
+import fansirsqi.xposed.sesame.ui.widget.ListDialog;
 import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.LanguageUtil;
 import fansirsqi.xposed.sesame.util.Log;
@@ -231,6 +232,12 @@ public class OldSettingsActivity extends BaseActivity {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        save();
     }
     private void save() {
         try {

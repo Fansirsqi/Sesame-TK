@@ -16,7 +16,7 @@ import fansirsqi.xposed.sesame.R;
 import fansirsqi.xposed.sesame.entity.MapperEntity;
 import fansirsqi.xposed.sesame.model.ModelField;
 import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
-import fansirsqi.xposed.sesame.ui.ListDialog;
+import fansirsqi.xposed.sesame.ui.widget.ListDialog;
 /**
  * 数据结构说明
  * Map<String, Integer> 表示已选择的数据与已经设置的数量映射关系

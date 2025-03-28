@@ -1,8 +1,11 @@
 package fansirsqi.xposed.sesame.util;
 
+import android.content.Context;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
@@ -14,6 +17,8 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -33,6 +38,38 @@ public class JsonUtil {
         MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL); // 忽略空属性
         MAPPER.setTimeZone(TimeZone.getDefault()); // 设置时区
         MAPPER.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())); // 设置日期格式
+    }
+
+
+    // 读取并解析 assets/lspatch/config.json 文件
+    public static void parseUseManager(Context context) {
+        try {
+            InputStream inputStream = context.getAssets().open("lspatch/config.json");
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(inputStream);
+            String jsonString = rootNode.toPrettyString();
+            Log.runtime("Config content: " + jsonString);
+            boolean useManager = rootNode.path("useManager").asBoolean();
+            Log.runtime("useManager: " + useManager);
+            inputStream.close();
+        } catch (Exception e) {
+            Log.runtime("Failed to read or parse config file: " + e.getMessage());
+        }
+    }
+    // 解析 useManager 字段
+    public static boolean parseUseManager(JsonParser jsonParser) {
+        try {
+            while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
+                String fieldName = jsonParser.currentName();
+                if ("useManager".equals(fieldName)) {
+                    jsonParser.nextToken();
+                    return jsonParser.getBooleanValue();
+                }
+            }
+        } catch (IOException e) {
+            Log.error("parseUseManager", e.getMessage());
+        }
+        return false; // 默认值
     }
 
     public static ObjectMapper copyMapper() {
@@ -71,7 +108,7 @@ public class JsonUtil {
                 if (pretty) {
                     return ((JSONObject) object).toString(4);
                 } else {
-                    return ((JSONObject) object).toString();
+                    return object.toString();
                 }
             }
             if (pretty) {

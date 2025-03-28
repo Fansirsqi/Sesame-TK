@@ -11,28 +11,49 @@ import android.os.Bundle;
 import fansirsqi.xposed.sesame.BuildConfig;
 import fansirsqi.xposed.sesame.R;
 import fansirsqi.xposed.sesame.util.Log;
-import lombok.Getter;
-import lombok.Setter;
 
 
 public final class ViewAppInfo {
     
-    private static final String TAG = ViewAppInfo.class.getSimpleName();
-    
+    public static final String TAG = ViewAppInfo.class.getSimpleName();
+
     @SuppressLint("StaticFieldLeak")
-    @Getter
-    private static Context context = null;
-    @Getter
-    private static String appTitle = "";
-    @Getter
-    private static String appVersion = "";
-    @Getter
-    private static String appBuildTarget = "";
-    @Getter
-    private static String appBuildNumber = "";
-    @Setter
-    @Getter
-    private static RunType runType = RunType.DISABLE;
+    public static Context context = null;
+    public static String appTitle = "";
+    public static String appVersion = "";
+    public static String appBuildTarget = "";
+    public static String appBuildNumber = "";
+
+    public static RunType runType = RunType.DISABLE;
+
+
+    public static Context getContext() {
+        return context;
+    }
+
+    public static String getAppTitle() {
+        return appTitle;
+    }
+
+    public static String getAppVersion() {
+        return appVersion;
+    }
+
+    public static String getAppBuildTarget() {
+        return appBuildTarget;
+    }
+
+    public static String getAppBuildNumber() {
+        return appBuildNumber;
+    }
+
+    public static RunType getRunType() {
+        return runType;
+    }
+
+    public static void setRunType(RunType type) {
+        runType = type;
+    }
 
     /**
      * 初始化 ViewAppInfo，设置应用的相关信息，如版本号、构建日期等
@@ -106,7 +127,7 @@ public final class ViewAppInfo {
             // 根据返回结果设置 runType
             if (result.getBoolean("active", false)) {
                 Log.runtime(TAG, "ContentProvider 返回 true，设置 runType 为 MODEL");
-                runType = RunType.MODEL; // 激活状态
+                runType = RunType.ACTIVE; // 激活状态
                 return;
             }
             Log.runtime(TAG, "ContentProvider 返回 false，设置 runType 为 DISABLE");
@@ -122,9 +143,14 @@ public final class ViewAppInfo {
      * @param runTypeCode 运行类型编码
      */
     public static void setRunTypeByCode(Integer runTypeCode) {
-        RunType newRunType = RunType.getByCode(runTypeCode);
-        if (newRunType == null) {
+        RunType newRunType;
+        if (runTypeCode == null) {          // 处理null情况，直接设置默认值
             newRunType = RunType.DISABLE;
+        } else {
+            newRunType = RunType.getByCode(runTypeCode); // 直接传入Integer会自动拆箱为int
+            if (newRunType == null) {
+                newRunType = RunType.DISABLE;
+            }
         }
         ViewAppInfo.runType = newRunType;
     }

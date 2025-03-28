@@ -50,6 +50,7 @@ import fansirsqi.xposed.sesame.ui.dto.ModelDto;
 import fansirsqi.xposed.sesame.ui.dto.ModelFieldInfoDto;
 import fansirsqi.xposed.sesame.ui.dto.ModelFieldShowDto;
 import fansirsqi.xposed.sesame.ui.dto.ModelGroupDto;
+import fansirsqi.xposed.sesame.ui.widget.ListDialog;
 import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.LanguageUtil;
@@ -107,14 +108,16 @@ public class WebSettingsActivity extends BaseActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (webView.canGoBack()) {
-                    webView.goBack();
-                } else {
+//                if (webView.canGoBack()) {
+//                    webView.goBack();
+//                } else
+                {
                     save();
                     finish();
                 }
             }
         });
+
         // 初始化导出逻辑
         exportLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -194,15 +197,20 @@ public class WebSettingsActivity extends BaseActivity {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        save();
+    }
+
 
     public class WebAppInterface {
         @JavascriptInterface
         public void onBackPressed() {
             runOnUiThread(() -> {
-                if (webView.canGoBack()) {
-                    webView.goBack();
-                } else {
+                {
                     WebSettingsActivity.this.finish();
+                    save();
                 }
             });
         }
@@ -375,6 +383,7 @@ public class WebSettingsActivity extends BaseActivity {
         menu.add(0, 3, 3, "删除配置");
         menu.add(0, 4, 4, "单向好友");
         menu.add(0, 5, 5, "切换UI");
+        menu.add(0, 6, 6, "保存");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -420,7 +429,8 @@ public class WebSettingsActivity extends BaseActivity {
                         .show();
                 break;
             case 4:
-                ListDialog.show(this, "单向好友列表", AlipayUser.getList(user -> user.getFriendStatus() != 1), SelectModelFieldFunc.newMapInstance(), false, ListDialog.ListType.SHOW);
+                ListDialog.show(this, "单向好友列表", AlipayUser.getList(user -> user.getFriendStatus() != 1), SelectModelFieldFunc.newMapInstance(), false,
+                        ListDialog.ListType.SHOW);
                 break;
             case 5:
                 UIConfig.INSTANCE.setUiOption(UI_OPTION_NEW);
@@ -433,6 +443,9 @@ public class WebSettingsActivity extends BaseActivity {
                 } else {
                     Toast.makeText(this, "切换失败", Toast.LENGTH_SHORT).show();
                 }
+                break;
+            case 6:
+                save();
                 break;
         }
         return super.onOptionsItemSelected(item);

@@ -31,6 +31,7 @@ import fansirsqi.xposed.sesame.model.ModelConfig;
 import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.ui.widget.ContentPagerAdapter;
+import fansirsqi.xposed.sesame.ui.widget.ListDialog;
 import fansirsqi.xposed.sesame.ui.widget.TabAdapter;
 import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.LanguageUtil;
@@ -139,6 +140,11 @@ public class SettingActivity extends BaseActivity {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        save();
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // 创建菜单选项
