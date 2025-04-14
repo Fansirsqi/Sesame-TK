@@ -8,7 +8,6 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -43,6 +42,8 @@ import fansirsqi.xposed.sesame.util.ToastUtil
 import java.util.Calendar
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import androidx.core.net.toUri
+import fansirsqi.xposed.sesame.data.General
 
 class MainActivity : BaseActivity() {
     private var hasPermissions = false
@@ -81,7 +82,9 @@ class MainActivity : BaseActivity() {
                 Log.error("so file copy failed")
             }
             val libSesamePath = Detector.getLibPath(this)
-            System.load(libSesamePath)
+            if (libSesamePath != null) {
+                System.load(libSesamePath)
+            }
             Log.runtime("Loading so from original path$libSesamePath")
             Detector.initDetector(this)
         } catch (e: Exception) {
@@ -100,7 +103,7 @@ class MainActivity : BaseActivity() {
                 val it = Intent(this@MainActivity, HtmlViewerActivity::class.java)
                 it.putExtra("nextLine", false)
                 it.putExtra("canClear", true)
-                it.setData(Uri.parse(data))
+                it.data = data.toUri()
                 startActivity(it)
                 return@setOnLongClickListener true // 表示事件已处理
             }
@@ -292,18 +295,19 @@ class MainActivity : BaseActivity() {
             }
         }
         val it = Intent(this, HtmlViewerActivity::class.java)
-        it.setData(Uri.parse(data))
+        it.data = data.toUri()
         startActivity(it)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val packageManager = packageManager
-        val canonicalName = javaClass.canonicalName ?: return false // 若类名为空，直接返回失败
-        val aliasName = "$canonicalName Alias" // 确保字符串拼接安全
         try {
-            val componentEnabledSetting = packageManager.getComponentEnabledSetting(ComponentName(this, aliasName))
-            val checkable = menu.add(0, 1, 1, R.string.hide_the_application_icon).setCheckable(true)
-            checkable.setChecked(componentEnabledSetting > PackageManager.COMPONENT_ENABLED_STATE_ENABLED)
+            // 使用清单文件中定义的完整别名
+            val aliasComponent = ComponentName(this, General.MODULE_PACKAGE_UI_ICON)
+            val state = packageManager.getComponentEnabledSetting(aliasComponent)
+            // 注意状态判断逻辑修正
+            val isEnabled = state != PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+            menu.add(0, 1, 1, R.string.hide_the_application_icon)
+                .setCheckable(true).isChecked = !isEnabled
             menu.add(0, 2, 2, R.string.view_error_log_file)
             menu.add(0, 3, 3, R.string.view_all_log_file)
             menu.add(0, 4, 4, R.string.view_runtim_log_file)
@@ -323,14 +327,26 @@ class MainActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            1 -> {
-                val shouldHideIcon = !item.isChecked // 是否应隐藏图标
-                item.setChecked(shouldHideIcon)
-                val packageManager = packageManager
-                val canonicalName = javaClass.canonicalName ?: return false // 若类名为空，直接返回失败
-                val aliasName = "$canonicalName Alias" // 确保字符串拼接安全
-                val newState = if (shouldHideIcon) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-                packageManager.setComponentEnabledSetting(ComponentName(this, aliasName), newState, PackageManager.DONT_KILL_APP)
+            1 ->  {
+                val shouldHide = !item.isChecked
+                item.isChecked = shouldHide
+
+                val aliasComponent = ComponentName(this, General.MODULE_PACKAGE_UI_ICON)
+                val newState = if (shouldHide) {
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                } else {
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                }
+
+                packageManager.setComponentEnabledSetting(
+                    aliasComponent,
+                    newState,
+                    PackageManager.DONT_KILL_APP
+                )
+
+                // 提示用户需要重启启动器才能看到效果
+                Toast.makeText(this, "设置已保存，可能需要重启桌面才能生效", Toast.LENGTH_SHORT).show()
+                return true
             }
 
             2 -> {
@@ -339,7 +355,7 @@ class MainActivity : BaseActivity() {
                 val errorIt = Intent(this, HtmlViewerActivity::class.java)
                 errorIt.putExtra("nextLine", false)
                 errorIt.putExtra("canClear", true)
-                errorIt.setData(Uri.parse(errorData))
+                errorIt.data = errorData.toUri()
                 startActivity(errorIt)
             }
 
@@ -349,7 +365,7 @@ class MainActivity : BaseActivity() {
                 val otherIt = Intent(this, HtmlViewerActivity::class.java)
                 otherIt.putExtra("nextLine", false)
                 otherIt.putExtra("canClear", true)
-                otherIt.setData(Uri.parse(recordData))
+                otherIt.data = recordData.toUri()
                 startActivity(otherIt)
             }
 
@@ -359,7 +375,7 @@ class MainActivity : BaseActivity() {
                 val allIt = Intent(this, HtmlViewerActivity::class.java)
                 allIt.putExtra("nextLine", false)
                 allIt.putExtra("canClear", true)
-                allIt.setData(Uri.parse(runtimeData))
+                allIt.data = runtimeData.toUri()
                 startActivity(allIt)
             }
 
@@ -381,7 +397,7 @@ class MainActivity : BaseActivity() {
                 val captureIt = Intent(this, HtmlViewerActivity::class.java)
                 captureIt.putExtra("nextLine", false)
                 captureIt.putExtra("canClear", true)
-                captureIt.setData(Uri.parse(captureData))
+                captureIt.data = captureData.toUri()
                 startActivity(captureIt)
             }
 
@@ -437,7 +453,7 @@ class MainActivity : BaseActivity() {
                             }
                         }
                     }
-                } catch (e: InterruptedException) {
+                } catch (_: InterruptedException) {
                     Thread.currentThread().interrupt()
                 }
             }.start()
@@ -482,7 +498,7 @@ class MainActivity : BaseActivity() {
                             }
                         }
                     }
-                } catch (e: InterruptedException) {
+                } catch (_: InterruptedException) {
                     Thread.currentThread().interrupt()
                 }
             }.start()

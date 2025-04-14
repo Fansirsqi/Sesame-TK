@@ -30,4 +30,5 @@ object General {
      */
     const val H5PAGE_NAME: String = "com.alipay.mobile.h5container.api.H5Page"
     const val MODULE_PACKAGE_NAME: String = "fansirsqi.xposed.sesame"
+    const val MODULE_PACKAGE_UI_ICON : String = "$MODULE_PACKAGE_NAME.ui.MainActivityAlias"
 }
