@@ -31,28 +31,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleNormalRelease assembleCompatibleRelease -Pversion=${{ github.ref_name }}
 
-      - name: Sign Normal APK
-        id: sign_normal_apk
-        uses: ilharp/sign-android-release@v1
-        with:
-          releaseDir: app/build/outputs/apk/normal/release/
-          signingKey: ${{ secrets.ANDROID_SIGNING_KEY }}
-          keyAlias: ${{ secrets.ANDROID_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          buildToolsVersion: 34.0.0
-
-      - name: Sign Compatible APK
-        id: sign_compatible_apk
-        uses: ilharp/sign-android-release@v1
-        with:
-          releaseDir: app/build/outputs/apk/compatible/release/
-          signingKey: ${{ secrets.ANDROID_SIGNING_KEY }}
-          keyAlias: ${{ secrets.ANDROID_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          buildToolsVersion: 34.0.0
-
       - name: Upload Sesame compatible
         uses: actions/upload-artifact@v4
         with:
