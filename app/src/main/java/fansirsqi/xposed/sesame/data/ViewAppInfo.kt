@@ -10,9 +10,11 @@ import fansirsqi.xposed.sesame.BuildConfig
 import fansirsqi.xposed.sesame.R
 import fansirsqi.xposed.sesame.data.RunType.Companion.getByCode
 import fansirsqi.xposed.sesame.util.Log
+import androidx.core.net.toUri
 
+@SuppressLint("StaticFieldLeak")
 object ViewAppInfo {
-    val TAG: String = ViewAppInfo::class.java.getSimpleName()
+    val TAG: String = ViewAppInfo::class.java.simpleName
 
     @SuppressLint("StaticFieldLeak")
     var context: Context? = null
@@ -33,7 +35,7 @@ object ViewAppInfo {
         if (ViewAppInfo.context == null) {
             ViewAppInfo.context = context
             appBuildNumber = BuildConfig.VERSION_CODE.toString()
-            appTitle = context.getString(R.string.app_name)
+            appTitle = context.getString(R.string.app_name) + BuildConfig.VERSION_NAME
             appBuildTarget = BuildConfig.BUILD_DATE + " " + BuildConfig.BUILD_TIME + " ⏰"
             try {
                 appVersion = BuildConfig.VERSION_NAME.replace(
@@ -50,59 +52,42 @@ object ViewAppInfo {
      * 检查当前应用的运行类型，判断是否启用或禁用 通过与 content provider 交互来检查应用是否处于激活状态
      */
     fun checkRunType() {
-        // 如果 runType 已设置，直接返回
         if (runType != null) {
             Log.runtime(TAG, "runType 已设置，直接返回")
             return
         }
         try {
-            // 如果 context 为空，设置 runType 为 DISABLE 并返回
             if (context == null) {
                 Log.runtime(TAG, "context 为空，设置 runType 为 DISABLE")
                 runType = RunType.DISABLE
                 return
             }
-            // 获取 ContentResolver
-            val contentResolver = context!!.getContentResolver()
-            Log.runtime(TAG, "获取 ContentResolver")
-            // 定义 ContentProvider 的 Uri
-            val uri = Uri.parse("content://me.weishu.exposed.CP/")
-            Log.runtime(TAG, "解析 Uri: content://me.weishu.exposed.CP/")
-            // 调用 ContentProvider，检查应用是否处于激活状态
+            val contentResolver = context!!.contentResolver
+            val uri = "content://me.weishu.exposed.CP/".toUri()
             var result: Bundle? = null
             try {
-                Log.runtime(TAG, "尝试调用 ContentProvider 的 active 方法")
                 result = contentResolver.call(uri, "active", null, null)
             } catch (e: RuntimeException) {
-                Log.runtime(TAG, "调用 ContentProvider 失败，尝试通过 Intent 启动 Activity")
                 try {
                     val intent = Intent("me.weishu.exp.ACTION_ACTIVE")
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context!!.startActivity(intent)
                 } catch (e1: Throwable) {
-                    Log.runtime(TAG, "启动 Activity 失败，设置 runType 为 DISABLE")
                     runType = RunType.DISABLE
                     return
                 }
             }
-            // 如果第一次调用失败，尝试再次调用
             if (result == null) {
-                Log.runtime(TAG, "第一次调用 ContentProvider 返回 null，尝试再次调用")
                 result = contentResolver.call(uri, "active", null, null)
             }
-            // 如果仍然失败，设置 runType 为 DISABLE 并返回
             if (result == null) {
-                Log.runtime(TAG, "ContentProvider 返回 null，设置 runType 为 DISABLE")
                 runType = RunType.DISABLE
                 return
             }
-            // 根据返回结果设置 runType
             if (result.getBoolean("active", false)) {
-                Log.runtime(TAG, "ContentProvider 返回 true，设置 runType 为 MODEL")
                 runType = RunType.ACTIVE // 激活状态
                 return
             }
-            Log.runtime(TAG, "ContentProvider 返回 false，设置 runType 为 DISABLE")
         } catch (ignored: Throwable) {
             Log.runtime(TAG, "捕获异常，设置 runType 为 DISABLE")
         }
@@ -127,6 +112,7 @@ object ViewAppInfo {
         runType = newRunType
     }
 
+    @JvmStatic
     val isApkInDebug: Boolean
         /**
          * 判断当前应用是否处于调试模式
@@ -135,7 +121,7 @@ object ViewAppInfo {
          */
         get() {
             try {
-                val info = context!!.getApplicationInfo()
+                val info = context!!.applicationInfo
                 return (info.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
             } catch (e: Exception) {
                 return false
