@@ -73,7 +73,7 @@ class MainActivity : BaseActivity() {
         oneWord = findViewById(R.id.one_word)
         // 获取并设置一言句子
         ViewAppInfo.checkRunType()
-        updateSubTitle(ViewAppInfo.getRunType().nickName)
+        updateSubTitle(ViewAppInfo.runType?.nickName ?: "0000")
         titleRunner = Runnable { updateSubTitle(RunType.DISABLE.nickName) }
         try {
             if (AssetUtil.copySoFileToStorage(this, "libchecker.so")) {
@@ -117,7 +117,7 @@ class MainActivity : BaseActivity() {
                     if (action != null) {
                         when (action) {
                             "fansirsqi.xposed.sesame.status" -> {
-                                if (RunType.DISABLE == ViewAppInfo.getRunType()) {
+                                if (RunType.DISABLE == ViewAppInfo.runType) {
                                     updateSubTitle(RunType.LOADED.nickName)
                                 }
                                 viewHandler.removeCallbacks(titleRunner!!)
@@ -160,8 +160,8 @@ class MainActivity : BaseActivity() {
                     runOnUiThread { oneWord.text = error } // 在主线程中更新UI
                 }
             })
-        buildVersion.text = "Build Version: " + ViewAppInfo.getAppVersion() // 版本信息
-        buildTarget.text = "Build Target: " + ViewAppInfo.getAppBuildTarget() // 编译日期信息
+        buildVersion.text = "Build Version: " + ViewAppInfo.appVersion // 版本信息
+        buildTarget.text = "Build Target: " + ViewAppInfo.appBuildTarget // 编译日期信息
     }
 
     private fun updateOneWord(str: String, oneWord: TextView) {
@@ -171,7 +171,7 @@ class MainActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         if (hasPermissions) {
-            if (RunType.DISABLE == ViewAppInfo.getRunType()) {
+            if (RunType.DISABLE == ViewAppInfo.runType) {
                 viewHandler.postDelayed(titleRunner!!, 3000)
                 try {
                     sendBroadcast(Intent("com.eg.android.AlipayGphone.sesame.status"))
@@ -537,7 +537,7 @@ class MainActivity : BaseActivity() {
 
     private fun updateSubTitle(runType: String) {
         Log.runtime("updateSubTitle$runType")
-        baseTitle = ViewAppInfo.getAppTitle() + "[" + runType + "]"
+        baseTitle = ViewAppInfo.appTitle + "[" + runType + "]"
         when (runType) {
             RunType.DISABLE.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.not_active_text))
             RunType.ACTIVE.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary))
