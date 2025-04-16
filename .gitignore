@@ -77,3 +77,4 @@ demo/*
 #编译缓存
 /app/.cxx/* 
 
+.lingma/rules/project_rule.md
