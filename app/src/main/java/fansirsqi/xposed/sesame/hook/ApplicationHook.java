@@ -62,6 +62,7 @@ import fansirsqi.xposed.sesame.task.BaseTask;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.task.antMember.AntMemberRpcCall;
+import fansirsqi.xposed.sesame.ui.MainActivity;
 import fansirsqi.xposed.sesame.util.AssetUtil;
 import fansirsqi.xposed.sesame.util.Detector;
 import fansirsqi.xposed.sesame.util.HideVPNStatus;
@@ -195,8 +196,11 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         if (General.MODULE_PACKAGE_NAME.equals(lpparam.packageName)) {
             try {
-                XposedHelpers.callStaticMethod(lpparam.classLoader.loadClass(ViewAppInfo.class.getName()), "setRunTypeByCode", RunType.ACTIVE.getCode());
-            } catch (ClassNotFoundException e) {
+//
+//                XposedHelpers.callStaticMethod(lpparam.classLoader.loadClass(ViewAppInfo.class.getName()), "setRunTypeByCode", RunType.ACTIVE.getCode());
+//
+                ViewAppInfo.INSTANCE.setRunType(RunType.ACTIVE);
+            } catch (Exception e) {
                 Log.printStackTrace(e);
             }
         } else if (General.PACKAGE_NAME.equals(lpparam.packageName) && General.PACKAGE_NAME.equals(lpparam.processName)) {
@@ -239,7 +243,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 Log.runtime(TAG, "hook attach err");
                 Log.printStackTrace(TAG, t);
             }
-            //hook "com.alipay.mobile.quinox.LauncherActivity" 类的onResume方法
             try {
                 XposedHelpers.findAndHookMethod("com.alipay.mobile.quinox.LauncherActivity", classLoader, "onResume",
                         new XC_MethodHook() {
@@ -249,7 +252,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 String targetUid = getUserId();
                                 if (targetUid == null) {
                                     Log.record("onResume:用户未登录");
-                                    Toast.show("onResume:用户未登录");
+                                    Toast.show("用户未登录");
                                     return;
                                 }
                                 if (!init) {
