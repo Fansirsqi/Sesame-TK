@@ -105,7 +105,6 @@ public class SettingActivity extends BaseActivity {
         if (this.userName != null) {
             setBaseSubtitle(getString(R.string.settings) + ": " + this.userName);
         }
-        setBaseSubtitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary));
         initializeTabs();
     }
 

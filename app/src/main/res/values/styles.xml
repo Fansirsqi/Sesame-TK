@@ -5,8 +5,9 @@
         <!--Appbar背景色-->
         <item name="colorPrimary">@color/colorPrimary</item>
         <!--ToolBar上的Title颜色-->
-        <item name="titleTextColor">@color/textColorPrimary</item>
-        <item name="subtitleTextColor">?android:attr/textColorSecondary</item>
+        <item name="titleTextColor">@color/active_text</item>
+        <item name="subtitleTextColor">@color/active_text</item>
+
         <item name="android:navigationBarColor">@color/colorPrimary</item>
         <item name="android:statusBarColor">@color/colorPrimary</item>
         <item name="windowNoTitle">true</item>
