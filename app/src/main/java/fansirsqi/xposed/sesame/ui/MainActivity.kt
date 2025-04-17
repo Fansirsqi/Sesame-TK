@@ -116,7 +116,7 @@ class MainActivity : BaseActivity() {
                         when (action) {
                             "fansirsqi.xposed.sesame.status" -> {
                                 if (RunType.DISABLE == ViewAppInfo.runType) {
-                                    ViewAppInfo.setRunTypeByCode(1)
+                                    ViewAppInfo.setRunTypeByCode(0)
                                     updateSubTitle(ViewAppInfo.runType?.nickName ?: "更新失败")
                                 }
                                 viewHandler.removeCallbacks(titleRunner!!)
