@@ -21,8 +21,6 @@ enum class RunType(val code: Int, val nickName: String) {
             }
         }
 
-        // 在RunType.kt的companion object中
-        @JvmStatic
         fun getByCode(code: Int?): RunType? {
             return CODE_MAP[code]
         }
