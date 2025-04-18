@@ -196,10 +196,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         if (General.MODULE_PACKAGE_NAME.equals(lpparam.packageName)) {
             try {
-//
-//                XposedHelpers.callStaticMethod(lpparam.classLoader.loadClass(ViewAppInfo.class.getName()), "setRunTypeByCode", RunType.ACTIVE.getCode());
-//
                 ViewAppInfo.INSTANCE.setRunType(RunType.ACTIVE);
+                Log.runtime(TAG, "handleLoadPackage setRunType: " + ViewAppInfo.INSTANCE.getRunType());
             } catch (Exception e) {
                 Log.printStackTrace(e);
             }
