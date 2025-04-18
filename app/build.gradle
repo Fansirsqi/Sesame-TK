@@ -34,9 +34,16 @@ android {
     // 生成构建时间和目标代码
     try {
         def dateFormat = new SimpleDateFormat("yy-MM-dd")
-        buildDate = dateFormat.format(new Date())
         def timeFormat = new SimpleDateFormat("HH:mm:ss")
+
+        // 设置为中国时区
+        def chinaTimeZone = TimeZone.getTimeZone("GMT+8")
+        dateFormat.setTimeZone(chinaTimeZone)
+        timeFormat.setTimeZone(chinaTimeZone)
+
+        buildDate = dateFormat.format(new Date())
         buildTime = timeFormat.format(new Date())
+
         MessageDigest md = MessageDigest.getInstance("MD5")
         md.update(buildTime.bytes)
         buildTargetCode = md.digest().encodeHex().toString().substring(0, 4)
@@ -58,8 +65,9 @@ android {
 
     // 配置 Android 构建设置
     namespace "fansirsqi.xposed.sesame"
-    compileSdk 34
 
+    //noinspection GradleDependency
+    compileSdk 34
 
     defaultConfig {
         minSdk 21
