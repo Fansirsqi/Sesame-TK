@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.JavascriptInterface;
@@ -108,8 +110,10 @@ public class WebSettingsActivity extends BaseActivity {
             @Override
             public void handleOnBackPressed() {
                 if (webView.canGoBack()) {
+                    Log.runtime("WebSettingsActivity.handleOnBackPressed: go back");
                     webView.goBack();
                 } else {
+                    Log.runtime("WebSettingsActivity.handleOnBackPressed: save");
                     save();
                     finish();
                 }
@@ -198,6 +202,7 @@ public class WebSettingsActivity extends BaseActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        Log.runtime("Override onBackPressed: save");
         save();
     }
 
@@ -206,9 +211,12 @@ public class WebSettingsActivity extends BaseActivity {
         @JavascriptInterface
         public void onBackPressed() {
             runOnUiThread(() -> {
-                {
-                    WebSettingsActivity.this.finish();
+                if (webView.canGoBack()) {
+                    webView.goBack();
+                } else {
+                    Log.runtime("WebAppInterface onBackPressed: save");
                     save();
+                    WebSettingsActivity.this.finish();
                 }
             });
         }
@@ -443,7 +451,14 @@ public class WebSettingsActivity extends BaseActivity {
                 }
                 break;
             case 6:
-                save();
+                // 在调用 save() 之前，先调用 JS 函数同步 WebView 中的数据到 Java 端
+                Log.runtime("WebSettingsActivity.onOptionsItemSelected: Calling handleData() in WebView");
+                webView.evaluateJavascript("if(typeof handleData === 'function'){ handleData(); } else { console.error('handleData function not found'); }", null);
+                // 使用 Handler 延迟执行 save()，给 JS 一点时间完成异步操作
+                // 200 毫秒是一个经验值，如果仍然有问题可以适当增加
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    save();
+                }, 200); // 延迟 200 毫秒
                 break;
         }
         return super.onOptionsItemSelected(item);
