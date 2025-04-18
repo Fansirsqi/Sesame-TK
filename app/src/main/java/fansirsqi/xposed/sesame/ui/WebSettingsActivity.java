@@ -21,7 +21,6 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.core.content.ContextCompat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -108,10 +107,9 @@ public class WebSettingsActivity extends BaseActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-//                if (webView.canGoBack()) {
-//                    webView.goBack();
-//                } else
-                {
+                if (webView.canGoBack()) {
+                    webView.goBack();
+                } else {
                     save();
                     finish();
                 }
@@ -179,7 +177,8 @@ public class WebSettingsActivity extends BaseActivity {
         });
         if (isApkInDebug()) {
             WebView.setWebContentsDebuggingEnabled(true);
-            webView.loadUrl("http://192.168.31.69:5500/app/src/main/assets/web/index.html");
+//            webView.loadUrl("http://192.168.31.69:5500/app/src/main/assets/web/index.html");
+            webView.loadUrl("file:///android_asset/web/index.html");
         } else {
             webView.loadUrl("file:///android_asset/web/index.html");
         }
@@ -451,17 +450,23 @@ public class WebSettingsActivity extends BaseActivity {
     }
 
     private void save() {
-        if (Config.isModify(userId) && Config.save(userId, false)) {
-            Toast.makeText(this, "保存成功！", Toast.LENGTH_SHORT).show();
-            if (!StringUtil.isEmpty(userId)) {
-                try {
-                    Intent intent = new Intent("com.eg.android.AlipayGphone.sesame.restart");
-                    intent.putExtra("userId", userId);
-                    sendBroadcast(intent);
-                } catch (Throwable th) {
-                    Log.printStackTrace(th);
+        if (Config.isModify(userId)) {
+            if (Config.save(userId, false)) {
+                Toast.makeText(context, "保存成功！", Toast.LENGTH_SHORT).show();
+                if (!StringUtil.isEmpty(userId)) {
+                    try {
+                        Intent intent = new Intent("com.eg.android.AlipayGphone.sesame.restart");
+                        intent.putExtra("userId", userId);
+                        sendBroadcast(intent);
+                    } catch (Throwable th) {
+                        Log.printStackTrace(th);
+                    }
                 }
+            }else{
+                Toast.makeText(context, "保存失败！", Toast.LENGTH_SHORT).show();
             }
+        } else {
+            Toast.makeText(context, "配置未修改，无需保存！", Toast.LENGTH_SHORT).show();
         }
         if (!StringUtil.isEmpty(userId)) {
             UserMap.save(userId);
