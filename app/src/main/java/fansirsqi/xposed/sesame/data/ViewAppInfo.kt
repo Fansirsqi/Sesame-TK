@@ -33,7 +33,7 @@ object ViewAppInfo {
         if (ViewAppInfo.context == null) {
             ViewAppInfo.context = context
             appBuildNumber = BuildConfig.VERSION_CODE.toString()
-            appTitle = context.getString(R.string.app_name) + BuildConfig.VERSION_NAME
+            appTitle = context.getString(R.string.app_name) //+ BuildConfig.VERSION_NAME
             appBuildTarget = BuildConfig.BUILD_DATE + " " + BuildConfig.BUILD_TIME + " ⏰"
             try {
                 appVersion = BuildConfig.VERSION_NAME.replace(

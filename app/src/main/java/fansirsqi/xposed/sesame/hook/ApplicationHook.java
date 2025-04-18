@@ -62,7 +62,6 @@ import fansirsqi.xposed.sesame.task.BaseTask;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.task.antMember.AntMemberRpcCall;
-import fansirsqi.xposed.sesame.ui.MainActivity;
 import fansirsqi.xposed.sesame.util.AssetUtil;
 import fansirsqi.xposed.sesame.util.Detector;
 import fansirsqi.xposed.sesame.util.HideVPNStatus;
@@ -955,7 +954,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Log.runtime("sesame 查看广播:" + action + " intent:" + intent);
+            Log.runtime("Alipay got Broadcast " + action + " intent:" + intent);
             if (action != null) {
                 switch (action) {
                     case "com.eg.android.AlipayGphone.sesame.restart":
@@ -972,7 +971,11 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         break;
                     case "com.eg.android.AlipayGphone.sesame.status":
                         try {
-                            context.sendBroadcast(new Intent("fansirsqi.xposed.sesame.status"));
+                            Intent replyIntent = new Intent("fansirsqi.xposed.sesame.status");
+                            replyIntent.putExtra("EXTRA_RUN_TYPE", RunType.ACTIVE.getNickName());
+                            replyIntent.setPackage(General.MODULE_PACKAGE_NAME);
+                            context.sendBroadcast(replyIntent);
+                            Log.runtime(TAG, "Replied with status: "+RunType.ACTIVE.getNickName());
                         } catch (Throwable th) {
                             Log.runtime(TAG, "sesame sendBroadcast status err:");
                             Log.printStackTrace(TAG, th);
