@@ -1,0 +1,41 @@
+[versions]
+android-plugin = "8.9.1"
+kotlin-plugin = "2.1.20"
+fooay-resolver-plugin = "0.10.0"
+kotlin-stdlib = "2.1.20"
+slf4j = "2.0.17"
+logback-android = "3.0.0"
+appcompat = "28.0.0"
+recyclerview = "1.4.0"
+viewpager2 = "1.1.0"
+material = "1.12.0"
+xposed-api = "82"
+lombok = "1.18.38"
+okhttp = "4.12.0"
+jackson = "2.18.3"
+jackson-compatible = "2.13.5"
+
+[libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin-stdlib" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+logback-android = { module = "com.github.tony19:logback-android", version.ref = "logback-android" }
+appcompat-v7 = { module = "com.android.support:appcompat-v7", version.ref = "appcompat" }
+recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
+viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager2" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+xposed-api = { module = "de.robv.android.xposed:api", version.ref = "xposed-api" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson" }
+jackson-core-compatible = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson-compatible" }
+jackson-databind-compatible = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson-compatible" }
+jackson-annotations-compatible = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson-compatible" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "android-plugin" }
+android-library = { id = "com.android.library", version.ref = "android-plugin" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin-plugin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-plugin" }
+fooay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "fooay-resolver-plugin" }
