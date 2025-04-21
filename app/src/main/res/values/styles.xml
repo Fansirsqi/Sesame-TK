@@ -9,7 +9,8 @@
         <item name="subtitleTextColor">@color/active_text</item>
 
         <item name="android:navigationBarColor">@color/colorPrimary</item>
-        <item name="android:statusBarColor">@color/colorPrimary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">true</item>
         <item name="windowNoTitle">true</item>
         <!-- 设置actionOverflowMenuStyle以自定义菜单的背景 -->
         <item name="actionOverflowMenuStyle">@style/MenuTheme</item>

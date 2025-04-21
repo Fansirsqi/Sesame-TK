@@ -2,7 +2,11 @@ package fansirsqi.xposed.sesame.ui
 
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
+import android.view.View
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import fansirsqi.xposed.sesame.R
@@ -19,6 +23,14 @@ open class BaseActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ViewAppInfo.init(applicationContext)
+        
+        // 使用WindowInsetsControllerCompat处理状态栏
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        @Suppress("DEPRECATION")
+        window.statusBarColor = Color.TRANSPARENT
+        WindowInsetsControllerCompat(window, window.decorView).let { controller ->
+            controller.isAppearanceLightStatusBars = true
+        }
     }
 
     /**

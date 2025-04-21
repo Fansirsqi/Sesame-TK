@@ -28,7 +28,7 @@ public abstract class IdMapManager {
     private static final Map<Class<? extends IdMapManager>, IdMapManager> instances = new ConcurrentHashMap<>();
 
     public static <T extends IdMapManager> T getInstance(Class<T> clazz) {
-        T instance = (T) instances.get(clazz); // 尝试从缓存中获取实例
+        T instance = clazz.cast(instances.get(clazz)); // 尝试从缓存中获取实例
         if (instance == null) { // 如果缓存中没有
             try {
                 instance = clazz.getDeclaredConstructor().newInstance(); // 创建新实例

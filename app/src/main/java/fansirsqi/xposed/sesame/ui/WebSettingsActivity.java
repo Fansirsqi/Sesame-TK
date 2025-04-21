@@ -146,7 +146,6 @@ public class WebSettingsActivity extends BaseActivity {
         WebSettings settings = webView.getSettings();
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         settings.setJavaScriptEnabled(true);
-        settings.setDatabaseEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);
@@ -197,13 +196,6 @@ public class WebSettingsActivity extends BaseActivity {
         for (ModelGroup modelGroup : ModelGroup.values()) {
             groupList.add(new ModelGroupDto(modelGroup.getCode(), modelGroup.getName(), modelGroup.getIcon()));
         }
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        Log.runtime("Override onBackPressed: save");
-        save();
     }
 
 

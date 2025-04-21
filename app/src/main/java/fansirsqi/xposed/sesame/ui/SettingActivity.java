@@ -140,11 +140,6 @@ public class SettingActivity extends BaseActivity {
     }
 
     @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        save();
-    }
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // 创建菜单选项
         menu.add(0, 1, 1, "导出配置");

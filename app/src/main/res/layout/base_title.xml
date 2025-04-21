@@ -9,5 +9,7 @@
         android:theme="@style/MenuTheme"
         android:textSize="8sp"
         android:background="@color/base_color"
+        android:paddingTop="?attr/actionBarSize"
+        android:fitsSystemWindows="true"
     tools:ignore="SmallSp">
 </androidx.appcompat.widget.Toolbar>
