@@ -168,7 +168,7 @@ dependencies {
     implementation(libs.kotlin.stdlib)
     implementation(libs.slf4j.api)
     implementation(libs.logback.android)
-    implementation(libs.appcompat.v7)
+    implementation(libs.appcompat)
     implementation(libs.recyclerview)
     implementation(libs.viewpager2)
     implementation(libs.material)
