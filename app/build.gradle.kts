@@ -12,6 +12,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
+        vectorDrawables.useSupportLibrary = true
         applicationId = "fansirsqi.xposed.sesame"
         minSdk = 21
         targetSdk = 36
@@ -41,18 +42,26 @@ android {
                 .digest(buildTime.toByteArray())
                 .joinToString("") { "%02x".format(it) }
                 .substring(0, 4)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             "0000"
         }
-        
+
         val gitCommitCount = try {
-            Runtime.getRuntime().exec("git rev-list --count HEAD")
-                .inputStream.bufferedReader().readText().trim()
-        } catch (e: Exception) {
-            ""
+            val process = Runtime.getRuntime().exec(arrayOf("git", "rev-list", "--count", "HEAD"))
+            val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
+            process.waitFor()
+            if (process.exitValue() == 0) {
+                output
+            } else {
+                process.errorStream.bufferedReader().use { it.readText() }
+                "0"
+            }
+        } catch (_: Exception) {
+            "0"
         }
 
-        versionCode = if (gitCommitCount.isEmpty()) 9527 else gitCommitCount.toInt()
+
+        versionCode = if (gitCommitCount.isEmpty()) 0 else gitCommitCount.toInt()
         versionName = if (buildTag.contains("alpha") || buildTag.contains("beta")) {
             "$major.$minor.$patch-$buildTag.$buildTargetCode"
         } else {
