@@ -104,11 +104,11 @@ android {
         when (name) {
             "normal" -> {
                 compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_21
-                    targetCompatibility = JavaVersion.VERSION_21
+                    sourceCompatibility = JavaVersion.VERSION_23
+                    targetCompatibility = JavaVersion.VERSION_23
                 }
                 kotlinOptions {
-                    jvmTarget = "21"
+                    jvmTarget = "23"
                 }
             }
             "compatible" -> {
