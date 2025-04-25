@@ -3,7 +3,6 @@
 *.ap_
 /app/normal/*
 /app/compatible/*
-/app/lint-baseline.xml
 *.jks
 # Files for the ART/Dalvik VM
 *.dex
@@ -78,9 +77,4 @@ demo/*
 #编译缓存
 /app/.cxx/* 
 
-# python virtual env
-.venv/
-test
-
-# cache
 .lingma/rules/project_rule.md
