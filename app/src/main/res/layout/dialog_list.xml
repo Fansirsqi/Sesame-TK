@@ -12,7 +12,7 @@
 
         <Button
             android:id="@+id/btn_select_invert"
-            android:textColor="@color/colorPrimary"
+            android:textColor="@color/button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
@@ -24,7 +24,7 @@
 
         <Button
             android:id="@+id/btn_select_all"
-            android:textColor="@color/colorPrimary"
+            android:textColor="@color/button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toLeftOf="@+id/btn_select_invert"
@@ -59,7 +59,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/colorPrimary"
+            android:textColor="@color/button"
             android:text="@string/last"
             android:textAllCaps="false"
             android:minHeight="50dp"
@@ -70,7 +70,7 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/colorPrimary"
+            android:textColor="@color/button"
             android:text="@string/next"
             android:textAllCaps="false"
             android:minHeight="50dp"

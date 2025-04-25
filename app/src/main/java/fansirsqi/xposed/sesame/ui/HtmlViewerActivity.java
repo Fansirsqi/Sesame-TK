@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -51,18 +50,6 @@ public class HtmlViewerActivity extends BaseActivity {
         progressBar = findViewById(R.id.pgb_webview);
         // 设置 WebView 的客户端
         setupWebView();
-        
-        // 设置夜间模式
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mWebView.getSettings().setForceDark(WebSettings.FORCE_DARK_ON);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                mWebView.getSettings().setAlgorithmicDarkeningAllowed(true);
-            }
-        }
-        // 设置WebView背景色
-        mWebView.setBackgroundColor(ContextCompat.getColor(this, R.color.background));
-        // 设置进度条颜色
-        progressBar.setProgressTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.selection_color)));
     }
 
     /**

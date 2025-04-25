@@ -27,11 +27,11 @@
                 android:layout_weight="1"
                 android:background="@drawable/button_extend"
                 android:text="@string/query_the_remaining_amount_of_saplings"
-                android:textColor="@color/textColorPrimary" />
+                android:textColor="@color/button_text" />
 
             <Button
                 style="?android:attr/buttonBarButtonStyle"
-                android:textColor="@color/textColorPrimary"
+                android:textColor="@color/button_text"
                 android:id="@+id/get_newTree_items"
                 android:background="@drawable/button_extend"
                 android:layout_width="wrap_content"
@@ -49,7 +49,7 @@
 
             <Button
                 style="?android:attr/buttonBarButtonStyle"
-                android:textColor="@color/textColorPrimary"
+                android:textColor="@color/button_text"
                 android:id="@+id/query_area_trees"
                 android:background="@drawable/button_extend"
                 android:layout_width="wrap_content"
@@ -60,7 +60,7 @@
 
             <Button
                 style="?android:attr/buttonBarButtonStyle"
-                android:textColor="@color/textColorPrimary"
+                android:textColor="@color/button_text"
                 android:id="@+id/get_unlock_treeItems"
                 android:background="@drawable/button_extend"
                 android:layout_width="wrap_content"

@@ -1,9 +1,6 @@
 package fansirsqi.xposed.sesame.ui;
-import android.content.Context;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import fansirsqi.xposed.sesame.R;
 import fansirsqi.xposed.sesame.data.ViewAppInfo;
@@ -50,27 +47,5 @@ public class BaseActivity extends AppCompatActivity {
     }
     public void setBaseSubtitleTextColor(int color) {
         toolbar.setSubtitleTextColor(color);
-    }
-
-    @Override
-    protected void attachBaseContext(Context newBase) {
-        Configuration configuration = newBase.getResources().getConfiguration();
-        // 创建新的Configuration对象
-        Configuration configurationNew = new Configuration(configuration);
-        // 创建新的Context配置
-        Context context = newBase.createConfigurationContext(configurationNew);
-        super.attachBaseContext(context);
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        // 当UI模式（日夜模式）发生变化时，重建Activity以应用新主题
-        if ((newConfig.diff(getResources().getConfiguration()) & Configuration.UI_MODE_NIGHT_MASK) != 0) {
-            recreate();
-        } else if (toolbar != null) {
-            toolbar.setTitle(getBaseTitle());
-            toolbar.setSubtitle(getBaseSubtitle());
-        }
     }
 }

@@ -8,6 +8,6 @@
         android:layout_height="wrap_content"
         android:theme="@style/MenuTheme"
         android:textSize="8sp"
-        android:background="@color/base_color"
+        android:background="@color/colorPrimary"
     tools:ignore="SmallSp">
 </androidx.appcompat.widget.Toolbar>

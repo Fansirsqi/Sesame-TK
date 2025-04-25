@@ -8,7 +8,7 @@
     </item>
     <item>
         <shape>
-            <solid android:color="@color/selection_color"/>
+            <solid android:color="@color/button"/>
             <corners android:radius="10dp"/>
         </shape>
     </item>
