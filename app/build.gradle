@@ -1,27 +1,42 @@
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 
+
 plugins {
     id "com.android.application"
 }
-
 android {
-    // 禁用所有单元测试
+
     testOptions {
         unitTests.all {
             it.enabled = false
         }
     }
-
-    // 启用 BuildConfig 生成
     buildFeatures {
         buildConfig = true
     }
+    def getSigningProperty = { propName, envName ->
+        if (System.getenv('CI')) {
+            return System.getenv(envName) ?: ''
+        }
+        def properties = new Properties()
+        def localProperties = new File(project.rootProject.projectDir, "local.properties")
+        if (localProperties.exists()) {
+            properties.load(new FileInputStream(localProperties))
+            return properties[propName] ?: ''
+        }
+        return ''
+    }
 
-    // 版本号配置
+    //发版前请务必保证在本地构建完成，否则会像我一样发了个寂寞呜呜呜~
+    // to developer
+    //发版规则：alphafix->betafix 用于修复已知问题
+    //版本号格式：主版本号.次版本号.补丁版本号-(alpha->beta->release |debug) 用于开发者调试|依次递进
+    //github发布前务必确认当前版本号是否符合发版规则,以免造成困扰
     def major = 0          // 主版本号
     def minor = 2          // 次版本号
     def patch = 6          // 补丁版本号
+//    def buildTag = "beta.6" // 构建标签 (alpha, beta, release, 等)
     def buildTag = "alpha" // 构建标签 (alpha, beta, release, 等)
     def buildDate
     def buildTime
@@ -29,8 +44,6 @@ android {
     def _versionCode
     def _versionName
     def gitCommitCount = 'git rev-list --count HEAD'.execute().text.trim()
-
-    // 生成构建时间和目标代码
     try {
         def dateFormat = new SimpleDateFormat("yy-MM-dd")
         buildDate = dateFormat.format(new Date())
@@ -39,14 +52,14 @@ android {
         MessageDigest md = MessageDigest.getInstance("MD5")
         md.update(buildTime.bytes)
         buildTargetCode = md.digest().encodeHex().toString().substring(0, 4)
-    } catch (Exception e) {
+    }
+    catch (Exception e) {
+        // 错误处理机制
         println("时间或日期格式化错误: ${e.message}")
         buildDate = "unknown"
         buildTime = "unknown"
         buildTargetCode = "0000"
     }
-
-    // 设置版本号和版本名称
     _versionCode = gitCommitCount.empty ? 9527 : gitCommitCount.toInteger()
     if (buildTag.contains("alpha") || buildTag.contains("beta")) {
         _versionName = "${major}.${minor}.${patch}-${buildTag}.${buildTargetCode}"
@@ -58,9 +71,17 @@ android {
     // 配置 Android 构建设置
     namespace "fansirsqi.xposed.sesame"
     compileSdk 34
-
+    signingConfigs {
+        release {
+            storeFile file('./byseven.jks')
+            storePassword getSigningProperty('MY_APP_STORE_PASSWORD', 'ANDROID_KEYSTORE_PASSWORD')
+            keyAlias getSigningProperty('MY_APP_KEY_ALIAS', 'ANDROID_KEY_ALIAS')
+            keyPassword getSigningProperty('MY_APP_KEY_PASSWORD', 'ANDROID_KEY_PASSWORD')
+        }
+    }
     defaultConfig {
         minSdk 21
+        //noinspection OldTargetApi,ExpiredTargetSdkVersion
         targetSdk 34
         versionCode _versionCode
         versionName _versionName
@@ -70,24 +91,11 @@ android {
         buildConfigField "String", "BUILD_TAG", "\"${buildTag}\""
         if (!System.getenv('CI')) {
             ndk {
-                abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+                abiFilters['armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64']
             }
         } else {
-            println("CI环境下不编译jniLibs")
-            sourceSets {
-                main {
-                    jniLibs.srcDirs = ['src/main/jniLibs']
-                }
-            }
-        }
-    }
-    if (!System.getenv('CI')) {
-        println("非CI环境:编译jniLibs")
-        externalNativeBuild {
-            cmake {
-                path file("src/main/cpp/CMakeLists.txt")
-                version "3.31.6"
-                ndkVersion '29.0.13113456'
+            ndk {
+                abiFilters[]
             }
         }
     }
@@ -96,8 +104,6 @@ android {
         applicationName = "Sesame"
         applicationType = "Normal"
     }
-
-    // 产品风味配置
     flavorDimensions.add("default")
     productFlavors {
         normal {
@@ -110,27 +116,25 @@ android {
         }
     }
 
-    // 构建类型配置
+
     buildTypes {
         debug {
             debuggable true
+            signingConfig signingConfigs.release
             versionNameSuffix "-debug"
         }
         release {
             debuggable false
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
-
-    // 编译选项
     compileOptions {
         targetCompatibility JavaVersion.VERSION_17
         sourceCompatibility JavaVersion.VERSION_17
     }
-
-    // 配置 APK 输出文件名
     applicationVariants.configureEach { variant ->
         variant.outputs.configureEach { output ->
             def outputFile = output.outputFile
@@ -138,21 +142,54 @@ android {
                 if (variant.buildType.name == 'release') {
                     output.outputFileName = "${applicationName}-${variant.productFlavors[0].ext.applicationType}-${defaultConfig.versionName}.apk"
                 }
+                if (variant.buildType.name == 'debug') {
+                    output.outputFileName = "${applicationName}-${variant.productFlavors[0].ext.applicationType}-${defaultConfig.versionName}-debug.${buildTargetCode}.apk"
+                }
             }
         }
     }
+
+
+    if (!System.getenv('CI')) {
+        externalNativeBuild {
+            cmake {
+                path file("src/main/cpp/CMakeLists.txt")
+                version "3.31.6"
+            }
+        }
+    } elss {
+        externalNativeBuild {
+            cmake {
+                // 设置无效路径防止任务触发
+                path 'dummy/CMakeLists.txt'
+            }
+        }
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/jniLibs']
+        }
+    }
+// 根据环境选择NDK版本
+    ndkVersion System.getenv('CI') ? '26.1.10909125' : '29.0.13113456'
 }
 
 // 依赖项配置
 dependencies {
+
+    //noinspection GradleDependency
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.10'
     implementation 'org.slf4j:slf4j-api:2.0.7'
     implementation 'com.github.tony19:logback-android:3.0.0'
+    //noinspection GradleDependency
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    //noinspection GradleDependency
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
     implementation 'com.google.android.material:material:1.12.0'
+
     compileOnly 'de.robv.android.xposed:api:82'
+    //noinspection AnnotationProcessorOnCompilePath
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
