@@ -36,7 +36,6 @@ import fansirsqi.xposed.sesame.data.ViewAppInfo;
 import fansirsqi.xposed.sesame.entity.FriendWatch;
 import fansirsqi.xposed.sesame.entity.UserEntity;
 import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
-import fansirsqi.xposed.sesame.util.Detector;
 import fansirsqi.xposed.sesame.util.FansirsqiUtil;
 import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.Log;
@@ -55,7 +54,7 @@ public class MainActivity extends BaseActivity {
     private UserEntity[] userEntityArray = {null};
     private TextView oneWord = null;
 
-    @SuppressLint({"UnspecifiedRegisterReceiverFlag", "SetTextI18n", "UnsafeDynamicallyLoadedCode"})
+    @SuppressLint({"UnspecifiedRegisterReceiverFlag", "SetTextI18n"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,13 +75,6 @@ public class MainActivity extends BaseActivity {
         ViewAppInfo.checkRunType();
         updateSubTitle(ViewAppInfo.getRunType());
         titleRunner = () -> updateSubTitle(RunType.DISABLE);
-        System.load(Detector.getLibPath(this));
-        Detector.initDetector(this);
-        //   欢迎自己打包 欢迎大佬pr
-        //   项目开源且公益  维护都是自愿
-        //   但是如果打包改个名拿去卖钱忽悠小白
-        //   那我只能说你妈死了 就当开源项目给你妈烧纸钱了
-
         if (mainImage != null) {
             mainImage.setOnLongClickListener(
                     v -> {
@@ -156,7 +148,7 @@ public class MainActivity extends BaseActivity {
                 });
         buildVersion.setText("Build Version: " + ViewAppInfo.getAppVersion()); // 版本信息
         buildTarget.setText("Build Target: " + ViewAppInfo.getAppBuildTarget()); // 编译日期信息
-//        StringDialog.showAlertDialog(this, "提示", getString(R.string.start_message), "我知道了");
+        StringDialog.showAlertDialog(this, "提示", getString(R.string.start_message), "我知道了");
     }
 
     private void updateOneWord(String str, TextView oneWord) {
@@ -311,7 +303,7 @@ public class MainActivity extends BaseActivity {
             menu.add(0, 7, 7, R.string.view_capture);
             menu.add(0, 8, 8, R.string.extend);
             menu.add(0, 9, 9, R.string.settings);
-            menu.add(0, 10, 10, "🧹 清空配置");
+                menu.add(0, 10, 10, "🧹 清空配置");
         } catch (Exception e) {
             Log.printStackTrace(e);
             ToastUtil.makeText(this, "菜单创建失败，请重试", Toast.LENGTH_SHORT).show();
@@ -527,8 +519,7 @@ public class MainActivity extends BaseActivity {
     private void goFrinedWatch(int index) {
         UserEntity userEntity = userEntityArray[index];
         if (userEntity != null) {
-            ListDialog.show(this, getString(R.string.friend_watch), FriendWatch.getList(userEntity.getUserId()), SelectModelFieldFunc.newMapInstance(), false
-                    , ListDialog.ListType.SHOW);
+            ListDialog.show(this, getString(R.string.friend_watch), FriendWatch.getList(userEntity.getUserId()), SelectModelFieldFunc.newMapInstance(), false, ListDialog.ListType.SHOW);
         } else {
             ToastUtil.makeText(this, "😡 别他妈选默认！！！！！！！！", Toast.LENGTH_LONG).show();
         }
@@ -541,20 +532,16 @@ public class MainActivity extends BaseActivity {
      * @param index 选择的用户索引，用于获取用户信息。
      */
     private void goSettingActivity(int index) {
-        if (Detector.loadLibrary("checker")) {
-            UserEntity userEntity = userEntityArray[index];
-            Class<?> targetActivity = UIConfig.INSTANCE.getTargetActivityClass();
-            Intent intent = new Intent(this, targetActivity);
-            if (userEntity != null) {
-                intent.putExtra("userId", userEntity.getUserId());
-                intent.putExtra("userName", userEntity.getShowName());
-            } else {
-                intent.putExtra("userName", userNameArray[index]);
-            }
-            startActivity(intent);
+        UserEntity userEntity = userEntityArray[index];
+        Class<?> targetActivity = UIConfig.INSTANCE.getTargetActivityClass();
+        Intent intent = new Intent(this, targetActivity);
+        if (userEntity != null) {
+            intent.putExtra("userId", userEntity.getUserId());
+            intent.putExtra("userName", userEntity.getShowName());
         } else {
-            Detector.tips(this, "缺少必要依赖！");
+            intent.putExtra("userName", userNameArray[index]);
         }
+        startActivity(intent);
     }
 
     private void updateSubTitle(RunType runType) {

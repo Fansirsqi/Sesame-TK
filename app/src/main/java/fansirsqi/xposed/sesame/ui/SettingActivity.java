@@ -61,7 +61,6 @@ public class SettingActivity extends BaseActivity {
         if (intent != null) {
             this.userId = intent.getStringExtra("userId");
             this.userName = intent.getStringExtra("userName");
-
         }
         // 初始化各种配置数据
         Model.initAllModel();
