@@ -211,9 +211,9 @@ public class Config {
 
             if (configV2FileExists) {
                 String json = Files.readFromFile(configV2File);
-                Log.runtime(TAG, "读取配置文件成功: " + configV2File.getPath());
+                Log.record(TAG, "读取配置文件成功: " + configV2File.getPath());
                 JsonUtil.copyMapper().readerForUpdating(INSTANCE).readValue(json);
-                Log.runtime(TAG, "格式化配置成功");
+                Log.record(TAG, "反序列化配置成功");
                 String formatted = toSaveStr();
                 if (formatted != null && !formatted.equals(json)) {
                     Log.runtime(TAG, "格式化配置: " + userName);
@@ -231,7 +231,7 @@ public class Config {
             }
         } catch (Throwable t) {
             Log.printStackTrace(TAG, t);
-            Log.runtime(TAG, "重置配置: " + userName);
+            Log.record(TAG, "重置配置: " + userName);
             try {
                 unload();
                 if (configV2File != null) {
