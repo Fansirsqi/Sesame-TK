@@ -1,9 +1,13 @@
 package fansirsqi.xposed.sesame.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import fansirsqi.xposed.sesame.BuildConfig
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.IOException
+import java.util.zip.ZipFile
 
 object Detector {
 
@@ -48,7 +52,7 @@ object Detector {
                 context.packageName,
                 PackageManager.GET_META_DATA
             )
-            val hasLSPatch = appInfo.metaData?.containsKey("lspatch") == true
+            Log.runtime("DEBUG",appInfo.metaData.toString())
             return appInfo.metaData?.containsKey("lspatch") == true
         } catch (e: Exception) {
             Log.error("检查LSPatch运行环境时出错: ${e.message}")
@@ -64,7 +68,7 @@ object Detector {
     fun isLegitimateEnvironment(context: Context): Boolean {
         val isRunningInLSPatch = isRunningInLSPatch(context)
         if (!isRunningInLSPatch) {
-            return false
+            return true
         }
         val isEmbedded = isEmbeddedNative(context)
         Log.runtime("isEmbedded: $isEmbedded")
