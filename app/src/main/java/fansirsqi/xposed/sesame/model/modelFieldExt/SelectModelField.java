@@ -50,7 +50,7 @@ public class SelectModelField extends ModelField<Set<String>> implements SelectM
         Button btn = new Button(context);
         btn.setText(getName());
         btn.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        btn.setTextColor(ContextCompat.getColor(context, R.color.selection_color));
+        btn.setTextColor(ContextCompat.getColor(context, R.color.button));
         btn.setBackground(ContextCompat.getDrawable(context, R.drawable.button));
         btn.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         btn.setMinHeight(150);
