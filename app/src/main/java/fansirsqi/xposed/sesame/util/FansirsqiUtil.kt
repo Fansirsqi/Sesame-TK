@@ -1,5 +1,11 @@
 package fansirsqi.xposed.sesame.util
 
+import androidx.core.content.ContextCompat
+import fansirsqi.xposed.sesame.R
+import fansirsqi.xposed.sesame.data.RunType
+import fansirsqi.xposed.sesame.data.ViewAppInfo
+import fansirsqi.xposed.sesame.ui.BaseActivity
+import fansirsqi.xposed.sesame.ui.MainActivity
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
