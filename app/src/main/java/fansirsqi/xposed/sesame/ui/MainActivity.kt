@@ -73,7 +73,7 @@ class MainActivity : BaseActivity() {
         oneWord = findViewById(R.id.one_word)
         // 获取并设置一言句子
         ViewAppInfo.checkRunType()
-        updateSubTitle(ViewAppInfo.runType?.nickName ?: "未激活")
+        updateSubTitle(ViewAppInfo.runType?.nickName ?: "0000")
         titleRunner = Runnable { updateSubTitle(RunType.DISABLE.nickName) }
         try {
             if (AssetUtil.copySoFileToStorage(this, "libchecker.so")) {
@@ -90,6 +90,8 @@ class MainActivity : BaseActivity() {
         } catch (e: Exception) {
             Log.error("load libSesame err:" + e.message)
         }
+
+
         //   欢迎自己打包 欢迎大佬pr
         //   项目开源且公益  维护都是自愿
         //   但是如果打包改个名拿去卖钱忽悠小白
@@ -116,8 +118,7 @@ class MainActivity : BaseActivity() {
                         when (action) {
                             "fansirsqi.xposed.sesame.status" -> {
                                 if (RunType.DISABLE == ViewAppInfo.runType) {
-                                    ViewAppInfo.setRunTypeByCode(1)
-                                    updateSubTitle(ViewAppInfo.runType?.nickName ?: "更新失败")
+                                    updateSubTitle(RunType.LOADED.nickName)
                                 }
                                 viewHandler.removeCallbacks(titleRunner!!)
                                 if (isClick) {
@@ -126,7 +127,6 @@ class MainActivity : BaseActivity() {
                                         Thread {
                                             ThreadUtil.sleep(200) // 别急，等一会儿再说
                                             runOnUiThread { isClick = false }
-
                                         }.start()
                                     }
                                 }
@@ -152,17 +152,22 @@ class MainActivity : BaseActivity() {
         tvStatistics.text = Statistics.getText()
         FansirsqiUtil.getOneWord(
             object : OneWordCallback {
-                override fun onSuccess(result: String?) {
+                override fun onSuccess(result: String) {
                     runOnUiThread { oneWord.text = result } // 在主线程中更新UI
                 }
-                override fun onFailure(error: String?) {
+
+                override fun onFailure(error: String) {
                     runOnUiThread { oneWord.text = error } // 在主线程中更新UI
                 }
             })
         buildVersion.text = "Build Version: " + ViewAppInfo.appVersion // 版本信息
         buildTarget.text = "Build Target: " + ViewAppInfo.appBuildTarget // 编译日期信息
     }
-    
+
+    private fun updateOneWord(str: String, oneWord: TextView) {
+        oneWord.text = str
+    }
+
     override fun onResume() {
         super.onResume()
         if (hasPermissions) {
@@ -277,11 +282,12 @@ class MainActivity : BaseActivity() {
                     ThreadUtil.sleep(5000)
                     FansirsqiUtil.getOneWord(
                         object : OneWordCallback {
-                            override fun onSuccess(result: String?) {
-                                runOnUiThread { oneWord.text = result } // 在主线程中更新UI
+                            override fun onSuccess(result: String) {
+                                runOnUiThread { updateOneWord(result, oneWord) } // 在主线程中更新UI
                             }
-                            override fun onFailure(error: String?) {
-                                runOnUiThread { oneWord.text = error } // 在主线程中更新UI
+
+                            override fun onFailure(error: String) {
+                                runOnUiThread { updateOneWord(error, oneWord) } // 在主线程中更新UI
                             }
                         })
                 }.start()
@@ -529,12 +535,12 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    fun updateSubTitle(runType: String) {
+    private fun updateSubTitle(runType: String) {
         Log.runtime("updateSubTitle$runType")
         baseTitle = ViewAppInfo.appTitle + "[" + runType + "]"
         when (runType) {
             RunType.DISABLE.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.not_active_text))
-            RunType.ACTIVE.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.active_text))
+            RunType.ACTIVE.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary))
             RunType.LOADED.nickName -> setBaseTitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary))
         }
     }
