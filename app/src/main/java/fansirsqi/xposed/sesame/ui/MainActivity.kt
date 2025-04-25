@@ -267,7 +267,7 @@ class MainActivity : BaseActivity() {
                 showSelectionDialog(
                     "🤣 请选择有效账户[别选默认]",
                     userNameArray,
-                    { index: Int -> this.goFriendWatch(index) },
+                    { index: Int -> this.goFrinedWatch(index) },
                     "😡 老子不选了，滚",
                     {},
                     false
@@ -506,7 +506,7 @@ class MainActivity : BaseActivity() {
     }
 
 
-    private fun goFriendWatch(index: Int) {
+    private fun goFrinedWatch(index: Int) {
         val userEntity = userEntityArray[index]
         if (userEntity != null) {
             ListDialog.show(
