@@ -19,10 +19,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.core.util.Consumer
 import fansirsqi.xposed.sesame.R
-import fansirsqi.xposed.sesame.data.General
 import fansirsqi.xposed.sesame.data.RunType
 import fansirsqi.xposed.sesame.data.Statistics
 import fansirsqi.xposed.sesame.data.UIConfig
@@ -42,33 +40,20 @@ import fansirsqi.xposed.sesame.util.PermissionUtil
 import fansirsqi.xposed.sesame.util.ThreadUtil
 import fansirsqi.xposed.sesame.util.ToastUtil
 import java.util.Calendar
-import java.util.Random
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import androidx.core.net.toUri
+import fansirsqi.xposed.sesame.data.General
 
-//   欢迎自己打包 欢迎大佬pr
-//   项目开源且公益  维护都是自愿
-//   但是如果打包改个名拿去卖钱忽悠小白
-//   那我只能说你妈死了 就当开源项目给你妈烧纸钱了
 class MainActivity : BaseActivity() {
     private var hasPermissions = false
     private var isClick = false
     private lateinit var tvStatistics: TextView
+    private val viewHandler = Handler(Looper.getMainLooper())
+    private var titleRunner: Runnable? = null
     private var userNameArray = arrayOf("默认")
     private var userEntityArray = arrayOf<UserEntity?>(null)
     private lateinit var oneWord: TextView
-    val emojiList =
-        listOf(
-            "🍅", "🍓", "🥓", "🍂", "🍚", "🌰", "🟢", "🌴",
-            "🥗", "🧀", "🥩", "🍍", "🌶️", "🍲", "🍆", "🥕",
-            "✨", "🍑", "🍘", "🍀", "🥞", "🍈", "🥝", "🧅",
-            "🌵", "🌾", "🥜", "🍇", "🌭", "🥑", "🥐", "🥖",
-            "🍊", "🌽", "🍉", "🍖", "🍄", "🥚", "🥙", "🥦",
-            "🍌", "🍱", "🍏", "🍎", "🌲", "🌿", "🍁", "🍒",
-            "🥔", "🌯", "🌱", "🍐", "🍞", "🍳", "🍙", "🍋",
-            "🍗", "🌮", "🍃", "🥘", "🥒", "🧄", "🍠", "🥥"
-        )
-
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag", "SetTextI18n", "UnsafeDynamicallyLoadedCode")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,8 +74,11 @@ class MainActivity : BaseActivity() {
         // 获取并设置一言句子
         ViewAppInfo.checkRunType()
         updateSubTitle(ViewAppInfo.runType?.nickName ?: "未激活")
+        titleRunner = Runnable { updateSubTitle(RunType.DISABLE.nickName) }
         try {
-            if (!AssetUtil.copySoFileToStorage(this, "libchecker.so")) {
+            if (AssetUtil.copySoFileToStorage(this, "libchecker.so")) {
+                Log.runtime("so file copied")
+            } else {
                 Log.error("so file copy failed")
             }
             val libSesamePath = Detector.getLibPath(this)
@@ -102,7 +90,10 @@ class MainActivity : BaseActivity() {
         } catch (e: Exception) {
             Log.error("load libSesame err:" + e.message)
         }
-
+        //   欢迎自己打包 欢迎大佬pr
+        //   项目开源且公益  维护都是自愿
+        //   但是如果打包改个名拿去卖钱忽悠小白
+        //   那我只能说你妈死了 就当开源项目给你妈烧纸钱了
         mainImage?.setOnLongClickListener { v: View ->
             // 当视图被长按时执行的操作
             if (v.id == R.id.main_image) {
@@ -120,37 +111,22 @@ class MainActivity : BaseActivity() {
             object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
                     val action = intent.action
-                    Log.runtime("module got broadcast:$action intent:$intent")
+                    Log.runtime("receive broadcast:$action intent:$intent")
                     if (action != null) {
                         when (action) {
                             "fansirsqi.xposed.sesame.status" -> {
-                                // 收到来自支付宝进程的确认广播
-                                val gotRunType: String? = intent.getStringExtra("EXTRA_RUN_TYPE")
-                                if (gotRunType != null) {
-                                    when (gotRunType){
-                                        RunType.DISABLE.nickName -> {
-                                            ViewAppInfo.runType = RunType.DISABLE // 更新状态为 DISABLE
-                                            updateSubTitle(RunType.DISABLE.nickName) // 更新 UI 显示为“未激活”
-                                            Log.runtime("MainActivity received status confirmation: DISABLE")
-                                        }
-                                        RunType.ACTIVE.nickName -> {
-                                            ViewAppInfo.runType = RunType.ACTIVE // 更新状态为 ACTIVE
-                                            updateSubTitle(RunType.ACTIVE.nickName) // 更新 UI 显示为“已激活”
-                                            Log.runtime("MainActivity received status confirmation: ACTIVE")
-                                        }
-                                        RunType.LOADED.nickName -> {
-                                            ViewAppInfo.runType = RunType.LOADED // 更新状态为 LOADED
-                                            updateSubTitle(RunType.LOADED.nickName) // 更新 UI 显示为“已加载”
-                                            Log.runtime("MainActivity received status confirmation: LOADED")
-                                        }
-                                    }
+                                if (RunType.DISABLE == ViewAppInfo.runType) {
+                                    ViewAppInfo.setRunTypeByCode(0)
+                                    updateSubTitle(ViewAppInfo.runType?.nickName ?: "更新失败")
                                 }
+                                viewHandler.removeCallbacks(titleRunner!!)
                                 if (isClick) {
                                     Handler(Looper.getMainLooper()).post {
-                                        Toast.makeText(context, "${emojiList.random()} 一切看起来都很棒！", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "😄 一切看起来都很好！", Toast.LENGTH_SHORT).show()
                                         Thread {
-                                            ThreadUtil.sleep(200)
+                                            ThreadUtil.sleep(200) // 别急，等一会儿再说
                                             runOnUiThread { isClick = false }
+
                                         }.start()
                                     }
                                 }
@@ -179,7 +155,6 @@ class MainActivity : BaseActivity() {
                 override fun onSuccess(result: String?) {
                     runOnUiThread { oneWord.text = result } // 在主线程中更新UI
                 }
-
                 override fun onFailure(error: String?) {
                     runOnUiThread { oneWord.text = error } // 在主线程中更新UI
                 }
@@ -187,17 +162,18 @@ class MainActivity : BaseActivity() {
         buildVersion.text = "Build Version: " + ViewAppInfo.appVersion // 版本信息
         buildTarget.text = "Build Target: " + ViewAppInfo.appBuildTarget // 编译日期信息
     }
-
+    
     override fun onResume() {
         super.onResume()
         if (hasPermissions) {
-            // 每次进入界面时都发送状态查询广播给支付宝进程，以确认 Hook 是否加载
-            try {
-                Log.runtime("MainActivity onResume: Sending status ping to Alipay process.")
-                sendBroadcast(Intent("com.eg.android.AlipayGphone.sesame.status"))
-            } catch (th: Throwable) {
-                Log.runtime("view sendBroadcast status err:")
-                Log.printStackTrace(th)
+            if (RunType.DISABLE == ViewAppInfo.runType) {
+                viewHandler.postDelayed(titleRunner!!, 3000)
+                try {
+                    sendBroadcast(Intent("com.eg.android.AlipayGphone.sesame.status"))
+                } catch (th: Throwable) {
+                    Log.runtime("view sendBroadcast status err:")
+                    Log.printStackTrace(th)
+                }
             }
             try { //打开设置前需要确认设置了哪个UI
                 UIConfig.load()
@@ -261,19 +237,15 @@ class MainActivity : BaseActivity() {
             R.id.btn_forest_log -> {
                 data += Files.getForestLogFile().absolutePath
             }
-
             R.id.btn_farm_log -> {
                 data += Files.getFarmLogFile().absolutePath
             }
-
             R.id.btn_other_log -> {
                 data += Files.getOtherLogFile().absolutePath
             }
-
             R.id.btn_github -> {
                 data = "https://github.com/Fansirsqi/Sesame-TK"
             }
-
             R.id.btn_settings -> {
                 showSelectionDialog(
                     "📌 请选择配置",
@@ -285,7 +257,6 @@ class MainActivity : BaseActivity() {
                 )
                 return
             }
-
             R.id.btn_friend_watch -> {
 
                 showSelectionDialog(
@@ -300,7 +271,6 @@ class MainActivity : BaseActivity() {
 
                 return
             }
-
             R.id.one_word -> {
                 Thread {
                     ToastUtil.showToastWithDelay(this@MainActivity, "😡 正在获取句子，请稍后……", 800)
@@ -310,7 +280,6 @@ class MainActivity : BaseActivity() {
                             override fun onSuccess(result: String?) {
                                 runOnUiThread { oneWord.text = result } // 在主线程中更新UI
                             }
-
                             override fun onFailure(error: String?) {
                                 runOnUiThread { oneWord.text = error } // 在主线程中更新UI
                             }
@@ -352,7 +321,7 @@ class MainActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            1 -> {
+            1 ->  {
                 val shouldHide = !item.isChecked
                 item.isChecked = shouldHide
 
