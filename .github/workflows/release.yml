@@ -16,25 +16,16 @@ jobs:
           echo "Current time: $(date)"
 
       # 检出代码
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # 设置JDK
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
-          java-version: "23"
-          distribution: "zulu"
+          java-version: "21"
+          distribution: "temurin"
           cache: gradle
-
-      # 设置Gradle
-      - name: set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: false
-          gradle-version: wrapper
 
       # 获取原仓库的预发行版属性
       - name: Get Original Repository Pre-release Property
@@ -53,25 +44,25 @@ jobs:
 
       - name: Sign Normal APK
         id: sign_normal_apk
-        uses: ilharp/sign-android-release@v2
+        uses: ilharp/sign-android-release@v1
         with:
           releaseDir: app/build/outputs/apk/normal/release/
           signingKey: ${{ secrets.ANDROID_SIGNING_KEY }}
           keyAlias: ${{ secrets.ANDROID_KEY_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          buildToolsVersion: 36.0.0
+          buildToolsVersion: 34.0.0
 
       - name: Sign Compatible APK
         id: sign_compatible_apk
-        uses: ilharp/sign-android-release@v2
+        uses: ilharp/sign-android-release@v1
         with:
           releaseDir: app/build/outputs/apk/compatible/release/
           signingKey: ${{ secrets.ANDROID_SIGNING_KEY }}
           keyAlias: ${{ secrets.ANDROID_KEY_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          buildToolsVersion: 36.0.0
+          buildToolsVersion: 34.0.0
 
       - name: Generate APKS Checksum
         run: |
