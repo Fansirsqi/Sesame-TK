@@ -27,7 +27,6 @@ android {
     def buildTargetCode
     def _versionCode
     def _versionName
-    def gitCommitCount = 'git rev-list --count HEAD'.execute().text.trim()
     try {
         def dateFormat = new SimpleDateFormat("yy-MM-dd")
         buildDate = dateFormat.format(new Date())
@@ -48,7 +47,7 @@ android {
         buildDate2 = "unknown"
         buildTargetCode = "0000"
     }
-    _versionCode = gitCommitCount.empty ? 9527 : gitCommitCount.toInteger()
+    _versionCode = 'git rev-list --count HEAD'.execute().text.trim().toInteger()
     if (buildTag.contains("alpha") || buildTag.contains("beta")) {
         _versionName = "${major}.${minor}.${patch}-${buildTag}.${buildTargetCode}"
     }
