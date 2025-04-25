@@ -5,9 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import fansirsqi.xposed.sesame.R
-import fansirsqi.xposed.sesame.data.DataCache
 import fansirsqi.xposed.sesame.util.Log
 import fansirsqi.xposed.sesame.util.ToastUtil
 
@@ -40,9 +38,6 @@ class ExtendActivity : BaseActivity() {
         //完善下面这两个按钮对应功能
         val btnQueryAreaTrees = findViewById<Button>(R.id.query_area_trees)
         val btnGetUnlockTreeItems = findViewById<Button>(R.id.get_unlock_treeItems)
-
-        val btnclearphotoGuangPan = findViewById<Button>(R.id.clear_photo)
-
         // 设置Activity标题
         baseTitle = getString(R.string.extended_func)
         // 为每个按钮设置点击事件
@@ -50,24 +45,7 @@ class ExtendActivity : BaseActivity() {
         btnGetNewTreeItems.setOnClickListener(NewTreeItemsOnClickListener())
         btnQueryAreaTrees.setOnClickListener(AreaTreesOnClickListener())
         btnGetUnlockTreeItems.setOnClickListener(UnlockTreeItemsOnClickListener())
-        btnclearphotoGuangPan.setOnClickListener {
-            val context = this
-            AlertDialog.Builder(context)
-                .setTitle(R.string.clear_photo)
-                .setMessage("确认清空${DataCache.guangPanPhotoCount}组光盘行动图片？")
-                .setPositiveButton(R.string.ok) { dialog, which ->
-                    if (DataCache.clearGuangPanPhoto()) {
-                        ToastUtil.showToast(context, "光盘行动图片清空成功")
-                    } else {
-                        ToastUtil.showToast(context, "光盘行动图片清空失败")
-                    }
-                }
-                .setNegativeButton(R.string.cancel) { dialog, which -> dialog.dismiss() }
-                .show()
-        }
     }
-
-
 
     /**
      * 发送广播事件
