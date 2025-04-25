@@ -18,8 +18,6 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
-import androidx.webkit.WebSettingsCompat;
-import androidx.webkit.WebViewFeature;
 
 import java.io.File;
 
@@ -51,6 +49,7 @@ public class HtmlViewerActivity extends BaseActivity {
         
         // 设置夜间模式
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mWebView.getSettings().setForceDark(WebSettings.FORCE_DARK_ON);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 mWebView.getSettings().setAlgorithmicDarkeningAllowed(true);
             }
@@ -97,9 +96,6 @@ public class HtmlViewerActivity extends BaseActivity {
         mWebView.getSettings().setSupportZoom(true);
         mWebView.getSettings().setBuiltInZoomControls(true);
         mWebView.getSettings().setDisplayZoomControls(false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mWebView.getSettings().setAlgorithmicDarkeningAllowed(true);
-        }
         // 根据 intent 设置 WebView
         if (intent != null) {
             configureWebViewSettings(intent, settings);
