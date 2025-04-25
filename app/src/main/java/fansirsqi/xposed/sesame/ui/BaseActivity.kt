@@ -36,7 +36,7 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     var baseTitle: String?
-        get() = ViewAppInfo.appTitle
+        get() = ViewAppInfo.getAppTitle()
         set(title) {
             toolbar.title = title
         }
