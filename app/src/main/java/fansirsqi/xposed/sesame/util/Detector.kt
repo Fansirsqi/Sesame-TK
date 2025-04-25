@@ -1,6 +1,5 @@
 package fansirsqi.xposed.sesame.util
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import fansirsqi.xposed.sesame.BuildConfig
@@ -10,7 +9,7 @@ import java.io.IOException
 import java.util.zip.ZipFile
 
 object Detector {
-
+    @JvmStatic
     fun getLibPath(context: Context): String? {
     var libSesamePath: String? = null
     try {
@@ -27,6 +26,8 @@ object Detector {
     return libSesamePath
 }
 
+
+
     fun loadLibrary(libraryName: String): Boolean {
         try {
             System.loadLibrary(libraryName)
@@ -38,44 +39,11 @@ object Detector {
     }
 
     private external fun init(context: Context)
-    external fun tips(context: Context, message: String?)
-    external fun isEmbeddedNative(context: Context): Boolean
-    external fun dangerous(context: Context)
 
-    /**
-     * 检测是否通过LSPatch运行
-     */
-    private fun isRunningInLSPatch(context: Context): Boolean {
-        try {
-            // 检查应用元数据中是否有LSPatch标记
-            val appInfo = context.packageManager.getApplicationInfo(
-                context.packageName,
-                PackageManager.GET_META_DATA
-            )
-            Log.runtime("DEBUG",appInfo.metaData.toString())
-            return appInfo.metaData?.containsKey("lspatch") == true
-        } catch (e: Exception) {
-            Log.error("检查LSPatch运行环境时出错: ${e.message}")
-            return false
-        }
-    }
+    @JvmStatic
+    external fun tips(context: Context?, message: String?)
 
-
-
-    /**
-     * 检测模块是否在合法环境中运行
-     */
-    fun isLegitimateEnvironment(context: Context): Boolean {
-        val isRunningInLSPatch = isRunningInLSPatch(context)
-        if (!isRunningInLSPatch) {
-            return true
-        }
-        val isEmbedded = isEmbeddedNative(context)
-        Log.runtime("isEmbedded: $isEmbedded")
-        return isEmbedded
-    }
-
-
+    external fun foundTargetData(apkPath: String?): String?
 
     fun initDetector(context: Context) {
         try {
@@ -91,10 +59,72 @@ object Detector {
             val appInfo = pm.getApplicationInfo(packageName, 0)
             Log.runtime("appInfo.sourceDir: " + appInfo.sourceDir)
             return appInfo.sourceDir
-        } catch (_: PackageManager.NameNotFoundException) {
+        } catch (e: PackageManager.NameNotFoundException) {
             Log.runtime("Package not found: $packageName")
             return null
         }
     }
 
+    @JvmStatic
+    fun checkForLspatch(context: Context, packageName: String): Boolean {
+        try {
+            val apkPath = getApkPath(context, packageName)
+            if (apkPath == null) {
+                Log.runtime("Package not found2: $packageName")
+                return true
+            }
+            //            String jniFoundTargetData = foundTargetData(apkPath);
+//            Log.runtime("jniFoundTargetData: " + jniFoundTargetData);
+            return paserJson(jFoundTargetData(apkPath))
+        } catch (e: Exception) {
+            return true
+        }
+    }
+
+    private fun jFoundTargetData(apkPath: String): String? {
+        try {
+            ZipFile(File(apkPath)).use { zipFile ->
+                val entries = zipFile.entries()
+                while (entries.hasMoreElements()) {
+                    val entry = entries.nextElement()
+                    val entryName = entry.name
+                    if (entryName.startsWith("assets/lspatch/")) {
+                        if (entryName.endsWith(".json")) {
+                            Log.runtime("found target data: $entryName")
+                            val baos = ByteArrayOutputStream()
+                            val buffer = ByteArray(8192)
+                            var len: Int
+                            zipFile.getInputStream(entry).use { `is` ->
+                                while ((`is`.read(buffer).also { len = it }) != -1) {
+                                    baos.write(buffer, 0, len)
+                                }
+                            }
+                            return baos.toString()
+                        }
+                    }
+                }
+                Log.runtime("not found target data")
+                return null
+            }
+        } catch (e: IOException) {
+            Log.error("checkForLspatch", e.message)
+            return null
+        }
+    }
+
+    private fun paserJson(jsonContent: String?): Boolean {
+        try {
+            if (jsonContent == null) {
+                return false
+            }
+            Log.runtime("jsonContent: $jsonContent")
+            val jsonParser = JsonUtil.getJsonParser(jsonContent)
+            val useManager = JsonUtil.parseUseManager(jsonParser)
+            Log.runtime("useManager: $useManager")
+            return useManager // 找到后立即返回
+        } catch (e: Exception) {
+            Log.error("paserJson", e.message)
+            return false
+        }
+    }
 }
