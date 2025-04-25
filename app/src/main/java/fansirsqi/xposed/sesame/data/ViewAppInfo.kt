@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.net.Uri
 import android.os.Bundle
 import fansirsqi.xposed.sesame.BuildConfig
 import fansirsqi.xposed.sesame.R
@@ -21,6 +22,7 @@ object ViewAppInfo {
     var appVersion: String = ""
     var appBuildTarget: String = ""
     var appBuildNumber: String = ""
+
     var runType: RunType? = RunType.DISABLE
 
 
@@ -98,18 +100,15 @@ object ViewAppInfo {
      * @param runTypeCode 运行类型编码
      */
     fun setRunTypeByCode(runTypeCode: Int?) {
-        Log.debug(TAG, "设置 runType 编码为 $runTypeCode")
         var newRunType: RunType?
-        if (runTypeCode == null) {
-            Log.debug(TAG, "runTypeCode 为空，设置 runType 为 DISABLE")
+        if (runTypeCode == null) {          // 处理null情况，直接设置默认值
             newRunType = RunType.DISABLE
         } else {
-            newRunType = getByCode(runTypeCode)
+            newRunType = getByCode(runTypeCode) // 直接传入Integer会自动拆箱为int
             if (newRunType == null) {
                 newRunType = RunType.DISABLE
             }
         }
-        Log.debug(TAG, "设置 runType 为 $newRunType")
         runType = newRunType
     }
 
