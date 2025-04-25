@@ -23,11 +23,6 @@ object DataCache {
     // 光盘行动图片缓存
     private val photoGuangPanCacheSet: MutableSet<Map<String, String>> = HashSet()
 
-    init {
-        // 在单例初始化时加载数据
-        load()
-    }
-
     private fun checkGuangPanPhoto(guangPanPhoto: Map<String, String>?): Boolean {
         if (guangPanPhoto == null) {
             return false
@@ -50,7 +45,10 @@ object DataCache {
     }
 
     val guangPanPhotoCount: Int
-        get() = photoGuangPanCacheSet.size // 直接返回缓存大小，避免触发加载
+        get() {
+            load() // 同步最新数据
+            return photoGuangPanCacheSet.size
+        }
 
     fun clearGuangPanPhoto(): Boolean {
         photoGuangPanCacheSet.clear()
@@ -59,6 +57,7 @@ object DataCache {
 
     val randomGuangPanPhoto: Map<String, String>?
         get() {
+            load() // 确保加载最新数据
             val list: List<Map<String, String>> = ArrayList(photoGuangPanCacheSet)
             if (list.isEmpty()) {
                 return null
@@ -75,7 +74,6 @@ object DataCache {
 
     @Synchronized
     fun load() {
-        if (init) return // 避免重复加载
         val targetFile = Files.getTargetFileofDir(Files.MAIN_DIR, FILENAME)
         try {
             if (targetFile.exists()) {
