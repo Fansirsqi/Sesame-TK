@@ -1,5 +1,4 @@
-package fansirsqi.xposed.sesame.ui.widget;
-
+package fansirsqi.xposed.sesame.ui;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,30 +7,21 @@ import android.content.Intent;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.RelativeLayout;
-import android.widget.Toast;
-
+import android.widget.*;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
-
 import org.json.JSONException;
-
-import java.util.List;
-
 import fansirsqi.xposed.sesame.R;
-import fansirsqi.xposed.sesame.entity.AreaCode;
-import fansirsqi.xposed.sesame.entity.CooperateEntity;
-import fansirsqi.xposed.sesame.entity.MapperEntity;
-import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountOneModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectOneModelField;
-import fansirsqi.xposed.sesame.ui.OptionsAdapter;
+import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
+import fansirsqi.xposed.sesame.entity.AreaCode;
+import fansirsqi.xposed.sesame.entity.CooperateEntity;
+import fansirsqi.xposed.sesame.entity.MapperEntity;
 import fansirsqi.xposed.sesame.util.Maps.CooperateMap;
+import java.util.List;
 public class ListDialog {
     static AlertDialog listDialog;
     @SuppressLint("StaticFieldLeak")
@@ -73,7 +63,7 @@ public class ListDialog {
     public static void show(Context c, CharSequence title, List<? extends MapperEntity> bl, SelectModelFieldFunc selectModelFieldFunc, Boolean hasCount, ListType listType) {
         ListDialog.selectModelFieldFunc = selectModelFieldFunc;
         ListDialog.hasCount = hasCount;
-        fansirsqi.xposed.sesame.ui.widget.ListAdapter la = fansirsqi.xposed.sesame.ui.widget.ListAdapter.getClear(c, listType);
+        ListAdapter la = ListAdapter.getClear(c, listType);
         la.setBaseList(bl);
         la.setSelectedList(selectModelFieldFunc);
         showListDialog(c, title);
@@ -91,7 +81,7 @@ public class ListDialog {
             layout_batch_process = d.findViewById(R.id.layout_batch_process);
             assert layout_batch_process != null;
             layout_batch_process.setVisibility(listType == ListType.CHECK && !hasCount ? View.VISIBLE : View.GONE);
-            fansirsqi.xposed.sesame.ui.widget.ListAdapter.get(c).notifyDataSetChanged();
+            ListAdapter.get(c).notifyDataSetChanged();
         });
         listDialog.show();
         Button positiveButton = listDialog.getButton(DialogInterface.BUTTON_POSITIVE);
@@ -112,7 +102,7 @@ public class ListDialog {
                 if (searchText.length() <= 0) {
                     return;
                 }
-                fansirsqi.xposed.sesame.ui.widget.ListAdapter la = fansirsqi.xposed.sesame.ui.widget.ListAdapter.get(v.getContext());
+                ListAdapter la = ListAdapter.get(v.getContext());
                 int index = -1;
                 int id = v.getId();
                 if (id == R.id.btn_find_last) {
@@ -130,7 +120,7 @@ public class ListDialog {
         btn_find_last.setOnClickListener(onBtnClickListener);
         btn_find_next.setOnClickListener(onBtnClickListener);
         @SuppressLint("NonConstantResourceId") View.OnClickListener batchBtnOnClickListener = v1 -> {
-            fansirsqi.xposed.sesame.ui.widget.ListAdapter la = fansirsqi.xposed.sesame.ui.widget.ListAdapter.get(v1.getContext());
+            ListAdapter la = ListAdapter.get(v1.getContext());
             int id = v1.getId();
             if (id == R.id.btn_select_all) {
                 la.selectAll();
@@ -142,22 +132,22 @@ public class ListDialog {
         btn_select_invert.setOnClickListener(batchBtnOnClickListener);
         searchText = v.findViewById(R.id.edt_find);
         lv_list = v.findViewById(R.id.lv_list);
-        lv_list.setAdapter(fansirsqi.xposed.sesame.ui.widget.ListAdapter.getClear(c));
+        lv_list.setAdapter(ListAdapter.getClear(c));
         lv_list.setOnItemClickListener(
                 (p1, p2, p3, p4) -> {
                     if (listType == ListType.SHOW) {
                         return;
                     }
                     MapperEntity curIdAndName = (MapperEntity) p1.getAdapter().getItem(p3);
-                    fansirsqi.xposed.sesame.ui.widget.ListAdapter.ViewHolder curViewHolder = (fansirsqi.xposed.sesame.ui.widget.ListAdapter.ViewHolder) p2.getTag();
+                    ListAdapter.ViewHolder curViewHolder = (ListAdapter.ViewHolder) p2.getTag();
                     if (!hasCount) {
                         if (listType == ListType.RADIO) {
                             selectModelFieldFunc.clear();
                             if (curViewHolder.cb.isChecked()) {
                                 curViewHolder.cb.setChecked(false);
                             } else {
-                                for (int i = 0; i < fansirsqi.xposed.sesame.ui.widget.ListAdapter.viewHolderList.size(); i++) {
-                                    fansirsqi.xposed.sesame.ui.widget.ListAdapter.ViewHolder viewHolder = fansirsqi.xposed.sesame.ui.widget.ListAdapter.viewHolderList.get(i);
+                                for (int i = 0; i < ListAdapter.viewHolderList.size(); i++) {
+                                    ListAdapter.ViewHolder viewHolder = ListAdapter.viewHolderList.get(i);
                                     viewHolder.cb.setChecked(false);
                                 }
                                 curViewHolder.cb.setChecked(true);
@@ -199,7 +189,7 @@ public class ListDialog {
                                             curViewHolder.cb.setChecked(false);
                                         }
                                     }
-                                    fansirsqi.xposed.sesame.ui.widget.ListAdapter.get(c).notifyDataSetChanged();
+                                    ListAdapter.get(c).notifyDataSetChanged();
                                 })
                                 .setNegativeButton(c.getString(R.string.cancel), null)
                                 .create();
@@ -226,9 +216,9 @@ public class ListDialog {
                                         if (which == DialogInterface.BUTTON_POSITIVE) {
                                             CooperateMap.getInstance(CooperateMap.class).remove(curIdAndName.id);
                                             selectModelFieldFunc.remove(curIdAndName.id);
-                                            fansirsqi.xposed.sesame.ui.widget.ListAdapter.get(c).exitFind();
+                                            ListAdapter.get(c).exitFind();
                                         }
-                                        fansirsqi.xposed.sesame.ui.widget.ListAdapter.get(c).notifyDataSetChanged();
+                                        ListAdapter.get(c).notifyDataSetChanged();
                                     })
                                     .setNegativeButton(c.getString(R.string.cancel), null)
                                     .create().show();
@@ -264,7 +254,7 @@ public class ListDialog {
                                                                     .setPositiveButton(c.getString(R.string.ok), (dialog, which) -> {
                                                                         if (which == DialogInterface.BUTTON_POSITIVE) {
                                                                             selectModelFieldFunc.remove(curIdAndName.id);
-                                                                            fansirsqi.xposed.sesame.ui.widget.ListAdapter.get(c).exitFind();
+                                                                            ListAdapter.get(c).exitFind();
                                                                         }
                                                                         ListAdapter.get(c).notifyDataSetChanged();
                                                                     })

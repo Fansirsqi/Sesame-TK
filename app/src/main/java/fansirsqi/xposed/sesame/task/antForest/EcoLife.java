@@ -174,13 +174,13 @@ public class EcoLife {
                     if (afterMatcher.find()) {
                         photo.put("after", afterMatcher.group(1));
                     }
-                    DataCache.INSTANCE.saveGuangPanPhoto(photo);
+                    DataCache.saveGuangPanPhoto(photo);
                 }
             }
             if ("SUCCESS".equals(JsonUtil.getValueByPath(jo, "data.status"))) {
                 return;
             }
-            photo = DataCache.INSTANCE.getRandomGuangPanPhoto();
+            photo = DataCache.getRandomGuangPanPhoto();
             if (photo == null) {
                 Log.forest("光盘行动🍛请先完成一次光盘打卡");
                 return;

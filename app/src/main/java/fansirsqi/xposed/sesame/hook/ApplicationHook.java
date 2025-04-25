@@ -17,7 +17,6 @@ import android.os.PowerManager;
 
 import androidx.annotation.NonNull;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -62,7 +61,6 @@ import fansirsqi.xposed.sesame.task.BaseTask;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.task.antMember.AntMemberRpcCall;
-import fansirsqi.xposed.sesame.util.AssetUtil;
 import fansirsqi.xposed.sesame.util.Detector;
 import fansirsqi.xposed.sesame.util.HideVPNStatus;
 import fansirsqi.xposed.sesame.util.Log;
@@ -94,8 +92,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     static volatile Calendar dayCalendar;
     @Getter
     static volatile boolean offline = false;
-    @Getter
-    static volatile boolean useManager = true;
     @Getter
     static final AtomicInteger reLoginCount = new AtomicInteger(0);
     @SuppressLint("StaticFieldLeak")
@@ -194,56 +190,55 @@ public class ApplicationHook implements IXposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (General.MODULE_PACKAGE_NAME.equals(lpparam.packageName)) {
+        if ("fansirsqi.xposed.sesame".equals(lpparam.packageName)) {
+            Log.runtime(TAG, "handleLoadPackage start:" + lpparam);
             try {
-                XposedHelpers.callStaticMethod(lpparam.classLoader.loadClass(ViewAppInfo.class.getName()), "setRunTypeByCode", RunType.ACTIVE.getCode());
+                XposedHelpers.callStaticMethod(lpparam.classLoader.loadClass(ViewAppInfo.class.getName()), "setRunTypeByCode", RunType.MODEL.getCode());
             } catch (ClassNotFoundException e) {
                 Log.printStackTrace(e);
             }
         } else if (General.PACKAGE_NAME.equals(lpparam.packageName) && General.PACKAGE_NAME.equals(lpparam.processName)) {
             if (hooked) return;
             classLoader = lpparam.classLoader;
+            //hook Application类的attach方法
             try {
-                XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
-                    // 重写afterHookedMethod方法，在attach方法执行后执行自定义逻辑
-                    @SuppressLint("UnsafeDynamicallyLoadedCode")
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        context = (Context) param.args[0];
-                        Log.runtime(TAG, "Application context: " + context);
-                        Log.runtime(TAG, "Application package: " + context.getPackageName());
-                        try {
-                            try {
-                                String soFileOfStorage = context.getApplicationInfo().dataDir + File.separator + "lib" + File.separator + "libchecker.so";
-                                Log.runtime("soPath: " + soFileOfStorage);
-                                if (AssetUtil.INSTANCE.copyDtorageSoFileToPrivateDir(context, "libchecker.so")) {
-                                    System.load(soFileOfStorage);
-                                    Log.runtime("Loading so from : " + soFileOfStorage);
-                                } else {
-                                    String libSesamePath = Detector.getLibPath(context);
-                                    System.load(libSesamePath);
-                                    Log.runtime("Loading so from original path" + libSesamePath);
+                // 使用Xposed框架hook Application类的attach方法
+                // attach方法是在应用程序启动时，由Android系统调用，用于将应用程序与上下文环境关联起来
+                XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class,
+                        new XC_MethodHook() {
+                            // 重写afterHookedMethod方法，在attach方法执行后执行自定义逻辑
+                            @SuppressLint("UnsafeDynamicallyLoadedCode")
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                // 获取attach方法的第一个参数，即Context对象，并赋值给context变量
+                                context = (Context) param.args[0];
+                                try {
+                                    // versionName属性表示应用的版本名称
+                                    alipayVersion = new AlipayVersion(context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
+                                } catch (Exception e) {
+                                    // 如果在获取支付宝版本信息时出现异常，记录错误日志
+                                    Log.runtime(TAG, "获取支付宝版本信息失败");
+                                    Log.printStackTrace(e);
                                 }
-                            } catch (Exception e) {
-                                Log.error("load libSesame err:" + e.getMessage());
+                                // 调用父类的afterHookedMethod方法，执行一些默认的逻辑（如果有）
+                                super.afterHookedMethod(param);
                             }
-                            useManager = Detector.checkForLspatch(context, lpparam.packageName);
-                            Log.runtime(TAG, "useManager value: " + useManager);
-                            alipayVersion = new AlipayVersion(context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
-                        } catch (Exception e) {
-                            Log.runtime(TAG, "获取支付宝版本信息失败");
-                            Log.printStackTrace(e);
-                        }
-                        super.afterHookedMethod(param);
-                    }
-                });
+                        });
             } catch (Throwable t) {
+                // 如果在hook attach方法时出现异常，记录错误日志
                 Log.runtime(TAG, "hook attach err");
                 Log.printStackTrace(TAG, t);
             }
-
-
-
+            //hook "com.alipay.mobile.nebulaappproxy.api.rpc.H5AppRpcUpdate" 类的matchVersion方法
+            try {
+                XposedHelpers.findAndHookMethod("com.alipay.mobile.nebulaappproxy.api.rpc.H5AppRpcUpdate", classLoader, "matchVersion",
+                        classLoader.loadClass(General.H5PAGE_NAME), Map.class, String.class,
+                        XC_MethodReplacement.returnConstant(false));
+                Log.runtime(TAG, "hook matchVersion successfully");
+            } catch (Throwable t) {
+                Log.runtime(TAG, "hook matchVersion err");
+                Log.printStackTrace(TAG, t);
+            }
             //hook "com.alipay.mobile.quinox.LauncherActivity" 类的onResume方法
             try {
                 XposedHelpers.findAndHookMethod("com.alipay.mobile.quinox.LauncherActivity", classLoader, "onResume",
@@ -299,10 +294,9 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 }
                                 Log.runtime(TAG, "Service onCreate");
                                 context = appService.getApplicationContext();
-
-                                Log.runtime(TAG, "useManager: " + useManager);
-                                if (useManager) {
-                                    Detector.tips(context, "检测到LSPatch内置插件，已关闭插件功能");
+                                System.load(Detector.getLibPath(context));
+                                if (Detector.isLspatchDetected(context)) {
+                                    Toast.show("检测到模块被内置，停止运行");
                                     return;
                                 }
                                 service = appService;
@@ -617,10 +611,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 , String.class, boolean.class, boolean.class, String.class, classLoader.loadClass(General.JSON_OBJECT_NAME), String.class,
                                 classLoader.loadClass(General.JSON_OBJECT_NAME), boolean.class, boolean.class, int.class, boolean.class, String.class,
                                 classLoader.loadClass("com.alibaba" +
-                                        ".ariver.app.api.App"), classLoader.loadClass("com.alibaba.ariver.app.api.Page"), classLoader.loadClass("com" +
-                                        ".alibaba" +
-                                        ".ariver.engine.api.bridge.model.ApiContext"), classLoader.loadClass("com.alibaba.ariver.engine.api.bridge" +
-                                        ".extension" +
+                                        ".ariver.app.api.App"), classLoader.loadClass("com.alibaba.ariver.app.api.Page"), classLoader.loadClass("com.alibaba" +
+                                        ".ariver.engine.api.bridge.model.ApiContext"), classLoader.loadClass("com.alibaba.ariver.engine.api.bridge.extension" +
                                         ".BridgeCallback")
                                 , new XC_MethodHook() {
                                     @SuppressLint("WakelockTimeout")
@@ -692,7 +684,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 }
                 Model.bootAllModel(classLoader);
                 Status.load();
-                DataCache.INSTANCE.load();
+                DataCache.load();
                 updateDay(userId);
                 BaseModel.initData();
                 String successMsg = "芝麻粒-TK 加载成功✨";
