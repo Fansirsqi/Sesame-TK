@@ -139,6 +139,7 @@ public class WebSettingsActivity extends BaseActivity {
         if (userName != null) {
             setBaseSubtitle(getString(R.string.settings) + ": " + userName);
         }
+        setBaseSubtitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary));
         context = this;
         webView = findViewById(R.id.webView);
         WebSettings settings = webView.getSettings();

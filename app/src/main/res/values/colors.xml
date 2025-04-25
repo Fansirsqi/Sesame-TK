@@ -14,9 +14,6 @@
     <color name="orange">#E64000</color>
 
     <color name="not_active_text">#e10000</color>
-    <color name="active_text">#DCDCDC</color>
-    <color name="load_active_text">#999999</color>
-
     <color name="navigationBarColor">#AA000000</color>
 
     <color name="toast_text_color">#090909</color>
