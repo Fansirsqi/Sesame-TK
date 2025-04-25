@@ -68,6 +68,7 @@ demo/*
 /.vscode/settings.json
 *.REST
 *.txt
+*.py
 *.json
 
 # CPP source code
@@ -83,5 +84,3 @@ test
 
 # cache
 .lingma/rules/project_rule.md
-serve-debug/webhook.db
-*.pyc
