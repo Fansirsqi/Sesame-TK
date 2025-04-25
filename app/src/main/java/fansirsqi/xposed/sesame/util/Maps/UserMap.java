@@ -2,7 +2,6 @@ package fansirsqi.xposed.sesame.util.Maps;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Collections;
@@ -200,19 +199,10 @@ public class UserMap {
      */
     public static synchronized void load(String userId) {
         userMap.clear();
-        if (userId == null || userId.isEmpty()) {
-            Log.runtime(TAG, "Skip loading user map for empty userId");
-            return;
-        }
         try {
-            File friendIdMapFile = Files.getFriendIdMapFile(userId);
-            if (friendIdMapFile == null) {
-                Log.runtime(TAG, "Friend ID map file is null for userId: " + userId);
-                return;
-            }
-            String body = Files.readFromFile(friendIdMapFile);
+            String body = Files.readFromFile(Files.getFriendIdMapFile(userId));
             if (!body.isEmpty()) {
-                Map<String, UserEntity.UserDto> dtoMap = JsonUtil.parseObject(body, new TypeReference<>() {
+                Map<String, UserEntity.UserDto> dtoMap = JsonUtil.parseObject(body, new TypeReference<Map<String, UserEntity.UserDto>>() {
                 });
                 for (UserEntity.UserDto dto : dtoMap.values()) {
                     userMap.put(dto.getUserId(), dto.toEntity());
