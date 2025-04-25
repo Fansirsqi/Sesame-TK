@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme" parent="@style/Theme.AppCompat.Light">
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight">
         <!--Appbar背景色-->
         <item name="colorPrimary">@color/colorPrimary</item>
         <!--ToolBar上的Title颜色-->
-        <item name="titleTextColor">@color/textColorPrimary</item>
-        <item name="subtitleTextColor">#333333</item>
-        <item name="android:navigationBarColor">@color/button</item>
-        <item name="android:statusBarColor">@color/colorPrimary</item>
+        <item name="titleTextColor">@color/active_text</item>
+        <item name="subtitleTextColor">@color/active_text</item>
+
+        <item name="android:navigationBarColor">@color/colorPrimary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">true</item>
         <item name="windowNoTitle">true</item>
         <!-- 设置actionOverflowMenuStyle以自定义菜单的背景 -->
         <item name="actionOverflowMenuStyle">@style/MenuTheme</item>
@@ -17,6 +19,9 @@
     <style name="MenuTheme">
         <item name="android:textColorSecondary">@color/textColorPrimary</item>
         <item name="android:popupBackground">@drawable/menu_background</item>
+        <item name="android:textColor">@color/textColorPrimary</item>
+        <item name="android:itemBackground">@color/background</item>
+        <item name="android:colorBackground">@color/background</item>
     </style>
 
 </resources>

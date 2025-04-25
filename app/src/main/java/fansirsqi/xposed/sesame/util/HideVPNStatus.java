@@ -3,6 +3,7 @@ package fansirsqi.xposed.sesame.util;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.os.Build;
 
 import java.net.NetworkInterface;
 import java.util.Random;
@@ -63,28 +64,10 @@ public class HideVPNStatus {
     }
 
     private static void modifyNetworkInfo() {
-        hookNetworkInfoMethod("getType", ConnectivityManager.TYPE_VPN, ConnectivityManager.TYPE_WIFI);
-        hookNetworkInfoMethod("getTypeName", VPN, WIFI);
-        hookNetworkInfoMethod("getSubtypeName", VPN, WIFI);
-        hookGetNetworkInfo();
+        // 对于API 21+直接使用NetworkCapabilities
+        modifyNetworkCapabilities();
     }
 
-    private static void hookNetworkInfoMethod(String methodName, Object target, Object replacement) {
-        HookUtil.hookAllMethods(NetworkInfo.class, methodName, "before", param -> {
-            Object result = param.getResult();
-            if (target.equals(result)) {
-                param.setResult(replacement);
-            }
-        });
-    }
-
-    private static void hookGetNetworkInfo() {
-        HookUtil.hookAllMethods(ConnectivityManager.class, "getNetworkInfo", "before", param -> {
-            if (param.args.length > 0 && param.args[0] instanceof Integer && (int) param.args[0] == ConnectivityManager.TYPE_VPN) {
-                param.setResult(null);
-            }
-        });
-    }
 
     private static void modifyNetworkCapabilities() {
         hookNetworkCapabilitiesMethod("hasTransport", NetworkCapabilities.TRANSPORT_VPN, false);
@@ -118,4 +101,3 @@ public class HideVPNStatus {
         });
     }
 }
-

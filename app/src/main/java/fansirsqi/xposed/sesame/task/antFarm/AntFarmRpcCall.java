@@ -419,19 +419,41 @@ public class AntFarmRpcCall {
                 "[{\"requestType\":\"RPC\",\"sceneCode\":\"ANTFARM\",\"source\":\"siliaorenwu\"}]");
     }
 
-    public static String chouchouleListFarmTask() {
+    public static String chouchouleListFarmTask(String drawType) {
+        if ("ipDraw".equals(drawType)) { // IP抽抽乐
+            return RequestManager.requestString("com.alipay.antfarm.listFarmTask",
+                    "[{\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"signSceneCode\":\"\",\"source\":\"H5\",\"taskSceneCode\":\"ANTFARM_IP_DRAW_TASK\",\"topTask\":\"\"}]");
+        }
         return RequestManager.requestString("com.alipay.antfarm.listFarmTask",
                 "[{\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"signSceneCode\":\"\",\"source\":\"H5\",\"taskSceneCode\":\"ANTFARM_DRAW_TIMES_TASK\",\"topTask\":\"\"}]");
     }
 
-    public static String chouchouleDoFarmTask(String bizKey) {
+    public static String chouchouleDoFarmTask(String drawType, String bizKey) {
+        if ("ipDraw".equals(drawType)) { // IP抽抽乐
+            return RequestManager.requestString("com.alipay.antfarm.doFarmTask",
+                    "[{\"bizKey\":\"" + bizKey + "\",\"requestType\":\"RPC\",\"sceneCode\":\"ANTFARM\",\"source\":\"ip_ccl\",\"taskSceneCode\":\"ANTFARM_IP_DRAW_TASK\"}]");
+        }
         return RequestManager.requestString("com.alipay.antfarm.doFarmTask",
                 "[{\"bizKey\":\"" + bizKey + "\",\"requestType\":\"RPC\",\"sceneCode\":\"ANTFARM\",\"source\":\"chouchoule\",\"taskSceneCode\":\"ANTFARM_DRAW_TIMES_TASK\"}]");
     }
 
-    public static String chouchouleReceiveFarmTaskAward(String taskId) {
-        return RequestManager.requestString("com.alipay.antfarm.receiveFarmTaskAward",
+    public static String chouchouleReceiveFarmTaskAward(String drawType, String taskId) {
+        if ("ipDraw".equals(drawType)) { // IP抽抽乐
+            return RequestManager.requestString("com.alipay.antfarm.receiveFarmTaskAward",
+                    "[{\"awardType\":\"IP_DRAW_MACHINE_DRAW_TIMES\",\"requestType\":\"RPC\",\"sceneCode\":\"ANTFARM\",\"source\":\"ip_ccl\",\"taskId\":\"" + taskId + "\",\"taskSceneCode\":\"ANTFARM_IP_DRAW_TASK\"}]");
+        }
+            return RequestManager.requestString("com.alipay.antfarm.receiveFarmTaskAward",
                 "[{\"awardType\":\"DRAW_TIMES\",\"requestType\":\"RPC\",\"sceneCode\":\"ANTFARM\",\"source\":\"icon\",\"taskId\":\"" + taskId + "\",\"taskSceneCode\":\"ANTFARM_DRAW_TIMES_TASK\"}]");
+    }
+
+    /** IP抽抽乐查询活动与抽奖次数 **/
+    public static String queryDrawMachineActivity() {
+        return RequestManager.requestString("com.alipay.antfarm.queryDrawMachineActivity","[{\"otherScenes\":[\"dailyDrawMachine\"],\"requestType\":\"RPC\",\"scene\":\"ipDrawMachine\",\"sceneCode\":\"ANTFARM\",\"source\":\"ip_ccl\"}]");
+    }
+
+    /** IP抽抽乐抽奖 **/
+    public static String drawMachine() {
+        return RequestManager.requestString("com.alipay.antfarm.drawMachine","[{\"requestType\":\"RPC\",\"scene\":\"ipDrawMachine\",\"sceneCode\":\"ANTFARM\",\"source\":\"ip_ccl\"}]");
     }
 
     public static String hireAnimal(String farmId, String animalId) {

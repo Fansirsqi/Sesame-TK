@@ -171,6 +171,7 @@ public class NewRpcBridge implements RpcBridge {
                         String errorCode = (String) XposedHelpers.callMethod(rpcEntity.getResponseObject(), "getString", "error");
                         String errorMessage = (String) XposedHelpers.callMethod(rpcEntity.getResponseObject(), "getString", "errorMessage");
                         String response = rpcEntity.getResponseString();
+                        String methodName = rpcEntity.getRequestMethod();
 
                         if (errorMark.contains(errorCode) || errorStringMark.contains(errorMessage)) {
                             int currentErrorCount = maxErrorCount.incrementAndGet();
@@ -183,7 +184,7 @@ public class NewRpcBridge implements RpcBridge {
                                     }
                                 }
                                 if (BaseModel.getErrNotify().getValue()) {
-                                    Notify.sendErrorNotification(TimeUtil.getTimeStr() + " | 网络异常", response);
+                                    Notify.sendErrorNotification(TimeUtil.getTimeStr() + " | 网络异常: "+methodName, response);
                                 }
                                 if (BaseModel.getTimeoutRestart().getValue()) {
                                     Log.record("尝试重新登录");

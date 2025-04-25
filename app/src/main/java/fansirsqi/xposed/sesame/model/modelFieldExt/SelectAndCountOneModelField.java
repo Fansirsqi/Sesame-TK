@@ -11,7 +11,7 @@ import fansirsqi.xposed.sesame.model.ModelField;
 import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
 import fansirsqi.xposed.sesame.entity.MapperEntity;
 import fansirsqi.xposed.sesame.entity.KVNode;
-import fansirsqi.xposed.sesame.ui.ListDialog;
+import fansirsqi.xposed.sesame.ui.widget.ListDialog;
 import java.util.List;
 import java.util.Objects;
 public class SelectAndCountOneModelField extends ModelField<KVNode<String, Integer>> implements SelectModelFieldFunc {
@@ -37,7 +37,7 @@ public class SelectAndCountOneModelField extends ModelField<KVNode<String, Integ
         Button btn = new Button(context);
         btn.setText(getName());
         btn.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        btn.setTextColor(ContextCompat.getColor(context, R.color.button));
+        btn.setTextColor(ContextCompat.getColor(context, R.color.selection_color));
         btn.setBackground(ContextCompat.getDrawable(context, R.drawable.button));
         btn.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         btn.setMinHeight(150);

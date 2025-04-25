@@ -16,7 +16,7 @@ import fansirsqi.xposed.sesame.R;
 import fansirsqi.xposed.sesame.entity.MapperEntity;
 import fansirsqi.xposed.sesame.model.ModelField;
 import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
-import fansirsqi.xposed.sesame.ui.ListDialog;
+import fansirsqi.xposed.sesame.ui.widget.ListDialog;
 /**
  * 数据结构说明
  * Map<String, Integer> 表示已选择的数据与已经设置的数量映射关系
@@ -53,7 +53,7 @@ public class SelectAndCountModelField extends ModelField<Map<String, Integer>> i
         Button btn = new Button(context);
         btn.setText(getName());
         btn.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        btn.setTextColor(ContextCompat.getColor(context, R.color.button));
+        btn.setTextColor(ContextCompat.getColor(context, R.color.selection_color));
         btn.setBackground(ContextCompat.getDrawable(context, R.drawable.button));
         btn.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         btn.setMinHeight(150);

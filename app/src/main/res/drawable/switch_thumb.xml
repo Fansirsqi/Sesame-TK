@@ -5,7 +5,7 @@
         <shape android:shape="rectangle">
             <corners android:radius="20dp" />
             <stroke
-                android:width="2dp"
+                android:width="0dp"
                 android:color="@color/color_alpha" />
             <solid android:color="@color/switch_white" />
         </shape>
@@ -19,7 +19,7 @@
                         android:width="18dp"
                         android:height="18dp" />
                     <corners android:radius="10dp" />
-                    <solid android:color="@color/switch_white" />
+                    <solid android:color="@color/orange" />
                     <stroke
                         android:width="5dp"
                         android:color="@color/color_alpha" />
@@ -32,7 +32,7 @@
                         android:width="18dp"
                         android:height="18dp" />
                     <corners android:radius="10dp" />
-                    <solid android:color="@color/button" />
+                    <solid android:color="@color/switch_off" />
                     <stroke
                         android:width="12dp"
                         android:color="@color/color_alpha" />

@@ -1,6 +1,7 @@
 package fansirsqi.xposed.sesame.util;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.os.Build;
 import java.util.Locale;
 import fansirsqi.xposed.sesame.model.BaseModel;
 /**
@@ -17,15 +18,15 @@ public class LanguageUtil {
         // 检查是否设置了简体中文
         if (BaseModel.getLanguageSimplifiedChinese().getValue()) {
             // 创建简体中文的Locale对象
-            Locale locale = new Locale("zh", "CN");
+            Locale locale = new Locale.Builder().setLanguage("zh").setRegion("CN").build();
             // 设置默认的Locale
             Locale.setDefault(locale);
             // 获取当前的配置信息
             Configuration config = new Configuration(context.getResources().getConfiguration());
             // 更新配置信息中的Locale
-            config.locale = locale;
+            config.setLocale(locale);
             // 更新资源的配置信息，以应用新的Locale设置
-            context.getResources().updateConfiguration(config, context.getResources().getDisplayMetrics());
+            context = context.createConfigurationContext(config);
         }
     }
 }

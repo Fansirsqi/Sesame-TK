@@ -17,13 +17,21 @@ jobs:
           sudo timedatectl set-timezone Asia/Shanghai
           echo "Current time: $(date)"
 
-      - uses: actions/checkout@v4
-      - name: set up JDK 21
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: "21"
-          distribution: "temurin"
+          java-version: "23"
+          distribution: "zulu"
           cache: gradle
+
+      - name: set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+          gradle-version: wrapper
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -33,25 +41,25 @@ jobs:
 
       - name: Sign Normal APK
         id: sign_normal_apk
-        uses: ilharp/sign-android-release@v1
+        uses: ilharp/sign-android-release@v2
         with:
           releaseDir: app/build/outputs/apk/normal/release/
           signingKey: ${{ secrets.ANDROID_SIGNING_KEY }}
           keyAlias: ${{ secrets.ANDROID_KEY_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          buildToolsVersion: 34.0.0
+          buildToolsVersion: 36.0.0
 
       - name: Sign Compatible APK
         id: sign_compatible_apk
-        uses: ilharp/sign-android-release@v1
+        uses: ilharp/sign-android-release@v2
         with:
           releaseDir: app/build/outputs/apk/compatible/release/
           signingKey: ${{ secrets.ANDROID_SIGNING_KEY }}
           keyAlias: ${{ secrets.ANDROID_KEY_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          buildToolsVersion: 34.0.0
+          buildToolsVersion: 36.0.0
 
       - name: Upload Sesame compatible
         uses: actions/upload-artifact@v4

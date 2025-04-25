@@ -1,13 +1,17 @@
 package fansirsqi.xposed.sesame.ui.widget;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.List;
+
 import fansirsqi.xposed.sesame.R;
 
 public class TabAdapter extends RecyclerView.Adapter<TabAdapter.ViewHolder> {
@@ -32,14 +36,16 @@ public class TabAdapter extends RecyclerView.Adapter<TabAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.textView.setText(titles.get(position));
-        holder.textView.setTextColor(ContextCompat.getColor(context, R.color.main_button_text));
+        holder.textView.setTextColor(ContextCompat.getColor(context, R.color.textColorPrimary));
         
         // 设置背景资源
         if (selectedPosition == position) {
 //            holder.itemView.setBackgroundResource(R.drawable.tab_selected_background);
-            holder.itemView.findViewById(R.id.indicator_bar).setBackgroundResource(R.color.item_selected_orange);
+            holder.textView.setTextColor(ContextCompat.getColor(context, R.color.orange));
+            holder.itemView.findViewById(R.id.indicator_bar).setBackgroundResource(R.color.orange);
         } else {
 //            holder.itemView.setBackgroundResource(R.drawable.tab_background);
+            holder.textView.setTextColor(ContextCompat.getColor(context, R.color.textColorPrimary));
             holder.itemView.findViewById(R.id.indicator_bar).setBackgroundResource(android.R.color.transparent);
         }
         

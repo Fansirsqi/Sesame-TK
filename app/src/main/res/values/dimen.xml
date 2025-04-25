@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="setting_item_padding">16dp</dimen>
+    <dimen name="status_bar_height">24dp</dimen>
 </resources>

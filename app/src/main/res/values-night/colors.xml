@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 夜间模式 -->
+    <color name="background">#1A1A1A</color>
+    <color name="base_color">#4D4D4D</color>
+    <!-- theme-color -->
+    <color name="colorPrimary">#4D4D4D</color>
+    <color name="textColorPrimary">#FFFFFF</color>
+
+    <color name="selection_color">#F87640</color>
+
+    <color name="main_button">#3A3A3A</color>
+    <color name="button_pressed">#4A4A4A</color>
+
+    <color name="orange">#F87640</color>
+
+    <color name="not_active_text">#F4D022</color>
+    <color name="active_text">#DEDBDB</color>
+    <color name="load_active_text">#C8B9B9</color>
+
+    <color name="navigationBarColor">#AA000000</color>
+
+    <color name="toast_text_color">#FBFBFB</color>
+
+    <color name="switch_white">#FFFFFF</color>
+    <color name="switch_off">#DFDFDF</color>
+</resources>

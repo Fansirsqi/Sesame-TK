@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -17,6 +18,8 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewFeature;
 
 import java.io.File;
 
@@ -39,17 +42,23 @@ public class HtmlViewerActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         LanguageUtil.setLocale(this);
         setContentView(R.layout.activity_html_viewer);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            setBaseSubtitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary));
-        } else {
-            setBaseSubtitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary));
-        }
         // 设置标题栏
         // 初始化 WebView 和进度条
         mWebView = findViewById(R.id.mwv_webview);
         progressBar = findViewById(R.id.pgb_webview);
         // 设置 WebView 的客户端
         setupWebView();
+        
+        // 设置夜间模式
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                mWebView.getSettings().setAlgorithmicDarkeningAllowed(true);
+            }
+        }
+        // 设置WebView背景色
+        mWebView.setBackgroundColor(ContextCompat.getColor(this, R.color.background));
+        // 设置进度条颜色
+        progressBar.setProgressTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.selection_color)));
     }
 
     /**
@@ -88,6 +97,9 @@ public class HtmlViewerActivity extends BaseActivity {
         mWebView.getSettings().setSupportZoom(true);
         mWebView.getSettings().setBuiltInZoomControls(true);
         mWebView.getSettings().setDisplayZoomControls(false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mWebView.getSettings().setAlgorithmicDarkeningAllowed(true);
+        }
         // 根据 intent 设置 WebView
         if (intent != null) {
             configureWebViewSettings(intent, settings);

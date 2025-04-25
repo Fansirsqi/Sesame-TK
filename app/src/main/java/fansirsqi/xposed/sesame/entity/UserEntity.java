@@ -12,39 +12,39 @@ public class UserEntity {
     /**
      * 用户 ID
      */
-    private final String userId;
+    public final String userId;
     /**
      * 用户的账号
      */
-    private final String account;
+    public final String account;
     /**
      * 用户的好友状态（例如：是否是好友等）
      */
-    private final Integer friendStatus;
+    public final Integer friendStatus;
     /**
      * 用户的真实姓名
      */
-    private final String realName;
+    public final String realName;
     /**
      * 用户的昵称
      */
-    private final String nickName;
+    public final String nickName;
     /**
      * 用户的备注名
      */
-    private final String remarkName;
+    public final String remarkName;
     /**
      * 用于显示的名字，优先使用备注名，若无则使用昵称
      */
-    private final String showName;
+    public final String showName;
     /**
      * 用于显示的遮掩名字，真实姓名首字母被遮掩
      */
-    private final String maskName;
+    public final String maskName;
     /**
      * 用户的全名，格式为：显示名字 | 真实姓名 (账号)
      */
-    private final String fullName;
+    public final String fullName;
 
     /**
      * 构造方法，初始化用户基本信息。
@@ -82,12 +82,12 @@ public class UserEntity {
      */
     @Data
     public static class UserDto {
-        private String userId;
-        private String account;
-        private Integer friendStatus;
-        private String realName;
-        private String nickName;
-        private String remarkName;
+        public String userId;
+        public String account;
+        public Integer friendStatus;
+        public String realName;
+        public String nickName;
+        public String remarkName;
 
         /**
          * 将 UserDto 转换为 UserEntity 实体。

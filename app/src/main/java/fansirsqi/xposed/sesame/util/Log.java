@@ -10,7 +10,7 @@ import fansirsqi.xposed.sesame.model.BaseModel;
  * 日志工具类，负责初始化和管理各种类型的日志记录器，并提供日志输出方法。
  */
 public class Log {
-    private static final String TAG = "[" + BuildConfig.BUILD_TAG + BuildConfig.BUILD_NUMBER + "]";
+    private static final String TAG = "[" + BuildConfig.VERSION_NAME + "]";
     private static final Logger RUNTIME_LOGGER;
     private static final Logger SYSTEM_LOGGER;
     private static final Logger RECORD_LOGGER;

@@ -146,7 +146,7 @@ public class Config {
             }
         } catch (Exception e) {
             Log.printStackTrace(TAG, e);
-            Log.record("保存用户配置失败，格式化 JSON 时出错");
+            Log.runtime("保存用户配置失败，格式化 JSON 时出错");
             return false;
         }
         boolean success;
@@ -165,12 +165,12 @@ public class Config {
                 userName = "默认用户";
             } else {
                 UserEntity userEntity = UserMap.get(userId);
-                userName = userEntity != null ? userEntity.getShowName() : "未知用户";
+                userName = userEntity != null ? userEntity.getShowName() : "默认";
             }
-            Log.record("保存用户[" + userName + "]配置");
+            Log.runtime("保存 [" + userName + "] 配置");
         } catch (Exception e) {
             Log.printStackTrace(TAG, e);
-            Log.record("保存用户配置失败");
+            Log.runtime("保存用户配置失败");
             return false;
         }
         return true;
@@ -211,9 +211,9 @@ public class Config {
 
             if (configV2FileExists) {
                 String json = Files.readFromFile(configV2File);
-                Log.record(TAG, "读取配置文件成功: " + configV2File.getPath());
+                Log.runtime(TAG, "读取配置文件成功: " + configV2File.getPath());
                 JsonUtil.copyMapper().readerForUpdating(INSTANCE).readValue(json);
-                Log.record(TAG, "反序列化配置成功");
+                Log.runtime(TAG, "格式化配置成功");
                 String formatted = toSaveStr();
                 if (formatted != null && !formatted.equals(json)) {
                     Log.runtime(TAG, "格式化配置: " + userName);
@@ -231,7 +231,7 @@ public class Config {
             }
         } catch (Throwable t) {
             Log.printStackTrace(TAG, t);
-            Log.record(TAG, "重置配置: " + userName);
+            Log.runtime(TAG, "重置配置: " + userName);
             try {
                 unload();
                 if (configV2File != null) {

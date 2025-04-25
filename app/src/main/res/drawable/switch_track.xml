@@ -5,14 +5,14 @@
         <shape>
             <size android:width="38dp" android:height="18dp" />
             <corners android:radius="10dp" />
-            <solid android:color="@color/button" />
+            <solid android:color="@color/orange" />
         </shape>
     </item>
     <item>
         <shape>
             <size android:width="38dp" android:height="18dp" />
             <corners android:radius="10dp" />
-            <solid android:color="@color/switch_gray" />
+            <solid android:color="@color/switch_off" />
         </shape>
     </item>
 </selector>

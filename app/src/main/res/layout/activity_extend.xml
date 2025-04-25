@@ -27,11 +27,11 @@
                 android:layout_weight="1"
                 android:background="@drawable/button_extend"
                 android:text="@string/query_the_remaining_amount_of_saplings"
-                android:textColor="@color/button_text" />
+                android:textColor="@color/textColorPrimary" />
 
             <Button
                 style="?android:attr/buttonBarButtonStyle"
-                android:textColor="@color/button_text"
+                android:textColor="@color/textColorPrimary"
                 android:id="@+id/get_newTree_items"
                 android:background="@drawable/button_extend"
                 android:layout_width="wrap_content"
@@ -49,7 +49,7 @@
 
             <Button
                 style="?android:attr/buttonBarButtonStyle"
-                android:textColor="@color/button_text"
+                android:textColor="@color/textColorPrimary"
                 android:id="@+id/query_area_trees"
                 android:background="@drawable/button_extend"
                 android:layout_width="wrap_content"
@@ -60,7 +60,7 @@
 
             <Button
                 style="?android:attr/buttonBarButtonStyle"
-                android:textColor="@color/button_text"
+                android:textColor="@color/textColorPrimary"
                 android:id="@+id/get_unlock_treeItems"
                 android:background="@drawable/button_extend"
                 android:layout_width="wrap_content"
@@ -68,6 +68,36 @@
                 android:layout_margin="10dp"
                 android:text="@string/search_for_unlocked_items"
                 android:layout_weight="1"/>
+        </LinearLayout>
+
+        <LinearLayout
+            style="?android:attr/buttonBarStyle"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+
+            <Button
+                style="?android:attr/buttonBarButtonStyle"
+                android:textColor="@color/textColorPrimary"
+                android:id="@+id/clear_photo"
+                android:background="@drawable/button_extend"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:text="@string/clear_photo"
+                android:layout_weight="1" />
+
+<!--            <Button-->
+<!--                style="?android:attr/buttonBarButtonStyle"-->
+<!--                android:textColor="@color/textColorPrimary"-->
+<!--                android:id="@+id/get_unlock_treeItems"-->
+<!--                android:background="@drawable/button_extend"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_margin="10dp"-->
+<!--                android:text="@string/search_for_unlocked_items"-->
+<!--                android:layout_weight="1"/>-->
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
