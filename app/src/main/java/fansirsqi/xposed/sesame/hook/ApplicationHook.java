@@ -94,7 +94,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     static volatile Calendar dayCalendar;
     @Getter
     static volatile boolean offline = false;
-
+    @Getter
+    static volatile boolean useManager = true;
     @Getter
     static final AtomicInteger reLoginCount = new AtomicInteger(0);
     @SuppressLint("StaticFieldLeak")
@@ -219,14 +220,15 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                     System.load(soFileOfStorage);
                                     Log.runtime("Loading so from : " + soFileOfStorage);
                                 } else {
-                                    String libSesamePath = Detector.INSTANCE.getLibPath(context);
-                                    assert libSesamePath != null;
+                                    String libSesamePath = Detector.getLibPath(context);
                                     System.load(libSesamePath);
                                     Log.runtime("Loading so from original path" + libSesamePath);
                                 }
                             } catch (Exception e) {
                                 Log.error("load libSesame err:" + e.getMessage());
                             }
+                            useManager = Detector.checkForLspatch(context, lpparam.packageName);
+                            Log.runtime(TAG, "useManager value: " + useManager);
                             alipayVersion = new AlipayVersion(context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
                         } catch (Exception e) {
                             Log.runtime(TAG, "获取支付宝版本信息失败");
@@ -239,6 +241,9 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 Log.runtime(TAG, "hook attach err");
                 Log.printStackTrace(TAG, t);
             }
+
+
+
             //hook "com.alipay.mobile.quinox.LauncherActivity" 类的onResume方法
             try {
                 XposedHelpers.findAndHookMethod("com.alipay.mobile.quinox.LauncherActivity", classLoader, "onResume",
@@ -294,9 +299,10 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 }
                                 Log.runtime(TAG, "Service onCreate");
                                 context = appService.getApplicationContext();
-                                boolean isok = Detector.INSTANCE.isLegitimateEnvironment(context);
-                                if (isok) {
-                                    Detector.INSTANCE.dangerous(context);
+
+                                Log.runtime(TAG, "useManager: " + useManager);
+                                if (useManager) {
+                                    Detector.tips(context, "检测到LSPatch内置插件，已关闭插件功能");
                                     return;
                                 }
                                 service = appService;
