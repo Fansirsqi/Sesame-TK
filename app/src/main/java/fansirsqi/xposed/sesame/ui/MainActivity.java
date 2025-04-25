@@ -107,13 +107,9 @@ public class MainActivity extends BaseActivity {
                                     viewHandler.removeCallbacks(titleRunner);
                                     if (isClick) {
 
-                                        new Handler(Looper.getMainLooper()).post(() -> {
-                                            Toast.makeText(context, "😄 一切看起来都很好！", Toast.LENGTH_SHORT).show();
-                                            new Thread(() -> {
-                                                ThreadUtil.sleep(200); // 别急，等一会儿再说
-                                                runOnUiThread(() -> isClick = false);
-                                            }).start();
-                                        });
+                                        Toast.makeText(context, "😄 一切看起来都很好！", Toast.LENGTH_SHORT).show();
+                                        ThreadUtil.sleep(200); // 别急，等一会儿再说
+                                        isClick = false;
                                     }
                                     break;
                                 case "fansirsqi.xposed.sesame.update":
@@ -263,22 +259,20 @@ public class MainActivity extends BaseActivity {
 
             return;
         } else if (id == R.id.one_word) {
-            new Thread(() -> {
-                ToastUtil.showToastWithDelay(MainActivity.this, "😡 正在获取句子，请稍后……", 800);
-                ThreadUtil.sleep(5000);
-                FansirsqiUtil.getOneWord(
-                        new FansirsqiUtil.OneWordCallback() {
-                            @Override
-                            public void onSuccess(String result) {
-                                runOnUiThread(() -> updateOneWord(result, oneWord)); // 在主线程中更新UI
-                            }
+            ToastUtil.showToastWithDelay(this, "😡 正在获取句子，请稍后……", 800);
+            ThreadUtil.sleep(5000);
+            FansirsqiUtil.getOneWord(
+                    new FansirsqiUtil.OneWordCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            runOnUiThread(() -> updateOneWord(result, oneWord)); // 在主线程中更新UI
+                        }
 
-                            @Override
-                            public void onFailure(String error) {
-                                runOnUiThread(() -> updateOneWord(error, oneWord)); // 在主线程中更新UI
-                            }
-                        });
-            }).start();
+                        @Override
+                        public void onFailure(String error) {
+                            runOnUiThread(() -> updateOneWord(error, oneWord)); // 在主线程中更新UI
+                        }
+                    });
             return;
         }
         Intent it = new Intent(this, HtmlViewerActivity.class);
@@ -549,7 +543,7 @@ public class MainActivity extends BaseActivity {
         setBaseTitle(ViewAppInfo.getAppTitle() + "[" + runType.getName() + "]");
         switch (runType) {
             case DISABLE:
-                setBaseTitleTextColor(ContextCompat.getColor(this, R.color.not_active_text));
+                setBaseTitleTextColor(ContextCompat.getColor(this, R.color.textColorRed));
                 break;
             case MODEL:
                 setBaseTitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary));
