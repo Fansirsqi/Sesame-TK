@@ -5,7 +5,7 @@ pluginManagement {
         maven { url = uri("https://maven.aliyun.com/repository/public/") }
     }
     plugins {
-        kotlin("jvm") version "2.2.0-Beta1"  // 使用与libs.versions.toml中kotlin-plugin相同的版本
+        kotlin("jvm") version "2.1.20"  // 使用与libs.versions.toml中kotlin-plugin相同的版本
     }
 }
 
@@ -16,6 +16,6 @@ dependencyResolutionManagement {
     }
 }
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
 include(":app")

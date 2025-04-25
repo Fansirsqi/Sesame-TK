@@ -1,18 +1,18 @@
 [versions]
-android-plugin = "8.11.0-alpha07"
-kotlin-plugin = "2.2.0-Beta1"
-kotlin-stdlib = "2.2.0-Beta1"
-slf4j = "2.1.0-alpha1"
+android-plugin = "8.9.1"
+kotlin-plugin = "2.1.20"
+fooay-resolver-plugin = "0.10.0"
+kotlin-stdlib = "2.1.20"
+slf4j = "2.0.17"
 logback-android = "3.0.0"
-appcompat = "1.7.0"
+appcompat = "28.0.0"
 recyclerview = "1.4.0"
 viewpager2 = "1.1.0"
-material = "1.13.0-alpha13"
+material = "1.12.0"
 xposed-api = "82"
 lombok = "1.18.38"
-okhttp = "5.0.0-alpha.14"
-jackson = "2.19.0-rc2"
-#noinspection NewerVersionAvailable
+okhttp = "4.12.0"
+jackson = "2.18.3"
 jackson-compatible = "2.13.5"
 webkit = "1.13.0"
 core-ktx = "1.16.0"
@@ -20,7 +20,7 @@ core-ktx = "1.16.0"
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin-stdlib" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 logback-android = { module = "com.github.tony19:logback-android", version.ref = "logback-android" }
-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+appcompat-v7 = { module = "com.android.support:appcompat-v7", version.ref = "appcompat" }
 recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager2" }
 webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
