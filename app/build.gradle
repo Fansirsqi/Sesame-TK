@@ -72,7 +72,7 @@ android {
     namespace "fansirsqi.xposed.sesame"
     compileSdk 34
     signingConfigs {
-        release {
+        release  {
             storeFile file('./byseven.jks')
             storePassword getSigningProperty('MY_APP_STORE_PASSWORD', 'ANDROID_KEYSTORE_PASSWORD')
             keyAlias getSigningProperty('MY_APP_KEY_ALIAS', 'ANDROID_KEY_ALIAS')
@@ -89,14 +89,8 @@ android {
         buildConfigField "String", "BUILD_TIME", "\"${buildTime}\""
         buildConfigField "String", "BUILD_NUMBER", "\"${buildTargetCode}\""
         buildConfigField "String", "BUILD_TAG", "\"${buildTag}\""
-        if (!System.getenv('CI')) {
-            ndk {
-                abiFilters['armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64']
-            }
-        } else {
-            ndk {
-                abiFilters[]
-            }
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
         }
     }
 
@@ -157,20 +151,13 @@ android {
                 version "3.31.6"
             }
         }
-    } elss {
-        externalNativeBuild {
-            cmake {
-                // 设置无效路径防止任务触发
-                path 'dummy/CMakeLists.txt'
-            }
-        }
     }
     sourceSets {
         main {
             jniLibs.srcDirs = ['src/main/jniLibs']
         }
     }
-// 根据环境选择NDK版本
+    // 根据环境选择NDK版本
     ndkVersion System.getenv('CI') ? '26.1.10909125' : '29.0.13113456'
 }
 
