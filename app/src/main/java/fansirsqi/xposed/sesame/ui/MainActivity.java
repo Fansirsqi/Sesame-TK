@@ -113,6 +113,7 @@ public class MainActivity extends BaseActivity {
                                     }
                                     viewHandler.removeCallbacks(titleRunner);
                                     if (isClick) {
+
                                         new Handler(Looper.getMainLooper()).post(() -> {
                                             Toast.makeText(context, "😄 一切看起来都很好！", Toast.LENGTH_SHORT).show();
                                             new Thread(() -> {

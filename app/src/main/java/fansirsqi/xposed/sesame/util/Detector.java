@@ -18,9 +18,8 @@ public class Detector {
                     nativeLibraryDir + File.separator + System.mapLibraryName(
                     "checker");
         } catch (PackageManager.NameNotFoundException e) {
-            ToastUtil.showToast(context, "请不要对应用宝隐藏TK模块");
-            Log.record("请不要对应用宝隐藏TK模块");
-            Log.error("getLibPath", e.getMessage());
+            ToastUtil.showToast(context, "请授予支付宝读取芝麻粒的权限");
+            Log.record("请授予支付宝读取芝麻粒的权限");
         }
         return libSesamePath;
     }
@@ -31,7 +30,6 @@ public class Detector {
             System.loadLibrary(libraryName);
             return true;
         } catch (UnsatisfiedLinkError e) {
-            Log.error("loadLibrary", e.getMessage());
             return false;
         }
     }

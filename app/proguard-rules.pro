@@ -15,10 +15,7 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
-
-
 -keep class de.robv.android.xposed.** { *; }
--keep class fansirsqi.xposed.sesame.hook.** { *; }
 
 # Keep Logback classes
 -keep class ch.qos.logback.** { *; }

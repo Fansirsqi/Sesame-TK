@@ -15,18 +15,9 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    def getSigningProperty = { propName, envName ->
-        if (System.getenv('CI')) {
-            return System.getenv(envName) ?: ''
-        }
-        def properties = new Properties()
-        def localProperties = new File(project.rootProject.projectDir, "local.properties")
-        if (localProperties.exists()) {
-            properties.load(new FileInputStream(localProperties))
-            return properties[propName] ?: ''
-        }
-        return ''
-    }
+    def localProperties = new File(project.rootProject.projectDir, "local.properties")
+    def properties = new Properties()
+    properties.load(new FileInputStream(localProperties))
 
     //发版前请务必保证在本地构建完成，否则会像我一样发了个寂寞呜呜呜~
     // to developer
@@ -35,11 +26,12 @@ android {
     //github发布前务必确认当前版本号是否符合发版规则,以免造成困扰
     def major = 0          // 主版本号
     def minor = 2          // 次版本号
-    def patch = 6          // 补丁版本号
-//    def buildTag = "beta.6" // 构建标签 (alpha, beta, release, 等)
-    def buildTag = "alpha" // 构建标签 (alpha, beta, release, 等)
+    def patch = 5          // 补丁版本号
+    def buildTag = "beta.6" // 构建标签 (alpha, beta, release, 等)
     def buildDate
+    def buildDate2
     def buildTime
+    def buildTime2
     def buildTargetCode
     def _versionCode
     def _versionName
@@ -47,8 +39,10 @@ android {
     try {
         def dateFormat = new SimpleDateFormat("yy-MM-dd")
         buildDate = dateFormat.format(new Date())
+        buildDate2 = dateFormat.format(new Date()).replace("-", ".")
         def timeFormat = new SimpleDateFormat("HH:mm:ss")
         buildTime = timeFormat.format(new Date())
+        buildTime2 = timeFormat.format(new Date()).replace(":", ".")
         MessageDigest md = MessageDigest.getInstance("MD5")
         md.update(buildTime.bytes)
         buildTargetCode = md.digest().encodeHex().toString().substring(0, 4)
@@ -58,6 +52,8 @@ android {
         println("时间或日期格式化错误: ${e.message}")
         buildDate = "unknown"
         buildTime = "unknown"
+        buildTime2 = "unknown"
+        buildDate2 = "unknown"
         buildTargetCode = "0000"
     }
     _versionCode = gitCommitCount.empty ? 9527 : gitCommitCount.toInteger()
@@ -71,14 +67,6 @@ android {
     // 配置 Android 构建设置
     namespace "fansirsqi.xposed.sesame"
     compileSdk 34
-    signingConfigs {
-        release  {
-            storeFile file('./byseven.jks')
-            storePassword getSigningProperty('MY_APP_STORE_PASSWORD', 'ANDROID_KEYSTORE_PASSWORD')
-            keyAlias getSigningProperty('MY_APP_KEY_ALIAS', 'ANDROID_KEY_ALIAS')
-            keyPassword getSigningProperty('MY_APP_KEY_PASSWORD', 'ANDROID_KEY_PASSWORD')
-        }
-    }
     defaultConfig {
         minSdk 21
         //noinspection OldTargetApi,ExpiredTargetSdkVersion
@@ -89,9 +77,14 @@ android {
         buildConfigField "String", "BUILD_TIME", "\"${buildTime}\""
         buildConfigField "String", "BUILD_NUMBER", "\"${buildTargetCode}\""
         buildConfigField "String", "BUILD_TAG", "\"${buildTag}\""
+        applicationId "fansirsqi.xposed.sesame"
+
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            //noinspection ChromeOsAbiSupport
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
         }
+
+
     }
 
     ext {
@@ -110,19 +103,27 @@ android {
         }
     }
 
+    signingConfigs {
+        config {
+            storeFile file('./byseven.jks')
+            storePassword properties['MY_APP_STORE_PASSWORD']
+            keyAlias properties['MY_APP_KEY_ALIAS']
+            keyPassword properties['MY_APP_KEY_PASSWORD']
+        }
+    }
 
     buildTypes {
         debug {
             debuggable true
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.config
             versionNameSuffix "-debug"
         }
         release {
             debuggable false
-            minifyEnabled false
-            shrinkResources false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.config
         }
     }
     compileOptions {
@@ -155,8 +156,8 @@ android {
             jniLibs.srcDirs = ['src/main/jniLibs']
         }
     }
-    // 根据环境选择NDK版本
-    ndkVersion System.getenv('CI') ? '26.1.10909125' : '29.0.13113456'
+//    ndkVersion '26.1.10909125'
+    ndkVersion '29.0.13113456'
 }
 
 // 依赖项配置
@@ -166,15 +167,12 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.10'
     implementation 'org.slf4j:slf4j-api:2.0.7'
     implementation 'com.github.tony19:logback-android:3.0.0'
-    //noinspection GradleDependency
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    //noinspection GradleDependency
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
     implementation 'com.google.android.material:material:1.12.0'
 
     compileOnly 'de.robv.android.xposed:api:82'
-    //noinspection AnnotationProcessorOnCompilePath
     compileOnly 'org.projectlombok:lombok:1.18.36'
     annotationProcessor 'org.projectlombok:lombok:1.18.36'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
