@@ -49,11 +49,27 @@ public class HtmlViewerActivity extends BaseActivity {
         // 设置 WebView 的客户端
         setupWebView();
         
-        // 设置夜间模式
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                mWebView.getSettings().setAlgorithmicDarkeningAllowed(true);
+        // 安全设置WebView
+        try {
+            // 仅在确保WebView初始化完成后设置
+            if (mWebView != null && mWebView.getSettings() != null) {
+                // 夜间模式设置(可选)
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                    try {
+                        WebSettingsCompat.setAlgorithmicDarkeningAllowed(mWebView.getSettings(), true);
+                    } catch (Exception e) {
+                        Log.error(TAG, "设置夜间模式失败: " + e.getMessage());
+                        Log.printStackTrace(TAG, e);
+                    }
+                }
+                
+                // 确保基本设置不会导致崩溃
+                mWebView.getSettings().setJavaScriptEnabled(false);
+                mWebView.getSettings().setDomStorageEnabled(false);
             }
+        } catch (Exception e) {
+            Log.error(TAG, "WebView初始化异常: " + e.getMessage());
+            Log.printStackTrace(TAG, e);
         }
         // 设置WebView背景色
         mWebView.setBackgroundColor(ContextCompat.getColor(this, R.color.background));
@@ -97,8 +113,29 @@ public class HtmlViewerActivity extends BaseActivity {
         mWebView.getSettings().setSupportZoom(true);
         mWebView.getSettings().setBuiltInZoomControls(true);
         mWebView.getSettings().setDisplayZoomControls(false);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            mWebView.getSettings().setAlgorithmicDarkeningAllowed(true);
+        // 安全设置WebView
+        try {
+            if (mWebView != null && mWebView.getSettings() != null) {
+                // 基本WebView设置
+                mWebView.getSettings().setSupportZoom(true);
+                mWebView.getSettings().setBuiltInZoomControls(true);
+                mWebView.getSettings().setDisplayZoomControls(false);
+                mWebView.getSettings().setUseWideViewPort(true);
+                mWebView.getSettings().setLoadWithOverviewMode(true);
+                
+                // 可选夜间模式设置
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                    try {
+                        WebSettingsCompat.setAlgorithmicDarkeningAllowed(mWebView.getSettings(), true);
+                    } catch (Exception e) {
+                        Log.error(TAG, "设置夜间模式失败: " + e.getMessage());
+                        Log.printStackTrace(TAG, e);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.error(TAG, "WebView设置异常: " + e.getMessage());
+            Log.printStackTrace(TAG, e);
         }
         // 根据 intent 设置 WebView
         if (intent != null) {

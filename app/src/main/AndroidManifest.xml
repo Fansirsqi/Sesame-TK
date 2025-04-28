@@ -10,13 +10,13 @@
 
     <application
         android:allowBackup="true"
-        android:enableOnBackInvokedCallback="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@drawable/ic_launcher"
         android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        tools:targetApi="s">
         <meta-data
             android:name="xposedmodule"
             android:value="true" />
@@ -33,7 +33,6 @@
         <activity
             android:name="fansirsqi.xposed.sesame.ui.MainActivity"
             android:exported="true"
-            android:resizeableActivity="true"
             tools:targetApi="n">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -53,23 +52,18 @@
 
         <activity
             android:name="fansirsqi.xposed.sesame.ui.ExtendActivity"
-            android:resizeableActivity="true"
             tools:targetApi="n" />
         <activity
             android:name="fansirsqi.xposed.sesame.ui.WebSettingsActivity"
-            android:resizeableActivity="true"
             tools:targetApi="n" />
         <activity
             android:name="fansirsqi.xposed.sesame.ui.SettingActivity"
-            android:resizeableActivity="true"
             tools:targetApi="n" />
         <activity
             android:name="fansirsqi.xposed.sesame.ui.OldSettingsActivity"
-            android:resizeableActivity="true"
             tools:targetApi="n" />
         <activity
             android:name="fansirsqi.xposed.sesame.ui.HtmlViewerActivity"
-            android:resizeableActivity="true"
             tools:targetApi="n" />
     </application>
 </manifest>

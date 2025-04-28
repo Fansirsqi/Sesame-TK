@@ -26,8 +26,8 @@ android {
         // 版本配置
         val major = 0
         val minor = 2
-        val patch = 6
-        val buildTag = "alpha"
+        val patch = 5
+        val buildTag = "beta7"
         
         val buildDate = SimpleDateFormat("yy-MM-dd", Locale.CHINA).apply {
             timeZone = TimeZone.getTimeZone("GMT+8")
@@ -159,6 +159,15 @@ android {
                 version = "3.31.6"
                 ndkVersion = "29.0.13113456"
             }
+        }
+    }
+
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.all {
+            val flavorName = variant.flavorName.replaceFirstChar { it.uppercase() }
+            val fileName = "Sesame-$flavorName-${variant.versionName}.apk"
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName = fileName
         }
     }
 }

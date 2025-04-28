@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 获取短 SHA
+      - name: Get short SHA
+        run: echo "SHORT_SHA=${GITHUB_SHA::4}" >> $GITHUB_ENV
       # 设置时区为亚洲/上海
       - name: Set Timezone to Asia/Shanghai
         run: |
@@ -75,18 +78,18 @@ jobs:
 
       - name: Generate APKS Checksum
         run: |
-          sha256sum ${{ steps.sign_normal_apk.outputs.signedFile  }} > CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.sha256
-          sha256sum ${{ steps.sign_compatible_apk.outputs.signedFile }} > CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.sha256
+          sha256sum ${{ steps.sign_normal_apk.outputs.signedFile  }} > CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          sha256sum ${{ steps.sign_compatible_apk.outputs.signedFile }} > CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
 
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Sesame-${{ github.event.release.tag_name || github.ref_name }} # 发布的名称。默认为标签名称
+          name: ${{ github.event.release.tag_name || github.ref_name }} # 发布的名称。默认为标签名称
           files: |
             ${{ steps.sign_normal_apk.outputs.signedFile }}
             ${{ steps.sign_compatible_apk.outputs.signedFile }}
-            CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.sha256
-            CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.sha256
+            CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+            CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
           tag_name: ${{ github.ref_name }}
           draft: false
           append_body: true
@@ -102,12 +105,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           repository: Xposed-Modules-Repo/fansirsqi.xposed.sesame # 目标仓库的拥有者和仓库名称
-          name: Sesame-${{ github.event.release.tag_name || github.ref_name }} # 发布的名称。默认为标签名称
+          name: ${{ github.event.release.tag_name || github.ref_name }} # 发布的名称。默认为标签名称
           files: |
             ${{ steps.sign_normal_apk.outputs.signedFile }}
             ${{ steps.sign_compatible_apk.outputs.signedFile }}
-            CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.sha256
-            CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.sha256
+            CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+            CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
           token: ${{ secrets.TARGET_REPO_PAT }}
           tag_name: ${{ github.ref_name }}
           draft: false
