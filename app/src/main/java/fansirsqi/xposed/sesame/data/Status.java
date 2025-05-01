@@ -91,6 +91,12 @@ public class Status {
      * 农场助力
      */
     private Set<String> antOrchardAssistFriend = new HashSet<>();
+
+    /**
+     * 会员权益
+     */
+    private Set<String> memberPointExchangeBenefitLogList = new HashSet<>();
+
     public static int getVitalityCount(String skuId) {
         Integer exchangedCount = INSTANCE.VitalityStoreList.get(skuId);
         if (exchangedCount == null) {
@@ -545,4 +551,23 @@ public class Status {
         }
     }
 
+    public static Boolean canMemberPointExchangeBenefitToday(String benefitId) {
+        return !INSTANCE.memberPointExchangeBenefitLogList.contains(benefitId);
+    }
+
+    public static void memberPointExchangeBenefitToday(String benefitId) {
+        if (canMemberPointExchangeBenefitToday(benefitId)) {
+            INSTANCE.memberPointExchangeBenefitLogList.add(benefitId);
+            save();
+        }
+    }
+
+    /**
+     * 乐园商城-是否可以兑换该商品
+     * @param spuId 商品spuId
+     * @return true 可以兑换 false 兑换达到上限
+     */
+    public static boolean canParadiseCoinExchangeBenefitToday(String spuId) {
+        return !hasFlagToday("farm::paradiseCoinExchangeLimit::" + spuId);
+    }
 }

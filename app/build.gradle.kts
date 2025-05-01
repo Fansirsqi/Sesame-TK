@@ -151,11 +151,11 @@ android {
             jniLibs.srcDirs("src/main/jniLibs")
         }
     }
-
-    if (!System.getenv("CI").toBoolean()) {
+    val cmakeFile = file("src/main/cpp/CMakeLists.txt")
+    if (!System.getenv("CI").toBoolean() && cmakeFile.exists()) {
         externalNativeBuild {
             cmake {
-                path = file("src/main/cpp/CMakeLists.txt")
+                path = cmakeFile
                 version = "3.31.6"
                 ndkVersion = "29.0.13113456"
             }

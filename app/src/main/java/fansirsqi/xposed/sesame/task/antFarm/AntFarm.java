@@ -17,6 +17,7 @@ import java.util.Set;
 
 import fansirsqi.xposed.sesame.entity.AlipayUser;
 import fansirsqi.xposed.sesame.entity.MapperEntity;
+import fansirsqi.xposed.sesame.entity.ParadiseCoinBenefit;
 import fansirsqi.xposed.sesame.hook.rpc.intervallimit.RpcIntervalLimit;
 import fansirsqi.xposed.sesame.model.BaseModel;
 import fansirsqi.xposed.sesame.model.ModelFields;
@@ -33,6 +34,8 @@ import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.Log;
+import fansirsqi.xposed.sesame.util.Maps.IdMapManager;
+import fansirsqi.xposed.sesame.util.Maps.ParadiseCoinBenefitIdMap;
 import fansirsqi.xposed.sesame.util.Maps.UserMap;
 import fansirsqi.xposed.sesame.util.RandomUtil;
 import fansirsqi.xposed.sesame.util.ResUtil;
@@ -186,6 +189,8 @@ public class AntFarm extends ModelTask {
     private SelectModelField familyOptions;
     private SelectModelField inviteFriendVisitFamily;
     private StringModelField giftFamilyDrawFragment;
+    private BooleanModelField paradiseCoinExchangeBenefit;
+    private SelectModelField paradiseCoinExchangeBenefitList;
 
     @Override
     public ModelFields getFields() {
@@ -239,6 +244,8 @@ public class AntFarm extends ModelTask {
         modelFields.addField(inviteFriendVisitFamily = new SelectModelField("inviteFriendVisitFamily", "家庭 | 好友分享列表", new LinkedHashSet<>(),
          AlipayUser::getList));
         modelFields.addField(giftFamilyDrawFragment = new StringModelField("giftFamilyDrawFragment", "家庭 | 扭蛋碎片赠送用户ID(配置目录查看)", ""));
+        modelFields.addField(paradiseCoinExchangeBenefit = new BooleanModelField("paradiseCoinExchangeBenefit", "小鸡乐园 | 兑换权益", false));
+        modelFields.addField(paradiseCoinExchangeBenefitList = new SelectModelField("paradiseCoinExchangeBenefitList", "小鸡乐园 | 权益列表", new LinkedHashSet<>(), ParadiseCoinBenefit::getList));
         return modelFields;
     }
 
@@ -423,6 +430,10 @@ public class AntFarm extends ModelTask {
             if (enableDdrawGameCenterAward.getValue()) {
                 drawGameCenterAward();
             }
+            // 小鸡乐园道具兑换
+            if (paradiseCoinExchangeBenefit.getValue()) {
+                paradiseCoinExchangeBenefit();
+            }
             //小鸡睡觉&起床
             animalSleepAndWake();
         } catch (Throwable t) {
@@ -431,6 +442,114 @@ public class AntFarm extends ModelTask {
         } finally {
             Log.record("执行结束-蚂蚁" + getName());
         }
+    }
+
+    private void paradiseCoinExchangeBenefit() {
+        try {
+            JSONArray mallHomeItemList = getMallHomeItemList();
+            if (mallHomeItemList == null) {
+                Log.record("小鸡乐园币💸[未获取到可兑换权益]");
+                return;
+            }
+            for (int i = 0; i < mallHomeItemList.length(); i++) {
+                JSONObject mallItemInfo = mallHomeItemList.getJSONObject(i);
+                String spuName = mallItemInfo.getString("spuName");
+                String spuId = mallItemInfo.getString("spuId");
+                IdMapManager.getInstance(ParadiseCoinBenefitIdMap.class).add(spuId, spuName);
+                JSONArray itemStatusList = mallItemInfo.getJSONArray("itemStatusList");
+                if (!Status.canParadiseCoinExchangeBenefitToday(spuId) ||
+                        !paradiseCoinExchangeBenefitList.getValue().contains(spuId) ||
+                        isExchange(itemStatusList, spuId, spuName)) {
+                    continue;
+                }
+
+                int exchangedCount = 0;
+                while (exchangeBenefit(spuId)) {
+                    exchangedCount += 1;
+                    int minPrice = mallItemInfo.getInt("minPrice");
+                    Log.farm("乐园币兑换💸#花费[" + minPrice + "乐园币]" + "#第" + exchangedCount + "次兑换" + "[" + spuName + "]");
+                    TimeUtil.sleep(3000);
+                }
+            }
+            IdMapManager.getInstance(ParadiseCoinBenefitIdMap.class).save(UserMap.getCurrentUid());
+        } catch (Throwable t) {
+            Log.runtime(TAG, "paradiseCoinExchangeBenefit err:");
+            Log.printStackTrace(TAG, t);
+        }
+    }
+    private boolean exchangeBenefit(String spuId) {
+        try {
+            JSONObject jo = new JSONObject(AntFarmRpcCall.getMallItemDetail(spuId));
+            if (!ResUtil.checkResultCode(TAG, jo)) {
+                return false;
+            }
+            JSONObject mallItemDetail = jo.getJSONObject("mallItemDetail");
+            JSONArray mallSubItemDetailList = mallItemDetail.getJSONArray("mallSubItemDetailList");
+            for (int i = 0; i < mallSubItemDetailList.length(); i++) {
+                JSONObject mallSubItemDetail = mallSubItemDetailList.getJSONObject(i);
+                String skuId = mallSubItemDetail.getString("skuId");
+                String skuName = mallSubItemDetail.getString("skuName");
+                JSONArray itemStatusList = mallSubItemDetail.getJSONArray("itemStatusList");
+
+                if (isExchange(itemStatusList, spuId, skuName)) {
+                    return false;
+                }
+
+                if (exchangeBenefit(spuId, skuId)) {
+                    return true;
+                }
+            }
+        } catch (Throwable t) {
+            Log.runtime(TAG, "exchangeBenefit err:");
+            Log.printStackTrace(TAG, t);
+        }
+        return false;
+    }
+
+    private boolean exchangeBenefit(String spuId, String skuId) {
+        try {
+            JSONObject jo = new JSONObject(AntFarmRpcCall.exchangeBenefit(spuId, skuId));
+            return ResUtil.checkResultCode(TAG, jo);
+        } catch (Throwable t) {
+            Log.runtime(TAG, "exchangeBenefit err:");
+            Log.printStackTrace(TAG, t);
+        }
+        return false;
+    }
+
+    private boolean isExchange(JSONArray itemStatusList, String spuId, String spuName) {
+        try {
+            for (int j = 0; j < itemStatusList.length(); j++) {
+                String itemStatus = itemStatusList.getString(j);
+                if (PropStatus.REACH_LIMIT.name().equals(itemStatus)
+                        || PropStatus.REACH_USER_HOLD_LIMIT.name().equals(itemStatus)
+                        || PropStatus.NO_ENOUGH_POINT.name().equals(itemStatus)) {
+                    Log.record("乐园兑换💸[" + spuName + "]停止:" + PropStatus.valueOf(itemStatus).nickName());
+                    if (PropStatus.REACH_LIMIT.name().equals(itemStatus)){
+                        Status.setFlagToday("farm::paradiseCoinExchangeLimit::" + spuId);
+                    }
+                    return true;
+                }
+            }
+        } catch (Throwable t) {
+            Log.runtime(TAG, "isItemExchange err:");
+            Log.printStackTrace(TAG, t);
+        }
+        return false;
+    }
+
+    private JSONArray getMallHomeItemList() {
+        JSONArray mallItemSimpleList = null;
+        try {
+            JSONObject jo = new JSONObject(AntFarmRpcCall.getMallHome());
+            if (ResUtil.checkResultCode(TAG, jo)) {
+                mallItemSimpleList = jo.optJSONArray("mallItemSimpleList");
+            }
+        } catch (Throwable t) {
+            Log.runtime(TAG, "getMallHomeItemList err:");
+            Log.printStackTrace(TAG, t);
+        }
+        return mallItemSimpleList;
     }
 
     private void animalSleepAndWake() {
@@ -2326,6 +2445,16 @@ public class AntFarm extends ModelTask {
         int NOTIFY = 0;
         int DONT_NOTIFY = 1;
         String[] nickNames = {"选中通知", "选中不通知"};
+    }
+
+    public enum PropStatus {
+        REACH_USER_HOLD_LIMIT, NO_ENOUGH_POINT, REACH_LIMIT;
+
+        public static final CharSequence[] nickNames = {"达到用户持有上限", "乐园币不足", "兑换达到上限"};
+
+        public CharSequence nickName() {
+            return nickNames[ordinal()];
+        }
     }
 
     public void family() {

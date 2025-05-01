@@ -2,6 +2,7 @@ package fansirsqi.xposed.sesame.task.antMember;
 import org.json.JSONException;
 import org.json.JSONObject;
 import fansirsqi.xposed.sesame.entity.RpcEntity;
+import fansirsqi.xposed.sesame.hook.ApplicationHook;
 import fansirsqi.xposed.sesame.hook.RequestManager;
 import fansirsqi.xposed.sesame.util.RandomUtil;
 import fansirsqi.xposed.sesame.util.TimeUtil;
@@ -314,5 +315,37 @@ public class AntMemberRpcCall {
     public static String queryUserAccountInfo(String pointProdCode) {
         return RequestManager.requestString("com.alipay.insmarketingbff.point.queryUserAccountInfo",
                 "[{\"channel\":\"HiChat\",\"pointProdCode\":\"" + pointProdCode + "\",\"pointUnitType\":\"COUNT\"}]");
+    }
+
+    /**
+     * 查询会员信息
+     */
+    public static String queryMemberInfo() {
+        String data = "[{\"needExpirePoint\":true,\"needGrade\":true,\"needPoint\":true,\"queryScene\":\"POINT_EXCHANGE_SCENE\",\"source\":\"POINT_EXCHANGE_SCENE\",\"sourcePassMap\":{\"innerSource\":\"\",\"source\":\"\",\"unid\":\"\"}}]";
+        return RequestManager.requestString("com.alipay.alipaymember.biz.rpc.member.h5.queryMemberInfo", data);
+    }
+
+    /**
+     * 查询0元兑公益道具列表
+     * @param userId userId
+     * @param pointBalance 当前可用会员积分
+     */
+    public static String queryShandieEntityList(String userId, String pointBalance) {
+        String uniqueId = System.currentTimeMillis() + userId + "94000SR202501061144200394000SR2025010611458003";
+        String data = "[{\"blackIds\":[],\"deliveryIdList\":[\"94000SR2025010611442003\",\"94000SR2025010611458003\"],\"filterCityCode\":false,\"filterPointNoEnough\":false,\"filterStockNoEnough\":false,\"pageNum\":1,\"pageSize\":18,\"point\":" + pointBalance + ",\"previewCopyDbId\":\"\",\"queryType\":\"DELIVERY_ID_LIST\",\"source\":\"member_day\",\"sourcePassMap\":{\"innerSource\":\"\",\"source\":\"0yuandui\",\"unid\":\"\"},\"topIds\":[],\"uniqueId\":\"" + uniqueId + "\"}]";
+        return RequestManager.requestString("com.alipay.alipaymember.biz.rpc.config.h5.queryShandieEntityList", data);
+    }
+
+    /**
+     * 会员积分兑换道具
+     * @param benefitId benefitId
+     * @param itemId itemId
+     * @return 结果
+     */
+    public static String exchangeBenefit(String benefitId, String itemId) {
+        String requestId = "requestId" + System.currentTimeMillis();
+        String alipayClientVersion = ApplicationHook.getAlipayVersion().getVersionString();
+        String data = "[{\"benefitId\":\"" + benefitId + "\",\"cityCode\":\"\",\"exchangeType\":\"POINT_PAY\",\"itemId\":\"" + itemId + "\",\"miniAppId\":\"\",\"orderSource\":\"\",\"requestId\":\"" + requestId + "\",\"requestSourceInfo\":\"\",\"sourcePassMap\":{\"alipayClientVersion\":\"" + alipayClientVersion + "\",\"innerSource\":\"\",\"mobileOsType\":\"Android\",\"source\":\"\",\"unid\":\"\"},\"userOutAccount\":\"\"}]";
+        return RequestManager.requestString("com.alipay.alipaymember.biz.rpc.exchange.h5.exchangeBenefit", data);
     }
 }

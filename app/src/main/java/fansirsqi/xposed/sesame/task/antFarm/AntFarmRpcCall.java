@@ -6,6 +6,7 @@ import org.json.JSONObject;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import java.util.UUID;
 
 import fansirsqi.xposed.sesame.hook.RequestManager;
@@ -608,5 +609,20 @@ public static String enterFarm(String farmId, String userId) {
     public static String giftFamilyDrawFragment(String giftUserId, int giftNum) {
         String args = "[{\"bizType\":\"ANTFARM_GAME_CENTER\",\"giftNum\":" + giftNum + ",\"giftUserId\":\"" + giftUserId + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\"}]";
         return RequestManager.requestString("com.alipay.antfarm.giftFamilyDrawFragment", args);
+    }
+
+    public static String getMallHome() {
+        String data = "[{\"bizType\":\"ANTFARM_GAME_CENTER\",\"pageSize\":10,\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"startIndex\":0}]";
+        return RequestManager.requestString("com.alipay.charitygamecenter.getMallHome", data);
+    }
+
+    public static String getMallItemDetail(String spuId) {
+        String data = "[{\"bizType\":\"ANTFARM_GAME_CENTER\",\"itemId\":\"" + spuId + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\"}]";
+        return RequestManager.requestString("com.alipay.charitygamecenter.getMallItemDetail", data);
+    }
+
+    public static String exchangeBenefit(String spuId, String skuId) {
+        String data = "[{\"bizType\":\"ANTFARM_GAME_CENTER\",\"ignoreHoldLimit\":false,\"itemId\":\"" + spuId + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"subItemId\":\"" + skuId + "\"}]";
+        return RequestManager.requestString("com.alipay.charitygamecenter.buyMallItem", data);
     }
 }

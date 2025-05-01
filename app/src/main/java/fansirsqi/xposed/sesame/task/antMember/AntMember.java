@@ -3,15 +3,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 
+import fansirsqi.xposed.sesame.entity.MemberBenefit;
 import fansirsqi.xposed.sesame.model.BaseModel;
 import fansirsqi.xposed.sesame.model.ModelFields;
 import fansirsqi.xposed.sesame.model.ModelGroup;
 import fansirsqi.xposed.sesame.model.modelFieldExt.BooleanModelField;
+import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.Log;
+import fansirsqi.xposed.sesame.util.Maps.IdMapManager;
+import fansirsqi.xposed.sesame.util.Maps.MemberBenefitsMap;
 import fansirsqi.xposed.sesame.util.Maps.UserMap;
 import fansirsqi.xposed.sesame.util.ResUtil;
 import fansirsqi.xposed.sesame.data.Status;
@@ -33,6 +38,8 @@ public class AntMember extends ModelTask {
   }
   private BooleanModelField memberSign;
   private BooleanModelField memberTask;
+  private BooleanModelField memberPointExchangeBenefit;
+  private SelectModelField memberPointExchangeBenefitList;
   private BooleanModelField collectSesame;
   private BooleanModelField collectSesameWithOneClick;
   private BooleanModelField sesameTask;
@@ -49,6 +56,8 @@ public class AntMember extends ModelTask {
     ModelFields modelFields = new ModelFields();
     modelFields.addField(memberSign = new BooleanModelField("memberSign", "会员签到", false));
     modelFields.addField(memberTask = new BooleanModelField("memberTask", "会员任务", false));
+    modelFields.addField(memberPointExchangeBenefit = new BooleanModelField("memberPointExchangeBenefit", "会员积分 | 兑换权益", false));
+    modelFields.addField(memberPointExchangeBenefitList = new SelectModelField("memberPointExchangeBenefitList", "会员积分 | 权益列表", new LinkedHashSet<>(), MemberBenefit::getList));
     modelFields.addField(sesameTask = new BooleanModelField("sesameTask", "芝麻信用|芝麻粒信用任务", false));
     modelFields.addField(collectSesame = new BooleanModelField("collectSesame", "芝麻信用|芝麻粒领取", false));
     modelFields.addField(collectSesameWithOneClick = new BooleanModelField("collectSesameWithOneClick", "芝麻信用|芝麻粒领取使用一键收取", false));
@@ -83,6 +92,9 @@ public class AntMember extends ModelTask {
       }
       if (memberTask.getValue()) {
         doAllMemberAvailableTask();
+      }
+      if (memberPointExchangeBenefit.getValue()) {
+        memberPointExchangeBenefit();
       }
       if ((sesameTask.getValue() || collectSesame.getValue()) && checkSesameCanRun()) {
         if (sesameTask.getValue()) {
@@ -136,6 +148,69 @@ public class AntMember extends ModelTask {
       Log.record("执行结束-" + getName());
     }
   }
+
+  /**
+   * 会员积分0元兑，权益道具兑换
+   */
+  private void memberPointExchangeBenefit() {
+    try {
+      String userId = UserMap.getCurrentUid();
+      JSONObject memberInfo = new JSONObject(AntMemberRpcCall.queryMemberInfo());
+      if (!ResUtil.checkResultCode(TAG, memberInfo)) {
+        return;
+      }
+      String pointBalance = memberInfo.getString("pointBalance");
+      JSONObject jo = new JSONObject(AntMemberRpcCall.queryShandieEntityList(userId, pointBalance));
+      if (!ResUtil.checkResultCode(TAG, jo)) {
+        return;
+      }
+      if (!jo.has("benefits")) {
+        Log.record("会员积分[未找到可兑换权益]");
+        return;
+      }
+      JSONArray benefits = jo.getJSONArray("benefits");
+      for (int i = 0; i < benefits.length(); i++) {
+        JSONObject benefitInfo = benefits.getJSONObject(i);
+        JSONObject pricePresentation = benefitInfo.getJSONObject("pricePresentation");
+        String name = benefitInfo.getString("name");
+        String benefitId = benefitInfo.getString("benefitId");
+        IdMapManager.getInstance(MemberBenefitsMap.class).add(benefitId, name);
+        if (!Status.canMemberPointExchangeBenefitToday(benefitId)
+                || !memberPointExchangeBenefitList.getValue().contains(benefitId)) {
+          continue;
+        }
+        String itemId = benefitInfo.getString("itemId");
+        if (exchangeBenefit(benefitId, itemId)) {
+          String point = pricePresentation.getString("point");
+          Log.other("会员积分🎐兑换[" + name + "]#花费[" + point + "积分]");
+        } else {
+          Log.other("会员积分🎐兑换[" + name + "]失败！");
+        }
+      }
+      IdMapManager.getInstance(MemberBenefitsMap.class).save(userId);
+    } catch (JSONException e) {
+      Log.record("JSON解析错误: " + e.getMessage());
+      Log.printStackTrace(TAG, e);
+    } catch (Throwable t) {
+      Log.runtime(TAG, "memberPointExchangeBenefit err:");
+      Log.printStackTrace(TAG, t);
+    }
+  }
+
+  private Boolean exchangeBenefit(String benefitId, String itemId) {
+    try {
+      JSONObject jo = new JSONObject(AntMemberRpcCall.exchangeBenefit(benefitId, itemId));
+      if (ResUtil.checkResultCode(TAG, jo)) {
+        Status.memberPointExchangeBenefitToday(benefitId);
+        return true;
+      }
+    } catch (Throwable t) {
+      Log.runtime(TAG, "exchangeBenefit err:");
+      Log.printStackTrace(TAG, t);
+    }
+    return false;
+  }
+
   /**
    * 会员签到
    */

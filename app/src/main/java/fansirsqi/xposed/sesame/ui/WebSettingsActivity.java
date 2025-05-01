@@ -59,6 +59,8 @@ import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.Maps.BeachMap;
 import fansirsqi.xposed.sesame.util.Maps.CooperateMap;
 import fansirsqi.xposed.sesame.util.Maps.IdMapManager;
+import fansirsqi.xposed.sesame.util.Maps.MemberBenefitsMap;
+import fansirsqi.xposed.sesame.util.Maps.ParadiseCoinBenefitIdMap;
 import fansirsqi.xposed.sesame.util.Maps.ReserveaMap;
 import fansirsqi.xposed.sesame.util.Maps.UserMap;
 import fansirsqi.xposed.sesame.util.Maps.VitalityRewardsMap;
@@ -100,6 +102,8 @@ public class WebSettingsActivity extends BaseActivity {
         UserMap.load(userId);
         CooperateMap.getInstance(CooperateMap.class).load(userId);
         IdMapManager.getInstance(VitalityRewardsMap.class).load(this.userId);
+        IdMapManager.getInstance(MemberBenefitsMap.class).load(this.userId);
+        IdMapManager.getInstance(ParadiseCoinBenefitIdMap.class).load(this.userId);
         IdMapManager.getInstance(ReserveaMap.class).load();
         IdMapManager.getInstance(BeachMap.class).load();
         Config.load(userId);

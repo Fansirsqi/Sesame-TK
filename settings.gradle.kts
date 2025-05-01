@@ -1,8 +1,8 @@
 pluginManagement {
     repositories {
+        maven { url = uri("https://maven.aliyun.com/repository/public/") }
         gradlePluginPortal()
         google()
-        maven { url = uri("https://maven.aliyun.com/repository/public/") }
     }
     plugins {
         kotlin("jvm") version "2.2.0-Beta1"  // 使用与libs.versions.toml中kotlin-plugin相同的版本
@@ -11,8 +11,8 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        google()
         maven { url = uri("https://maven.aliyun.com/repository/public/") }
+        google()
     }
 }
 plugins {
