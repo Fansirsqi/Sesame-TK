@@ -290,6 +290,15 @@ public class AntMember extends ModelTask {
       String s;
       String recordId;
       JSONObject responseObj;
+
+      // 无法完成的任务
+      switch (taskTemplateId) {
+        case "save_ins_universal_new": // 坚持攒保证金
+        case "xiaofeijin_visit_new": // 坚持攒消费金金币
+        case "xianyonghoufu_new": // 体验先用后付
+          continue;
+      }
+
       if (task.getString("actionUrl").contains("jumpAction")) {
         // 跳转APP任务 依赖跳转的APP发送请求鉴别任务完成 仅靠hook支付宝无法完成
         continue;
@@ -321,13 +330,7 @@ public class AntMember extends ModelTask {
         Log.error(TAG + ".joinAndFinishSesameTask.feedBackSesameTask", "芝麻信用💳[任务" + taskTitle + "回调失败]#" + s);
         continue;
       }
-      // 无法完成的任务
-      switch (taskTemplateId) {
-        case "save_ins_universal_new": // 坚持攒保证金
-        case "xiaofeijin_visit_new": // 坚持攒消费金金币
-        case "xianyonghoufu_new": // 体验先用后付
-          continue;
-      }
+
       // 是否为浏览15s任务
       boolean assistiveTouch = task.getJSONObject("strategyRule").optBoolean("assistiveTouch");
       if (task.optBoolean("jumpToPushModel") || assistiveTouch) {
