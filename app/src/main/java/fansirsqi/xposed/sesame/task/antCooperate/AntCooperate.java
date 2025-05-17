@@ -83,7 +83,7 @@ public class AntCooperate extends ModelTask {
                     s = AntCooperateRpcCall.queryUserCooperatePlantList();
                 }
                 JSONObject jo = new JSONObject(s);
-                if (ResUtil.checkResultCode(jo)) {
+                if (ResUtil.checkResCode(jo)) {
                     Log.runtime(TAG, "获取合种列表成功");
                     int userCurrentEnergy = jo.getInt("userCurrentEnergy");
                     JSONArray ja = jo.getJSONArray("cooperatePlants");
@@ -147,7 +147,7 @@ public class AntCooperate extends ModelTask {
         try {
             String s = AntCooperateRpcCall.cooperateWater(AntCooperate.UserId, coopId, count);
             JSONObject jo = new JSONObject(s);
-            if (ResUtil.checkResultCode(jo)) {
+            if (ResUtil.checkResCode(jo)) {
                 Log.forest("合种浇水🚿[" + name + "]" + jo.getString("barrageText"));
                 Status.cooperateWaterToday(UserId, coopId);
             } else {
@@ -195,7 +195,7 @@ public class AntCooperate extends ModelTask {
             }
             TimeUtil.sleep(500);
             JSONObject jo = new JSONObject(AntCooperateRpcCall.queryCooperateRank("D", cooperationId));
-            if (ResUtil.checkResultCode(TAG, jo)) {
+            if (ResUtil.checkResCode(TAG, jo)) {
                 JSONArray cooperateRankInfos = jo.getJSONArray("cooperateRankInfos");
                 for (int i = 0; i < cooperateRankInfos.length(); i++) {
                     JSONObject rankInfo = cooperateRankInfos.getJSONObject(i);

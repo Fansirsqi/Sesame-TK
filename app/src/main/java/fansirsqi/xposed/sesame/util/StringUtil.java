@@ -77,4 +77,25 @@ public class StringUtil {
         result = text.substring(zLen, yLen);
         return result;
     }
+    //新增
+    public static String getJsonString(Map<String, Object> map) {
+        StringBuilder sb = new StringBuilder("[{");
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            Object value = entry.getValue();
+            if (value != null) {
+                sb.append("\"").append(entry.getKey()).append("\": ");
+                if (value instanceof String) {
+                    sb.append("\"").append(value).append("\"");
+                } else {
+                    sb.append(value);
+                }
+                sb.append(",");
+            }
+        }
+        if (sb.length() > 2) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        sb.append("}]");
+        return sb.toString();
+    }
 }

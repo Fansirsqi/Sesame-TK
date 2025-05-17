@@ -3,7 +3,6 @@
 *.ap_
 /app/normal/*
 /app/compatible/*
-/app/lint-baseline.xml
 *.jks
 # Files for the ART/Dalvik VM
 *.dex
@@ -68,20 +67,3 @@ demo/*
 /.vscode/settings.json
 *.REST
 *.txt
-*.json
-
-# CPP source code
-#C++源代码
-/app/src/main/cpp/ 
-
-#编译缓存
-/app/.cxx/* 
-
-# python virtual env
-.venv/
-test
-
-# cache
-.lingma/rules/project_rule.md
-serve-debug/webhook.db
-*.pyc

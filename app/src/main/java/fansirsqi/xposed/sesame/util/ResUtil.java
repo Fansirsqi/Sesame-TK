@@ -1,18 +1,9 @@
 package fansirsqi.xposed.sesame.util;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
 public class ResUtil {
     private static final String TAG = ResUtil.class.getSimpleName();
-    private static final String UNKNOWN_TAG = "Unknown TAG";
-
-    /**
-     * 将字符串转换为JSON字符串
-     *
-     * @param str 要转换的字符串
-     * @return 转换后的JSON字符串，转换失败返回null
-     */
+    // 写一个将str转换为jsonobj的方法
     public static String strToJson(String str) {
         try {
             return new JSONObject(str).toString();
@@ -21,82 +12,17 @@ public class ResUtil {
             return null;
         }
     }
-
-
-    /**
-     * 打印错误信息
-     *
-     * @param tag               标签
-     * @param jo                JSON对象
-     * @param errorMessageField 错误信息字段
-     */
-    public static void printErrorMessage(String tag, JSONObject jo, String errorMessageField) {
-        try {
-            String errMsg = tag + " error:";
-            Log.record(errMsg + jo.getString(errorMessageField));
-            Log.runtime(jo.getString(errorMessageField), jo.toString());
-        } catch (Throwable t) {
-            Log.error(TAG, "printErrorMessage err:");
-            Log.printStackTrace(TAG, t);
-        }
-    }
-
-    /**
-     * 检查JSON对象中的memo字段
-     *
-     * @param jo JSON对象
-     * @return 如果memo字段值为SUCCESS返回true，否则返回false
-     */
-    public static Boolean checkMemo(JSONObject jo) {
-        return checkMemo(UNKNOWN_TAG, jo);
-    }
-
-    /**
-     * 检查JSON对象中的memo字段
-     *
-     * @param tag 标签
-     * @param jo  JSON对象
-     * @return 如果memo字段值为SUCCESS返回true，否则返回false
-     */
-    public static Boolean checkMemo(String tag, JSONObject jo) {
-        try {
-            if (!"SUCCESS".equals(jo.optString("memo"))) {
-                if (jo.has("memo")) {
-                    printErrorMessage(tag, jo, "memo");
-                } else {
-                    Log.runtime(tag, jo.toString());
-                }
-                return false;
-            }
-            return true;
-        } catch (Throwable t) {
-            Log.error(TAG, "checkMemo err:");
-            Log.printStackTrace(TAG, t);
-        }
-        return false;
-    }
-
-    /**
-     * 检查JSON字符串中的响应码
-     *
-     * @param str JSON字符串
-     * @return 如果响应码符合预期返回true，否则返回false
-     * @throws JSONException JSON解析异常
-     */
-    public static Boolean checkResultCode(String str) throws JSONException {
+    public static Boolean checkResCode(String str) throws JSONException {
         JSONObject jsonObj = new JSONObject(str);
-        return checkResultCode(TAG, jsonObj);
+        return checkResCode(TAG, jsonObj);
     }
-
-    public static Boolean checkResultCode(String TAG, String str) throws JSONException {
+    public static Boolean checkResCode(String TAG, String str) throws JSONException {
         JSONObject jsonObj = new JSONObject(str);
-        return checkResultCode(TAG, jsonObj);
+        return checkResCode(TAG, jsonObj);
     }
-
-    public static Boolean checkResultCode(JSONObject jo) {
-        return checkResultCode(TAG, jo);
+    public static Boolean checkResCode(JSONObject jo) {
+        return checkResCode(TAG, jo);
     }
-
     /**
      * 检查JSON对象中的响应码（resultCode），并根据其类型和值返回处理结果。
      *
@@ -110,7 +36,7 @@ public class ResUtil {
      * @param jo  包含resultCode的JSON对象
      * @return 如果resultCode符合预期，则返回true；否则返回false
      */
-    public static Boolean checkResultCode(String TAG, JSONObject jo) {
+    public static Boolean checkResCode(String TAG, JSONObject jo) {
         try {
             Object resCode = jo.opt("resultCode");
             if (resCode == null) {
@@ -137,21 +63,17 @@ public class ResUtil {
         }
         return false;
     }
-
     public static Boolean checkSuccess(String str) throws JSONException {
         JSONObject jo = new JSONObject(str);
         return checkSuccess(TAG, jo);
     }
-
     public static Boolean checkSuccess(String tag, String str) throws JSONException {
         JSONObject jo = new JSONObject(str);
         return checkSuccess(tag, jo);
     }
-
     public static Boolean checkSuccess(JSONObject jo) {
         return checkSuccess(TAG, jo);
     }
-
     public static Boolean checkSuccess(String tag, JSONObject jo) {
         if (!jo.optBoolean("success") && !jo.optBoolean("isSuccess")) {
             logErrorDetails(tag, jo);
@@ -159,7 +81,6 @@ public class ResUtil {
         }
         return true;
     }
-
     private static void recordError(String TAG, JSONObject jo, String key, String prefix) throws JSONException {
         if (jo.has(key)) {
             Log.record(TAG + prefix + ": " + jo.getString(key));
@@ -169,7 +90,6 @@ public class ResUtil {
             Log.record(TAG + prefix + ": " + jo);
         }
     }
-
     private static void logErrorDetails(String tag, JSONObject jo) {
         try {
             if (jo.has("errorMsg")) {

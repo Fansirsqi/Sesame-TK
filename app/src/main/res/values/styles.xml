@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight">
+    <style name="AppTheme" parent="@style/Theme.AppCompat.Light">
         <!--Appbar背景色-->
         <item name="colorPrimary">@color/colorPrimary</item>
         <!--ToolBar上的Title颜色-->
-        <item name="titleTextColor">@color/active_text</item>
-        <item name="subtitleTextColor">@color/active_text</item>
-
-        <item name="android:navigationBarColor">@color/colorPrimary</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowTranslucentStatus">true</item>
+        <item name="titleTextColor">@color/textColorPrimary</item>
+        <item name="subtitleTextColor">#333333</item>
+        <item name="android:navigationBarColor">@color/button</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
         <item name="windowNoTitle">true</item>
         <!-- 设置actionOverflowMenuStyle以自定义菜单的背景 -->
         <item name="actionOverflowMenuStyle">@style/MenuTheme</item>
@@ -19,9 +17,23 @@
     <style name="MenuTheme">
         <item name="android:textColorSecondary">@color/textColorPrimary</item>
         <item name="android:popupBackground">@drawable/menu_background</item>
+    </style>
+
+    <!--请求-->
+    <style name="GlassInputStyle">
+        <item name="android:background">@drawable/bg_glass_input</item>
+        <item name="boxBackgroundColor">@android:color/transparent</item>
+        <item name="hintTextColor">@color/md_theme_light_onSurface</item>
+        <item name="android:textColorHint">#80000000</item>
+        <item name="counterTextColor">@color/md_theme_light_onSurface</item>
+    </style>
+
+    <style name="GlassButtonStyle" parent="Widget.MaterialComponents.Button">
+        <item name="android:textSize">18sp</item>
+        <item name="backgroundTint">@android:color/transparent</item>
         <item name="android:textColor">@color/textColorPrimary</item>
-        <item name="android:itemBackground">@color/background</item>
-        <item name="android:colorBackground">@color/background</item>
+        <item name="rippleColor">#20000000</item>
+        <item name="cornerRadius">24dp</item>
     </style>
 
 </resources>

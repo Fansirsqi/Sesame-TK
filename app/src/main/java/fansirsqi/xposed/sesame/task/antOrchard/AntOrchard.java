@@ -269,9 +269,12 @@ public class AntOrchard extends ModelTask {
       String s = AntOrchardRpcCall.orchardListTask();
       JSONObject jo = new JSONObject(s);
       if ("100".equals(jo.getString("resultCode"))) {
-        if (jo.has("signTaskInfo")) {
-          JSONObject signTaskInfo = jo.getJSONObject("signTaskInfo");
-          orchardSign(signTaskInfo);
+
+        if(!Status.hasFlagToday("orchardSign")) {
+          if (jo.has("signTaskInfo")) {
+            JSONObject signTaskInfo = jo.getJSONObject("signTaskInfo");
+            orchardSign(signTaskInfo);
+          }
         }
         JSONArray jaTaskList = jo.getJSONArray("taskList");
         for (int i = 0; i < jaTaskList.length(); i++) {
@@ -307,11 +310,13 @@ public class AntOrchard extends ModelTask {
         if ("100".equals(joSign.getString("resultCode"))) {
           int awardCount = joSign.getJSONObject("signTaskInfo").getJSONObject("currentSignItem").getInt("awardCount");
           Log.farm("农场签到📅[获得肥料]#" + awardCount + "g");
+          Status.setFlagToday("orchardSign");
         } else {
           Log.runtime(joSign.getString("resultDesc"), joSign.toString());
         }
       } else {
         Log.record("农场今日已签到");
+        Status.setFlagToday("orchardSign");
       }
     } catch (Throwable t) {
       Log.runtime(TAG, "orchardSign err:");

@@ -27,4 +27,7 @@ public class ReserveRpcCall {
         String args = "[{\"applyActions\":\"" + applyActions + "\",\"itemTypes\":\"" + itemTypes + "\"}]";
         return RequestManager.requestString("alipay.antforest.forest.h5.queryTreeItemsForExchange", args);
     }
+    public static String queryPost(String method,String data){
+        return RequestManager.requestString(method, data);
+    }
 }

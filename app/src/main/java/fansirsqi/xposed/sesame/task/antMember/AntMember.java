@@ -3,6 +3,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import fansirsqi.xposed.sesame.model.BaseModel;
 import fansirsqi.xposed.sesame.model.ModelFields;
@@ -31,6 +33,10 @@ public class AntMember extends ModelTask {
   public String getIcon() {
     return "AntMember.png";
   }
+  @Override
+  public Boolean isSync() {
+    return true;
+  }
   private BooleanModelField memberSign;
   private BooleanModelField memberTask;
   private BooleanModelField collectSesame;
@@ -49,7 +55,7 @@ public class AntMember extends ModelTask {
     ModelFields modelFields = new ModelFields();
     modelFields.addField(memberSign = new BooleanModelField("memberSign", "会员签到", false));
     modelFields.addField(memberTask = new BooleanModelField("memberTask", "会员任务", false));
-    modelFields.addField(sesameTask = new BooleanModelField("sesameTask", "芝麻信用|芝麻粒信用任务", false));
+    modelFields.addField(sesameTask = new BooleanModelField("sesameTask", "芝麻信用|芝麻粒信用任务", true));
     modelFields.addField(collectSesame = new BooleanModelField("collectSesame", "芝麻信用|芝麻粒领取", false));
     modelFields.addField(collectSesameWithOneClick = new BooleanModelField("collectSesameWithOneClick", "芝麻信用|芝麻粒领取使用一键收取", false));
     modelFields.addField(collectInsuredGold = new BooleanModelField("collectInsuredGold", "蚂蚁保|保障金领取", false));
@@ -78,35 +84,47 @@ public class AntMember extends ModelTask {
   public void run() {
     try {
       Log.record("执行开始-" + getName());
+      //会员签到
       if (memberSign.getValue()) {
         doMemberSign();
       }
+      //会员任务
       if (memberTask.getValue()) {
         doAllMemberAvailableTask();
       }
+      //芝麻粒任务
       if ((sesameTask.getValue() || collectSesame.getValue()) && checkSesameCanRun()) {
-        if (sesameTask.getValue()) {
-          doAllAvailableSesameTask();
-        }
-        if (collectSesame.getValue()) {
-          collectSesame(collectSesameWithOneClick.getValue());
+        if(!Status.hasFlagToday("SesameCRTask")) {
+          if (sesameTask.getValue()) {
+            doAllAvailableSesameTask();
+          }
+          //芝麻粒领取
+          if (collectSesame.getValue()) {
+            collectSesame(collectSesameWithOneClick.getValue());
+          }
         }
       }
+      //保障金领取
       if (collectInsuredGold.getValue()) {
         collectInsuredGold();
       }
+      //黄金票
       if (enableGoldTicket.getValue()) {
         goldTicket();
       }
+      //游戏中心
       if (enableGameCenter.getValue()) {
         enableGameCenter();
       }
+      //安心豆
       if (beanSignIn.getValue()) {
         beanSignIn();
       }
+      //安心豆兑换时光加速器
       if (beanExchangeBubbleBoost.getValue()) {
         beanExchangeBubbleBoost();
       }
+      //商家服务
       if (merchantSign.getValue() || merchantKmdk.getValue() || merchantMoreTask.getValue()) {
         JSONObject jo = new JSONObject(AntMemberRpcCall.transcodeCheck());
         if (!jo.optBoolean("success")) {
@@ -124,7 +142,9 @@ public class AntMember extends ModelTask {
           kmdkSignUp();
         }
         if (merchantSign.getValue()) {
-          doMerchantSign();
+          if(!Status.hasFlagToday("MerchantSign")) {
+            doMerchantSign();
+          }
         }
         if (merchantMoreTask.getValue()) {
           doMerchantMoreTask();
@@ -145,7 +165,7 @@ public class AntMember extends ModelTask {
         String s = AntMemberRpcCall.queryMemberSigninCalendar();
         ThreadUtil.sleep(500);
         JSONObject jo = new JSONObject(s);
-        if (ResUtil.checkResultCode(jo)) {
+        if (ResUtil.checkResCode(jo)) {
           Log.other("会员签到📅[" + jo.getString("signinPoint") + "积分]#已签到" + jo.getString("signinSumDay") + "天");
           Status.memberSignInToday(UserMap.getCurrentUid());
         } else {
@@ -167,11 +187,13 @@ public class AntMember extends ModelTask {
       String str = AntMemberRpcCall.queryAllStatusTaskList();
       ThreadUtil.sleep(500);
       JSONObject jsonObject = new JSONObject(str);
-      if (!ResUtil.checkResultCode(jsonObject)) {
+      //Log.debug("debug--会员任务列表:"+jsonObject);
+      if (!ResUtil.checkResCode(jsonObject)) {
         Log.error(TAG + ".doAllMemberAvailableTask", "会员任务响应失败: " + jsonObject.getString("resultDesc"));
         return;
       }
       if (!jsonObject.has("availableTaskList")) {
+        Log.other(TAG+"会员任务没有可用任务列表");
         return;
       }
       JSONArray taskList = jsonObject.getJSONArray("availableTaskList");
@@ -194,7 +216,7 @@ public class AntMember extends ModelTask {
       String s = AntMemberRpcCall.queryPointCert(page, pageSize);
       ThreadUtil.sleep(500);
       JSONObject jo = new JSONObject(s);
-      if (ResUtil.checkResultCode(jo)) {
+      if (ResUtil.checkResCode(jo)) {
         boolean hasNextPage = jo.getBoolean("hasNextPage");
         JSONArray jaCertList = jo.getJSONArray("certList");
         for (int i = 0; i < jaCertList.length(); i++) {
@@ -204,7 +226,7 @@ public class AntMember extends ModelTask {
           int pointAmount = jo.getInt("pointAmount");
           s = AntMemberRpcCall.receivePointByUser(id);
           jo = new JSONObject(s);
-          if (ResUtil.checkResultCode(jo)) {
+          if (ResUtil.checkResCode(jo)) {
             Log.other("会员积分🎖️[领取" + bizTitle + "]#" + pointAmount + "积分");
           } else {
             Log.record(jo.getString("resultDesc"));
@@ -280,69 +302,125 @@ public class AntMember extends ModelTask {
    * @param taskList 任务列表
    * @throws JSONException JSON解析异常，上抛处理
    */
-  private static void joinAndFinishSesameTask(JSONArray taskList) throws JSONException {
+  private static Set<String> failedTaskTemplates = new HashSet<>();
+
+  /**
+   * 芝麻信用-领取并完成任务
+   * @param taskList 任务列表
+   * @throws JSONException JSON解析异常
+   */
+  private static boolean joinAndFinishSesameTask(JSONArray taskList) throws JSONException {
     for (int i = 0; i < taskList.length(); i++) {
       JSONObject task = taskList.getJSONObject(i);
-      String taskTemplateId = task.getString("templateId");
       String taskTitle = task.getString("title");
-      int needCompleteNum = task.getInt("needCompleteNum");
-      int completedNum = task.optInt("completedNum", 0);
-      String s;
-      String recordId;
-      JSONObject responseObj;
-      if (task.getString("actionUrl").contains("jumpAction")) {
-        // 跳转APP任务 依赖跳转的APP发送请求鉴别任务完成 仅靠hook支付宝无法完成
+      String taskTemplateId = task.getString("templateId");
+
+      // 判断是否为无法完成的任务（包括黑名单中的任务）
+      if (isUnfinishableTask(task)) {
         continue;
       }
-      if (!task.has("todayFinish")) {
-        // 领取任务
-        s = AntMemberRpcCall.joinSesameTask(taskTemplateId);
+
+      String recordId = null;
+
+      // 尝试获取 recordId
+      if (task.has("recordId")) {
+        recordId = task.getString("recordId");
+      } else if (task.has("templateId")) {
+        String s = AntMemberRpcCall.joinSesameTask(taskTemplateId);
         ThreadUtil.sleep(200);
-        responseObj = new JSONObject(s);
+        JSONObject responseObj = new JSONObject(s);
         if (!responseObj.optBoolean("success")) {
-          Log.other(TAG, "芝麻信用💳[领取任务" + taskTitle + "失败]#" + s);
-          Log.error(TAG + ".joinAndFinishSesameTask.joinSesameTask", "芝麻信用💳[领取任务" + taskTitle + "失败]#" + s);
+          Log.other(TAG, "芝麻信用💳[领取任务" + task.getString("title") + "失败]#" + s);
+          markTaskAsFailed(task);
           continue;
         }
         recordId = responseObj.getJSONObject("data").getString("recordId");
       } else {
-        if (!task.has("recordId")) {
-          Log.other(TAG, "芝麻信用💳[任务" + taskTitle + "未获取到recordId]#" + task);
-          Log.error(TAG + ".joinAndFinishSesameTask", "芝麻信用💳[任务" + taskTitle + "未获取到recordId]#" + task);
-          continue;
-        }
-        recordId = task.getString("recordId");
-      }
-      s = AntMemberRpcCall.feedBackSesameTask(taskTemplateId);
-      ThreadUtil.sleep(200);
-      responseObj = new JSONObject(s);
-      if (!responseObj.optBoolean("success")) {
-        Log.other(TAG, "芝麻信用💳[任务" + taskTitle + "回调失败]#" + responseObj.getString("errorMessage"));
-        Log.error(TAG + ".joinAndFinishSesameTask.feedBackSesameTask", "芝麻信用💳[任务" + taskTitle + "回调失败]#" + s);
         continue;
       }
-      // 无法完成的任务
-      switch (taskTemplateId) {
-        case "save_ins_universal_new": // 坚持攒保证金
-        case "xiaofeijin_visit_new": // 坚持攒消费金金币
-        case "xianyonghoufu_new": // 体验先用后付
-          continue;
+
+      // 回调任务
+      String s = AntMemberRpcCall.feedBackSesameTask(taskTemplateId);
+      ThreadUtil.sleep(200);
+      JSONObject responseObj = new JSONObject(s);
+      if (!responseObj.optBoolean("success")) {
+        Log.other(TAG, "芝麻信用💳[任务" + task.getString("title") + "回调失败]#" + responseObj.optString("errorMessage"));
+        markTaskAsFailed(task);
+        continue;
       }
-      // 是否为浏览15s任务
-      boolean assistiveTouch = task.getJSONObject("strategyRule").optBoolean("assistiveTouch");
-      if (task.optBoolean("jumpToPushModel") || assistiveTouch) {
+
+      // 是否为浏览15秒任务
+      boolean assistiveTouch = task.getJSONObject("strategyRule").optBoolean("assistiveTouch", false);
+      if (task.optBoolean("jumpToPushModel", false) || assistiveTouch) {
         s = AntMemberRpcCall.finishSesameTask(recordId);
         ThreadUtil.sleep(16000);
         responseObj = new JSONObject(s);
         if (!responseObj.optBoolean("success")) {
-          Log.other(TAG, "芝麻信用💳[任务" + taskTitle + "完成失败]#" + s);
-          Log.error(TAG + ".joinAndFinishSesameTask.finishSesameTask", "芝麻信用💳[任务" + taskTitle + "完成失败]#" + s);
+          Log.other(TAG, "芝麻信用💳[任务" + task.getString("title") + "完成失败]#" + s);
+          markTaskAsFailed(task);
           continue;
         }
       }
-      Log.other("芝麻信用💳[完成任务" + taskTitle + "]#(" + (completedNum + 1) + "/" + needCompleteNum + "天)");
+
+      int completedNum = task.optInt("completedNum", 0);
+      int needCompleteNum = task.getInt("needCompleteNum");
+      Log.other("芝麻信用💳[完成任务" + task.getString("title") + "]#(" + (completedNum + 1) + "/" + needCompleteNum + "天)");
     }
+
+    // 所有任务遍历完毕，不管有没有失败，都标记为完成
+    Log.other(TAG, "芝麻信用💳[本次任务处理完毕]");
+    Status.setFlagToday("SesameCRTask");
+    return true;
   }
+
+  /**
+   * 判断当前任务是否属于无法完成的任务
+   * 包括：
+   *   - 已完成
+   *   - 黑名单任务（failedTaskTemplates）
+   *   - 特定模板任务（switch-case中列出的）
+   */
+  private static boolean isUnfinishableTask(JSONObject task) throws JSONException {
+    String taskTitle = task.getString("title");
+    String taskTemplateId = task.getString("templateId");
+
+    // 如果任务已完成，则跳过
+    if (task.has("todayFinish") && task.getBoolean("todayFinish")) {
+      Log.other(TAG, "芝麻信用💳[任务" + taskTitle + "]今日已完成");
+      return true;
+    }
+
+    // 如果任务在失败任务集合中，跳过
+    if (failedTaskTemplates.contains(taskTemplateId)) {
+      Log.other(TAG, "芝麻信用💳[跳过之前失败的任务]" + taskTitle);
+      return true;
+    }
+
+    // 检查是否是固定不可完成任务（case里的那些）
+    switch (taskTemplateId) {
+      case "save_ins_universal_new":
+      case "xiaofeijin_visit_new":
+      case "xianyonghoufu_new":
+      case "taobaoshipin_sanfang":
+      case "tbapp_bbnongchang_sanfang_hesen":
+      case "tbapp_taojinbin_sanfang":
+        Log.other(TAG, "芝麻信用💳[任务" + taskTitle + "]不可完成任务，自动跳过");
+        return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * 标记任务为失败
+   */
+  private static void markTaskAsFailed(JSONObject task) throws JSONException {
+    String taskTemplateId = task.getString("templateId");
+    failedTaskTemplates.add(taskTemplateId);
+  }
+
+
+
   /**
    * 芝麻粒收取
    * @param withOneClick 启用一键收取
@@ -443,10 +521,10 @@ public class AntMember extends ModelTask {
             }
           }
         } else {
-          Log.record("queryActivity");
+          Log.record("商家服务🏬queryActivity");
           Log.runtime(jo.toString());
         }
-        ThreadUtil.sleep(500);
+        ThreadUtil.sleep(5000);
       }
     } catch (Throwable t) {
       Log.runtime(TAG, "kmdkSignUp err:");
@@ -469,6 +547,7 @@ public class AntMember extends ModelTask {
       String reward = jo.getString("todayReward");
       if ("SUCCESS".equals(signResult)) {
         Log.other("商家服务🏬[每日签到]#获得积分" + reward);
+        Status.setFlagToday("merchantSign");
       } else {
         Log.record(s);
         Log.runtime(s);
@@ -666,7 +745,7 @@ public class AntMember extends ModelTask {
     ThreadUtil.sleep(16000);
     String str = AntMemberRpcCall.executeTask(bizParam, bizSubType, bizType, id);
     JSONObject jo = new JSONObject(str);
-    if (!ResUtil.checkResultCode(jo)) {
+    if (!ResUtil.checkResCode(jo)) {
       Log.runtime(TAG, "执行任务失败:" + jo.optString("resultDesc"));
       return;
     }
@@ -684,10 +763,11 @@ public class AntMember extends ModelTask {
       String str = AntMemberRpcCall.queryAllStatusTaskList();
       ThreadUtil.sleep(500);
       JSONObject jsonObject = new JSONObject(str);
-      if (!ResUtil.checkResultCode(jsonObject)) {
+      if (!ResUtil.checkResCode(jsonObject)) {
         Log.error(TAG + ".checkMemberTaskFinished", "会员任务响应失败: " + jsonObject.getString("resultDesc"));
       }
       if (!jsonObject.has("availableTaskList")) {
+        Log.error(TAG + ".checkMemberTaskFinished", "会员任务响应失败2: " + jsonObject.getString("resultDesc"));
         return true;
       }
       JSONArray taskList = jsonObject.getJSONArray("availableTaskList");
@@ -821,7 +901,7 @@ public class AntMember extends ModelTask {
         jo = new JSONObject(AntMemberRpcCall.signInTrigger("AP16242232", "INS_BLUE_BEAN_SIGN"));
         if (jo.optBoolean("success")) {
           String prizeName = jo.getJSONObject("result").getJSONArray("prizeSendOrderDTOList").getJSONObject(0).getString("prizeName");
-          Log.record("安心豆🫘[" + prizeName + "]");
+          Log.other("安心豆🫘[" + prizeName + "]");
         } else {
           Log.runtime(jo.toString());
         }
@@ -854,7 +934,7 @@ public class AntMember extends ModelTask {
       }
       jo = new JSONObject(AntMemberRpcCall.beanExchange(itemId, realConsumePointAmount));
       if (jo.optBoolean("success")) {
-        Log.record("安心豆🫘[兑换:" + itemName + "]");
+        Log.other("安心豆🫘[兑换:" + itemName + "]");
       } else {
         Log.runtime(jo.toString());
       }

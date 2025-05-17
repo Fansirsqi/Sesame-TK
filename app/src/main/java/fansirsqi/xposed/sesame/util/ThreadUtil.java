@@ -27,10 +27,18 @@ public class ThreadUtil {
      * @param millis 毫秒数。
      */
     public static void sleep(long millis) {
+        if (Thread.currentThread().isInterrupted()) {
+            Log.error("ThreadUtil", "Thread already interrupted, skipping sleep");
+            Log.system("ThreadUtil", "Thread already interrupted, skipping sleep");
+            return;
+        }
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            // 恢复中断状态
+            Thread.currentThread().interrupt();
+            // 可以选择记录日志或抛出自定义异常
+            Log.printStackTrace("ThreadUtil Thread sleep interrupted", e);
         }
     }
     public boolean shutdownAndAwaitTermination(ExecutorService pool) {

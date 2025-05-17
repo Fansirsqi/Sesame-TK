@@ -85,6 +85,7 @@ public class AntOrchardRpcCall {
                 "[{\"requestType\":\"NORMAL\",\"sceneCode\":\"ORCHARD\",\"signScene\":\"ANTFARM_ORCHARD_SIGN_V2\",\"source\":\"ch_appcenter__chsub_9patch\",\"version\":\""
                         + VERSION + "\"}]");
     }
+    //农场任务
     public static String finishTask(String userId, String sceneCode, String taskType) {
         return RequestManager.requestString("com.alipay.antiep.finishTask",
                 "[{\"outBizNo\":\"" + userId + System.currentTimeMillis()

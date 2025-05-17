@@ -7,6 +7,7 @@ import java.io.File;
 
 import fansirsqi.xposed.sesame.ui.SettingActivity;
 import fansirsqi.xposed.sesame.ui.WebSettingsActivity;
+import fansirsqi.xposed.sesame.ui.OldSettingsActivity;
 import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.Log;
@@ -22,6 +23,7 @@ public class UIConfig {
     private boolean init;
 
 
+    public static final String UI_OPTION_OLD = "old";
     public static final String UI_OPTION_WEB = "web"; //webUI
     public static final String UI_OPTION_NEW = "new";
 
@@ -34,11 +36,11 @@ public class UIConfig {
 
     public static Boolean save() {
         Log.record("保存UI配置");
-        return Files.setTargetFileofDir(JsonUtil.formatJson(INSTANCE), new File(Files.CONFIG_DIR, "app_config.json"));
+        return Files.setUIConfigFile(JsonUtil.formatJson(INSTANCE));
     }
 
     public static synchronized UIConfig load() {
-        File targetFile = Files.getTargetFileofDir(Files.CONFIG_DIR, "app_config.json");
+        File targetFile = Files.getTargetFileofDir(Files.MAIN_DIR, "ui_config.json");
         try {
             if (targetFile.exists()) {
                 String json = Files.readFromFile(targetFile);
@@ -46,7 +48,7 @@ public class UIConfig {
                     JsonUtil.copyMapper().readerForUpdating(INSTANCE).readValue(json);
                     String formatted = JsonUtil.formatJson(INSTANCE);
                     if (formatted != null && !formatted.equals(json)) {
-                        Log.runtime(TAG, "格式化" + TAG + "配置");
+                        Log.runtime(TAG, "格式化"+TAG+"配置");
                         Files.write2File(formatted, targetFile);
                     }
                 } else {
@@ -58,7 +60,7 @@ public class UIConfig {
             }
         } catch (Exception e) {
             Log.printStackTrace(TAG, e);
-            Log.runtime(TAG, "重置" + TAG + "配置");
+            Log.runtime(TAG, "重置"+TAG+"配置");
             resetToDefault();
             try {
                 Files.write2File(JsonUtil.formatJson(INSTANCE), targetFile);
@@ -79,6 +81,7 @@ public class UIConfig {
     @JsonIgnore
     public Class<?> getTargetActivityClass() {
         return switch (uiOption) {
+            case UI_OPTION_OLD -> OldSettingsActivity.class;
             case UI_OPTION_WEB -> WebSettingsActivity.class;
             case UI_OPTION_NEW -> SettingActivity.class;
             default -> {

@@ -1,5 +1,11 @@
 package fansirsqi.xposed.sesame.hook.rpc.debug;
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
+
+import fansirsqi.xposed.sesame.hook.ApplicationHook;
 import fansirsqi.xposed.sesame.hook.RequestManager;
+import fansirsqi.xposed.sesame.hook.Toast;
 import fansirsqi.xposed.sesame.task.reserve.ReserveRpcCall;
 import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.ResUtil;
@@ -10,6 +16,23 @@ import org.json.JSONObject;
 import java.util.Iterator;
 public class DebugRpc {
     private static final String TAG = DebugRpc.class.getCanonicalName();
+    //----------------------------------------------------------
+    private Context context;
+
+    public DebugRpc() {
+    }
+
+    public DebugRpc(Context context) {
+        this.context = context;
+    }
+
+    public void sendResult(String result) {
+        Intent intent = new Intent("com.eg.android.AlipayGphone.sesame.rpcresponse");
+        intent.putExtra("result", result);
+        context.sendBroadcast(intent);
+        Toast.show( "Rpc--test响应广播成功",true);
+    }
+    //----------------------------------------------------------
     public String getName() {
         return "Rpc测试";
     }
@@ -28,8 +51,9 @@ public class DebugRpc {
             public void run() {
                 switch (testType) {
                     case "Rpc":
-                        String s = test(broadcastFun, broadcastData);
+                        String s = ReserveRpcCall.queryPost(broadcastFun, broadcastData);
                         Log.debug("收到测试消息:\n方法:" + broadcastFun + "\n数据:" + broadcastData + "\n结果:" + s);
+                        sendResult(s);
                         break;
                     case "getNewTreeItems": // 获取新树上苗🌱信息
                         getNewTreeItems();
@@ -53,6 +77,7 @@ public class DebugRpc {
             }
         }.setData(broadcastFun, broadcastData, testType).start();
     }
+
     private String test(String fun, String data) {
         return RequestManager.requestString(fun, data);
     }
@@ -66,7 +91,7 @@ public class DebugRpc {
         try {
             String s = ReserveRpcCall.queryTreeItemsForExchange();
             JSONObject jo = new JSONObject(s);
-            if (ResUtil.checkResultCode(jo)) {
+            if (ResUtil.checkResCode(jo)) {
                 JSONArray ja = jo.getJSONArray("treeItems");
                 for (int i = 0; i < ja.length(); i++) {
                     jo = ja.getJSONObject(i);
@@ -95,7 +120,7 @@ public class DebugRpc {
             String response = ReserveRpcCall.queryTreeForExchange(projectId);
             JSONObject jo = new JSONObject(response);
             // 检查RPC调用结果码是否为"SUCCESS"，表示成功
-            if (ResUtil.checkResultCode(jo)) {
+            if (ResUtil.checkResCode(jo)) {
                 // 获取可交换树木的信息
                 JSONObject exchangeableTree = jo.getJSONObject("exchangeableTree");
                 // 获取当前预算
@@ -138,7 +163,7 @@ public class DebugRpc {
             String response = ReserveRpcCall.queryTreeItemsForExchange();
             JSONObject jo = new JSONObject(response);
             // 检查RPC调用结果码是否为"SUCCESS"，表示成功
-            if (ResUtil.checkResultCode(jo)) {
+            if (ResUtil.checkResCode(jo)) {
                 // 获取树木项目列表
                 JSONArray ja = jo.getJSONArray("treeItems");
                 // 遍历项目列表
@@ -183,7 +208,7 @@ public class DebugRpc {
             String response = ReserveRpcCall.queryTreeForExchange(projectId);
             JSONObject jo = new JSONObject(response);
             // 检查RPC调用结果码是否为"SUCCESS"，表示成功
-            if (ResUtil.checkResultCode(jo)) {
+            if (ResUtil.checkResCode(jo)) {
                 // 获取可交换树木的信息
                 JSONObject exchangeableTree = jo.getJSONObject("exchangeableTree");
                 // 获取当前预算
@@ -278,7 +303,7 @@ public class DebugRpc {
     private void queryAreaTrees() {
         try {
             JSONObject jo = new JSONObject(ReserveRpcCall.queryAreaTrees());
-            if (!ResUtil.checkResultCode(TAG, jo)) {
+            if (!ResUtil.checkResCode(TAG, jo)) {
                 return;
             }
             JSONObject areaTrees = jo.getJSONObject("areaTrees");
@@ -300,7 +325,7 @@ public class DebugRpc {
     private void getUnlockTreeItems() {
         try {
             JSONObject jo = new JSONObject(ReserveRpcCall.queryTreeItemsForExchange("", "project"));
-            if (!ResUtil.checkResultCode(TAG, jo)) {
+            if (!ResUtil.checkResCode(TAG, jo)) {
                 return;
             }
             JSONArray ja = jo.getJSONArray("treeItems");

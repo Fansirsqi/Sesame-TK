@@ -1,23 +1,19 @@
 package fansirsqi.xposed.sesame.model.modelFieldExt;
-
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-
 import androidx.core.content.ContextCompat;
-
 import com.fasterxml.jackson.core.type.TypeReference;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import fansirsqi.xposed.sesame.R;
 import fansirsqi.xposed.sesame.model.ModelField;
 import fansirsqi.xposed.sesame.ui.StringDialog;
+import java.util.ArrayList;
+import java.util.List;
 /**
  * 表示一个存储字符串列表的字段模型，用于管理和展示列表数据。
  * 提供基本的获取类型、配置值以及视图展示的方法。
@@ -55,7 +51,7 @@ public class ListModelField extends ModelField<List<String>> {
         Button btn = new Button(context);
         btn.setText(getName());
         btn.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        btn.setTextColor(ContextCompat.getColor(context, R.color.selection_color));
+        btn.setTextColor(ContextCompat.getColor(context, R.color.button));
         // 根据API版本选择合适的方法获取Drawable资源
         Drawable drawable;
         drawable = context.getResources().getDrawable(R.drawable.button, context.getTheme());

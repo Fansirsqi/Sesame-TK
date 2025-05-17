@@ -1,27 +1,20 @@
 package fansirsqi.xposed.sesame.task.antForest;
-
 import static fansirsqi.xposed.sesame.task.antForest.AntForest.giveEnergyRainList;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.util.Set;
-
 import fansirsqi.xposed.sesame.hook.Toast;
 import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.Maps.UserMap;
 import fansirsqi.xposed.sesame.util.ResUtil;
 import fansirsqi.xposed.sesame.util.ThreadUtil;
-
 public class EnergyRain {
     private static final String TAG = EnergyRain.class.getSimpleName();
-
     public static void startEnergyRain() {
         try {
-            Log.forest("开始执行能量雨🌧️");
             JSONObject jo = new JSONObject(AntForestRpcCall.startEnergyRain());
             ThreadUtil.sleep(300);
-            if (ResUtil.checkResultCode(jo)) {
+            if (ResUtil.checkResCode(jo)) {
                 String token = jo.getString("token");
                 JSONArray bubbleEnergyList = jo.getJSONObject("difficultyInfo").getJSONArray("bubbleEnergyList");
                 int sum = 0;
@@ -30,10 +23,9 @@ public class EnergyRain {
                 }
                 ThreadUtil.sleep(5000);
                 String result = AntForestRpcCall.energyRainSettlement(sum, token);
-                if (ResUtil.checkResultCode(result)) {
-                    String s = "收获能量雨🌧️[" + sum + "g]";
-                    Toast.show(s);
-                    Log.forest(s);
+                if (ResUtil.checkResCode(result)) {
+                    Toast.show("收获了[" + sum + "g]能量[能量雨]");
+                    Log.forest("收获能量雨🌧️[" + sum + "g]");
                 }
                 ThreadUtil.sleep(300);
             }
@@ -42,12 +34,11 @@ public class EnergyRain {
             Log.printStackTrace(TAG, th);
         }
     }
-
     static void energyRain() {
         try {
             JSONObject joEnergyRainHome = new JSONObject(AntForestRpcCall.queryEnergyRainHome());
             Thread.sleep(300);
-            if (ResUtil.checkResultCode(joEnergyRainHome)) {
+            if (ResUtil.checkResCode(joEnergyRainHome)) {
                 if (joEnergyRainHome.getBoolean("canPlayToday")) {
                     startEnergyRain();
                 }
@@ -68,8 +59,8 @@ public class EnergyRain {
                                 ThreadUtil.sleep(300);
                                 Log.record("尝试送能量雨给【" + UserMap.getMaskName(uid) + "】");
                                 granted = true;
-                                if (ResUtil.checkResultCode(rainJsonObj)) {
-                                    Log.forest("赠送能量雨机会给🌧️[" + UserMap.getMaskName(uid) + "]#" + UserMap.getMaskName(UserMap.getCurrentUid()));
+                                if (ResUtil.checkResCode(rainJsonObj)) {
+                                    Log.forest("送能量雨🌧️[" + UserMap.getMaskName(uid) + "]#" + UserMap.getMaskName(UserMap.getCurrentUid()));
                                     startEnergyRain();
                                 } else {
                                     Log.record("送能量雨失败");
@@ -86,7 +77,7 @@ public class EnergyRain {
             }
             Thread.sleep(300);
             joEnergyRainHome = new JSONObject(AntForestRpcCall.queryEnergyRainHome());
-            if (ResUtil.checkResultCode(joEnergyRainHome) && joEnergyRainHome.getBoolean("canPlayToday")) {
+            if (ResUtil.checkResCode(joEnergyRainHome) && joEnergyRainHome.getBoolean("canPlayToday")) {
                 startEnergyRain();
             }
         } catch (Throwable th) {

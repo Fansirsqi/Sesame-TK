@@ -17,7 +17,6 @@ import android.os.PowerManager;
 
 import androidx.annotation.NonNull;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -43,10 +42,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import fansirsqi.xposed.sesame.BuildConfig;
 import fansirsqi.xposed.sesame.data.Config;
 import fansirsqi.xposed.sesame.data.DataCache;
-import fansirsqi.xposed.sesame.data.General;
 import fansirsqi.xposed.sesame.data.RunType;
-import fansirsqi.xposed.sesame.data.Statistics;
-import fansirsqi.xposed.sesame.data.Status;
 import fansirsqi.xposed.sesame.data.ViewAppInfo;
 import fansirsqi.xposed.sesame.entity.AlipayVersion;
 import fansirsqi.xposed.sesame.entity.FriendWatch;
@@ -62,18 +58,31 @@ import fansirsqi.xposed.sesame.task.BaseTask;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.task.antMember.AntMemberRpcCall;
-import fansirsqi.xposed.sesame.util.AssetUtil;
-import fansirsqi.xposed.sesame.util.Detector;
-import fansirsqi.xposed.sesame.util.HideVPNStatus;
+import fansirsqi.xposed.sesame.data.General;
+import fansirsqi.xposed.sesame.task.reserve.ReserveRpcCall;
+import fansirsqi.xposed.sesame.ui.RpcDebugActivity;
 import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.Maps.UserMap;
 import fansirsqi.xposed.sesame.util.Notify;
+import fansirsqi.xposed.sesame.util.NtpTimeUtils;
 import fansirsqi.xposed.sesame.util.PermissionUtil;
+import fansirsqi.xposed.sesame.data.Statistics;
+import fansirsqi.xposed.sesame.data.Status;
 import fansirsqi.xposed.sesame.util.StringUtil;
 import fansirsqi.xposed.sesame.util.TimeUtil;
 import lombok.Getter;
 
 public class ApplicationHook implements IXposedHookLoadPackage {
+    //--------------------------------------------------------------
+
+    public static String requestString(String str, String str2) {
+        return rpcBridge.requestString(str, str2);
+    }
+    //避免每次用户切换或重启时都重新同步。
+    private static volatile boolean hasSyncedOnce = false;
+
+    //--------------------------------------------------------------
+
     static final String TAG = ApplicationHook.class.getSimpleName();
     @Getter
     private static final String modelVersion = BuildConfig.VERSION_NAME;
@@ -94,7 +103,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     static volatile Calendar dayCalendar;
     @Getter
     static volatile boolean offline = false;
-
     @Getter
     static final AtomicInteger reLoginCount = new AtomicInteger(0);
     @SuppressLint("StaticFieldLeak")
@@ -115,14 +123,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     }
 
     private volatile long lastExecTime = 0; // 添加为类成员变量
-
-    static {
-        // 初始化dayCalendar
-        dayCalendar = Calendar.getInstance();
-        dayCalendar.set(Calendar.HOUR_OF_DAY, 0);
-        dayCalendar.set(Calendar.MINUTE, 0);
-        dayCalendar.set(Calendar.SECOND, 0);
-    }
 
     /**
      * 执行检查方法
@@ -163,10 +163,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         try {
             int checkInterval = BaseModel.getCheckInterval().getValue();
             List<String> execAtTimeList = BaseModel.getExecAtTimeList().getValue();
-            if (execAtTimeList != null && execAtTimeList.contains("-1")) {
-                Log.record("定时执行未开启");
-                return;
-            }
             try {
                 if (execAtTimeList != null) {
                     Calendar lastExecTimeCalendar = TimeUtil.getCalendarByTimeMillis(lastExecTime);
@@ -193,53 +189,56 @@ public class ApplicationHook implements IXposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (General.MODULE_PACKAGE_NAME.equals(lpparam.packageName)) {
+        if ("fansirsqi.xposed.sesame".equals(lpparam.packageName)) {
             try {
-                ViewAppInfo.INSTANCE.setRunType(RunType.ACTIVE);
-                Log.runtime(TAG, "handleLoadPackage setRunType: " + ViewAppInfo.INSTANCE.getRunType());
-            } catch (Exception e) {
+                XposedHelpers.callStaticMethod(lpparam.classLoader.loadClass(ViewAppInfo.class.getName()), "setRunTypeByCode", RunType.MODEL.getCode());
+            } catch (ClassNotFoundException e) {
                 Log.printStackTrace(e);
             }
         } else if (General.PACKAGE_NAME.equals(lpparam.packageName) && General.PACKAGE_NAME.equals(lpparam.processName)) {
             if (hooked) return;
             classLoader = lpparam.classLoader;
+            //hook Application类的attach方法
             try {
-                XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
-                    // 重写afterHookedMethod方法，在attach方法执行后执行自定义逻辑
-                    @SuppressLint("UnsafeDynamicallyLoadedCode")
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                        context = (Context) param.args[0];
-                        Log.runtime(TAG, "Application context: " + context);
-                        Log.runtime(TAG, "Application package: " + context.getPackageName());
-                        try {
-                            try {
-                                String soFileOfStorage = context.getApplicationInfo().dataDir + File.separator + "lib" + File.separator + "libchecker.so";
-                                Log.runtime("soPath: " + soFileOfStorage);
-                                if (AssetUtil.INSTANCE.copyDtorageSoFileToPrivateDir(context, "libchecker.so")) {
-                                    System.load(soFileOfStorage);
-                                    Log.runtime("Loading so from : " + soFileOfStorage);
-                                } else {
-                                    String libSesamePath = Detector.INSTANCE.getLibPath(context);
-                                    assert libSesamePath != null;
-                                    System.load(libSesamePath);
-                                    Log.runtime("Loading so from original path" + libSesamePath);
+                // 使用Xposed框架hook Application类的attach方法
+                // attach方法是在应用程序启动时，由Android系统调用，用于将应用程序与上下文环境关联起来
+                XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class,
+                        new XC_MethodHook() {
+                            // 重写afterHookedMethod方法，在attach方法执行后执行自定义逻辑
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                                // 获取attach方法的第一个参数，即Context对象，并赋值给context变量
+                                context = (Context) param.args[0];
+                                try {
+                                    // 通过Context对象获取支付宝应用的版本信息
+                                    // context.getPackageManager().getPackageInfo(context.getPackageName(), 0)用于获取当前应用的包信息
+                                    // versionName属性表示应用的版本名称
+                                    alipayVersion = new AlipayVersion(context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
+                                } catch (Exception e) {
+                                    // 如果在获取支付宝版本信息时出现异常，记录错误日志
+                                    Log.runtime(TAG, "获取支付宝版本信息失败");
+                                    Log.printStackTrace(e);
                                 }
-                            } catch (Exception e) {
-                                Log.error("load libSesame err:" + e.getMessage());
+                                // 调用父类的afterHookedMethod方法，执行一些默认的逻辑（如果有）
+                                super.afterHookedMethod(param);
                             }
-                            alipayVersion = new AlipayVersion(context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName);
-                        } catch (Exception e) {
-                            Log.runtime(TAG, "获取支付宝版本信息失败");
-                            Log.printStackTrace(e);
-                        }
-                        super.afterHookedMethod(param);
-                    }
-                });
+                        });
             } catch (Throwable t) {
+                // 如果在hook attach方法时出现异常，记录错误日志
                 Log.runtime(TAG, "hook attach err");
                 Log.printStackTrace(TAG, t);
             }
+            //hook "com.alipay.mobile.nebulaappproxy.api.rpc.H5AppRpcUpdate" 类的matchVersion方法
+            try {
+                XposedHelpers.findAndHookMethod("com.alipay.mobile.nebulaappproxy.api.rpc.H5AppRpcUpdate", classLoader, "matchVersion",
+                        classLoader.loadClass(General.H5PAGE_NAME), Map.class, String.class,
+                        XC_MethodReplacement.returnConstant(false));
+                Log.runtime(TAG, "hook matchVersion successfully");
+            } catch (Throwable t) {
+                Log.runtime(TAG, "hook matchVersion err");
+                Log.printStackTrace(TAG, t);
+            }
+            //hook "com.alipay.mobile.quinox.LauncherActivity" 类的onResume方法
             try {
                 XposedHelpers.findAndHookMethod("com.alipay.mobile.quinox.LauncherActivity", classLoader, "onResume",
                         new XC_MethodHook() {
@@ -248,7 +247,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 Log.runtime(TAG, "Activity onResume");
                                 String targetUid = getUserId();
                                 if (targetUid == null) {
-                                    Log.record("onResume:用户未登录");
+                                    Log.record("用户未登录");
                                     Toast.show("用户未登录");
                                     return;
                                 }
@@ -285,7 +284,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
             try {
                 XposedHelpers.findAndHookMethod("android.app.Service", classLoader, "onCreate",
                         new XC_MethodHook() {
-                            @SuppressLint({"WakelockTimeout", "UnsafeDynamicallyLoadedCode"})
+                            @SuppressLint("WakelockTimeout")
                             @Override
                             protected void afterHookedMethod(MethodHookParam param) {
                                 Service appService = (Service) param.thisObject;
@@ -294,11 +293,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                 }
                                 Log.runtime(TAG, "Service onCreate");
                                 context = appService.getApplicationContext();
-                                boolean isok = Detector.INSTANCE.isLegitimateEnvironment(context);
-                                if (isok) {
-                                    Detector.INSTANCE.dangerous(context);
-                                    return;
-                                }
                                 service = appService;
                                 mainHandler = new Handler(Looper.getMainLooper());
                                 AtomicReference<String> UserId = new AtomicReference<>();
@@ -417,15 +411,9 @@ public class ApplicationHook implements IXposedHookLoadPackage {
 
     private static void setWakenAtTimeAlarm() {
         try {
-            List<String> wakenAtTimeList = BaseModel.getWakenAtTimeList().getValue();
-            if (wakenAtTimeList != null && wakenAtTimeList.contains("-1")) {
-                Log.record("定时唤醒未开启");
-                return;
-            }
             unsetWakenAtTimeAlarm();
             try {
-                PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, new Intent("com.eg.android.AlipayGphone.sesame.execute"),
-                        getPendingIntentFlag());
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, new Intent("com.eg.android.AlipayGphone.sesame.execute"), getPendingIntentFlag());
                 Calendar calendar = Calendar.getInstance();
                 calendar.add(Calendar.DAY_OF_MONTH, 1);
                 calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -440,6 +428,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 Log.runtime(TAG, "setWakenAt0 err:");
                 Log.printStackTrace(TAG, e);
             }
+            List<String> wakenAtTimeList = BaseModel.getWakenAtTimeList().getValue();
             if (wakenAtTimeList != null && !wakenAtTimeList.isEmpty()) {
                 Calendar nowCalendar = Calendar.getInstance();
                 for (int i = 1, len = wakenAtTimeList.size(); i < len; i++) {
@@ -448,8 +437,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         Calendar wakenAtTimeCalendar = TimeUtil.getTodayCalendarByTimeStr(wakenAtTime);
                         if (wakenAtTimeCalendar != null) {
                             if (wakenAtTimeCalendar.compareTo(nowCalendar) > 0) {
-                                PendingIntent wakenAtTimePendingIntent = PendingIntent.getBroadcast(context, i, new Intent("com.eg.android.AlipayGphone" +
-                                        ".sesame.execute"), getPendingIntentFlag());
+                                PendingIntent wakenAtTimePendingIntent = PendingIntent.getBroadcast(context, i, new Intent("com.eg.android.AlipayGphone.sesame.execute"), getPendingIntentFlag());
                                 if (setAlarmTask(wakenAtTimeCalendar.getTimeInMillis(), wakenAtTimePendingIntent)) {
                                     String wakenAtTimeKey = i + "|" + wakenAtTime;
                                     wakenAtTimeAlarmMap.put(wakenAtTimeKey, wakenAtTimePendingIntent);
@@ -514,8 +502,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
             if (force) {
                 String userId = getUserId();
                 if (userId == null) {
-                    Log.record("initHandler:用户未登录");
-                    Toast.show("initHandler:用户未登录");
+                    Log.record("用户未登录");
+                    Toast.show("用户未登录");
                     return false;
                 }
                 UserMap.initUser(userId);
@@ -530,17 +518,13 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                     Toast.show("用户模块配置加载失败");
                     return false;
                 }
-                // ！！所有权限申请应该放在加载配置之后
-                try {
-                    if (BaseModel.getHideVPNStatus().getValue()) {
-                        HideVPNStatus.proxy();
-                        Log.record("VPN隐藏功能已启用");
-                    }
-                } catch (Throwable t) {
-                    Log.error(TAG, "VPN隐藏功能启用失败");
-                    Log.printStackTrace(TAG, t);
+                //初始化ntp服务器
+                if (!hasSyncedOnce) {
+                    NtpTimeUtils.syncTimeAsync(); // 只同步一次
+                    hasSyncedOnce = true;
                 }
 
+                // ！！所有权限申请应该放在加载配置之后
                 //闹钟权限申请
                 if (!PermissionUtil.checkAlarmPermissions()) {
                     Log.record("❌ 支付宝无闹钟权限");
@@ -565,21 +549,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                             2000);
                 }
                 Notify.start(service);
-//                if (!Model.getModel(BaseModel.class).getEnableField().getValue()) {
-//                    Log.record("❌ 芝麻粒已禁用");
-//                    Toast.show("❌ 芝麻粒已禁用");
-//                    Notify.setStatusTextDisabled();
-//                    return false;
-//                }
-                // 获取 BaseModel 实例
-                BaseModel baseModel = Model.getModel(BaseModel.class);
-                if (baseModel == null) {
-                    Log.error("BaseModel 未找到 初始化失败");
-                    Notify.setStatusTextDisabled();
-                    return false;
-                }
-                // 检查 enableField 的值
-                if (!baseModel.getEnableField().getValue()) {
+                if (!Objects.requireNonNull(Model.getModel(BaseModel.class)).getEnableField().getValue()) {
                     Log.record("❌ 芝麻粒已禁用");
                     Toast.show("❌ 芝麻粒已禁用");
                     Notify.setStatusTextDisabled();
@@ -608,14 +578,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         rpcRequestUnhook = XposedHelpers.findAndHookMethod(
                                 "com.alibaba.ariver.commonability.network.rpc.RpcBridgeExtension", classLoader
                                 , "rpc"
-                                , String.class, boolean.class, boolean.class, String.class, classLoader.loadClass(General.JSON_OBJECT_NAME), String.class,
-                                classLoader.loadClass(General.JSON_OBJECT_NAME), boolean.class, boolean.class, int.class, boolean.class, String.class,
-                                classLoader.loadClass("com.alibaba" +
-                                        ".ariver.app.api.App"), classLoader.loadClass("com.alibaba.ariver.app.api.Page"), classLoader.loadClass("com" +
-                                        ".alibaba" +
-                                        ".ariver.engine.api.bridge.model.ApiContext"), classLoader.loadClass("com.alibaba.ariver.engine.api.bridge" +
-                                        ".extension" +
-                                        ".BridgeCallback")
+                                , String.class, boolean.class, boolean.class, String.class, classLoader.loadClass(General.JSON_OBJECT_NAME), String.class, classLoader.loadClass(General.JSON_OBJECT_NAME), boolean.class, boolean.class, int.class, boolean.class, String.class, classLoader.loadClass("com.alibaba" +
+                                        ".ariver.app.api.App"), classLoader.loadClass("com.alibaba.ariver.app.api.Page"), classLoader.loadClass("com.alibaba.ariver.engine.api.bridge.model.ApiContext"), classLoader.loadClass("com.alibaba.ariver.engine.api.bridge.extension.BridgeCallback")
                                 , new XC_MethodHook() {
                                     @SuppressLint("WakelockTimeout")
                                     @Override
@@ -647,8 +611,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                             if (BaseModel.getSendHookData().getValue()) {
                                                 HookSender.sendHookData(HookResponse);
                                             }
-                                            String logMessage = "\n========================>\n" + "TimeStamp: " + TimeStamp + "\n" + "Method: " + Method +
-                                                    "\n" + "Params: " + Params + "\n" + "Data: " + rawData + "\n<========================\n";
+                                            String logMessage = "\n========================>\n" + "TimeStamp: " + TimeStamp + "\n" + "Method: " + Method + "\n" + "Params: " + Params + "\n" + "Data: " + rawData + "\n<========================\n";
                                             if (!logMessage.trim().isEmpty() && !rawData.equals("null")) {
                                                 Log.capture(logMessage);
                                             }
@@ -686,7 +649,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 }
                 Model.bootAllModel(classLoader);
                 Status.load();
-                DataCache.INSTANCE.load();
+                DataCache.load();
                 updateDay(userId);
                 BaseModel.initData();
                 String successMsg = "芝麻粒-TK 加载成功✨";
@@ -775,17 +738,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     public static void updateDay(String userId) {
         Calendar nowCalendar = Calendar.getInstance();
         try {
-            // 如果dayCalendar为null，则初始化它
-            if (dayCalendar == null) {
-                dayCalendar = (Calendar) nowCalendar.clone();
-                dayCalendar.set(Calendar.HOUR_OF_DAY, 0);
-                dayCalendar.set(Calendar.MINUTE, 0);
-                dayCalendar.set(Calendar.SECOND, 0);
-                Log.record("初始化日期为：" + dayCalendar.get(Calendar.YEAR) + "-" + (dayCalendar.get(Calendar.MONTH) + 1) + "-" + dayCalendar.get(Calendar.DAY_OF_MONTH));
-                setWakenAtTimeAlarm();
-                return;
-            }
-
             int nowYear = nowCalendar.get(Calendar.YEAR);
             int nowMonth = nowCalendar.get(Calendar.MONTH);
             int nowDay = nowCalendar.get(Calendar.DAY_OF_MONTH);
@@ -826,8 +778,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
             } else {
                 alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, operation);
             }
-            Log.runtime("setAlarmTask triggerAtMillis:" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(triggerAtMillis) + " " +
-                    "operation:" + operation);
+            Log.runtime("setAlarmTask triggerAtMillis:" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(triggerAtMillis) + " operation:" + operation);
             return true;
         } catch (Throwable th) {
             Log.runtime(TAG, "setAlarmTask err:");
@@ -912,8 +863,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     public static Object getUserObject() {
         try {
             return XposedHelpers.callMethod(
-                    getServiceObject(XposedHelpers.findClass("com.alipay.mobile.personalbase.service.SocialSdkContactService", classLoader).getName()),
-                    "getMyAccountInfoModelByLocal");
+                    getServiceObject(XposedHelpers.findClass("com.alipay.mobile.personalbase.service.SocialSdkContactService", classLoader).getName()), "getMyAccountInfoModelByLocal");
         } catch (Throwable th) {
             Log.runtime(TAG, "getUserObject err");
             Log.printStackTrace(TAG, th);
@@ -950,11 +900,17 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 });
     }
 
-    class AlipayBroadcastReceiver extends BroadcastReceiver {
+    public class AlipayBroadcastReceiver extends BroadcastReceiver {
+        public static final String EXTRA_DATA = "data";
+        public static final String EXTRA_METHOD = "method";
+        public static final String EXTRA_RESULT = "result";
+
+//        public AlipayBroadcastReceiver() {
+//        }
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Log.runtime("Alipay got Broadcast " + action + " intent:" + intent);
+            Log.runtime("sesame 查看广播:" + action + " intent:" + intent);
             if (action != null) {
                 switch (action) {
                     case "com.eg.android.AlipayGphone.sesame.restart":
@@ -971,11 +927,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         break;
                     case "com.eg.android.AlipayGphone.sesame.status":
                         try {
-                            Intent replyIntent = new Intent("fansirsqi.xposed.sesame.status");
-                            replyIntent.putExtra("EXTRA_RUN_TYPE", RunType.ACTIVE.getNickName());
-                            replyIntent.setPackage(General.MODULE_PACKAGE_NAME);
-                            context.sendBroadcast(replyIntent);
-                            Log.runtime(TAG, "Replied with status: "+RunType.ACTIVE.getNickName());
+                            context.sendBroadcast(new Intent("fansirsqi.xposed.sesame.status"));
                         } catch (Throwable th) {
                             Log.runtime(TAG, "sesame sendBroadcast status err:");
                             Log.printStackTrace(TAG, th);
@@ -992,6 +944,24 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                             Log.runtime(TAG, "sesame 测试RPC请求失败:");
                             Log.printStackTrace(TAG, th);
                         }
+                        break;
+                    case "com.eg.android.AlipayGphone.sesame.ACTION_REQUEST_STRING":
+                        final String stringExtra = intent.getStringExtra(EXTRA_METHOD);
+                        final String stringExtra2 = intent.getStringExtra(EXTRA_DATA);
+                        new Thread(() -> {
+                            try {
+                                String result = ReserveRpcCall.queryPost(stringExtra, stringExtra2);
+                                // 添加响应广播发送
+                                String sd = "com.eg.android.AlipayGphone.sesame.rpcresponse";
+                                @SuppressLint("UnsafeImplicitIntentLaunch") Intent responseIntent = new Intent(sd);
+                                responseIntent.putExtra(EXTRA_RESULT, result);
+                                context.sendBroadcast(responseIntent);
+                                //Toast.show( "Rpc--自定义响应广播成功",true);
+                                //Log.debug("发送请求--结果:"+result);
+                            } catch (Exception e) {
+                                Log.printStackTrace(e);
+                            }
+                        }).start();
                         break;
                     default:
                         throw new IllegalStateException("Unexpected value: " + action);
@@ -1019,9 +989,11 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 // 在Android 13以下版本，注册广播接收器
                 context.registerReceiver(new AlipayBroadcastReceiver(), intentFilter);
             }
+            Log.record("注册广播成功");
             // 记录成功注册广播接收器的日志
             Log.runtime(TAG, "hook registerBroadcastReceiver successfully");
         } catch (Throwable th) {
+            Log.error("注册广播失败");
             // 记录注册广播接收器失败的日志
             Log.runtime(TAG, "hook registerBroadcastReceiver err:");
             // 打印异常堆栈信息
@@ -1037,6 +1009,8 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         intentFilter.addAction("com.eg.android.AlipayGphone.sesame.reLogin"); // 重新登录支付宝的动作
         intentFilter.addAction("com.eg.android.AlipayGphone.sesame.status"); // 查询支付宝状态的动作
         intentFilter.addAction("com.eg.android.AlipayGphone.sesame.rpctest"); // 调试RPC的动作
+        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.ACTION_REQUEST_STRING"); // 调试RPC的动作
+        intentFilter.addAction("com.eg.android.AlipayGphone.sesame.rpcresponse"); // 调试RPC的动作
         return intentFilter;
     }
 }

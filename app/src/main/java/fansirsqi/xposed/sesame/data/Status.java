@@ -35,6 +35,7 @@ public class Status {
     private boolean exchangeCollectToFriendTimes7Days = false;
     private boolean youthPrivilege = true;
     private boolean studentTask = true;
+    private boolean studentTask2 = true;//青春特权任务
     private Map<String, Integer> VitalityStoreList = new HashMap<>();
     // ===========================farm
     private Boolean answerQuestion = false;
@@ -113,6 +114,15 @@ public class Status {
     public static void setStudentTaskToday() {
         if (INSTANCE.studentTask) {
             INSTANCE.studentTask = false;
+            save();
+        }
+    }
+    public static boolean canStudentTask2() {
+        return INSTANCE.studentTask2;
+    }
+    public static void setStudentTaskToday2() {
+        if (INSTANCE.studentTask2) {
+            INSTANCE.studentTask2 = false;
             save();
         }
     }
@@ -544,5 +554,45 @@ public class Status {
             save();
         }
     }
+    //用户
+    public static Boolean hasFlagTodayByUser(String flag, String userId) {
+        String userFlag = userId + "::" + flag;
+        return INSTANCE.flagList.contains(userFlag);
+    }
+
+    public static void setFlagTodayByUser(String flag, String userId) {
+        String userFlag = userId + "::" + flag;
+        if (!hasFlagTodayByUser(flag, userId)) {
+            INSTANCE.flagList.add(userFlag);
+            save();
+        }
+    }
+
+    public static boolean getCompletedDaysByUser(String flag, String userId, int days) {
+        String userFlag = userId + "::" + flag;
+        Map<String, Long> completedDaysMap = new HashMap<>();
+        for (String entry : INSTANCE.flagList) {
+            if (entry.startsWith(userId + "::")) {
+                String[] parts = entry.split("::");
+                if (parts.length == 3) { // 格式为 userId::flag::timestamp
+                    completedDaysMap.put(parts[1], Long.parseLong(parts[2]));
+                }
+            }
+        }
+        Long timestamp = completedDaysMap.get(flag);
+        if (timestamp == null) {
+            return false;
+        }
+        long currentTime = System.currentTimeMillis();
+        long timeDifference = currentTime - timestamp;
+        return timeDifference <= days * 24 * 60 * 60 * 1000L; // 检查是否在指定天数内
+    }
+
+    public static void setCompletedDaysByUser(String flag, String userId, int days) {
+        String userFlag = userId + "::" + flag + "::" + System.currentTimeMillis();
+        INSTANCE.flagList.add(userFlag);
+        save();
+    }
+
 
 }

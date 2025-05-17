@@ -1,12 +1,26 @@
 package fansirsqi.xposed.sesame.util;
 import android.annotation.SuppressLint;
+
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 /**
  * 时间工具类。 提供了一系列方法来处理时间相关的操作，包括时间范围检查、时间比较、日期格式化等。
  */
@@ -168,6 +182,9 @@ public class TimeUtil {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
+            Log.system("线程错误："+e);
+            Log.error("线程错误："+e);
+            Log.other("线程错误："+e);
             throw new RuntimeException(e);
         }
     }
@@ -322,5 +339,74 @@ public class TimeUtil {
         calendar.add(Calendar.DAY_OF_YEAR, offset);
         @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat(format);
         return sdf.format(calendar.getTime());
+    }
+
+    public static long getMinuteTimestamp() {
+        return System.currentTimeMillis() / 60000;
+    }
+
+    /**
+     * 获取下个月的第一天
+     *
+     * @return 下个月的第一天
+     */
+    public static String getNextMonthFirstDay() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(2, 1);
+        calendar.set(5, 1);
+        return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar);
+    }
+
+    // 在TimeUtil.java中添加
+    public static String getCommonDate(long timeMillis) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd日 HH:mm:ss.SSS");
+        return sdf.format(new Date(timeMillis));
+    }
+
+
+    //old方法
+    public static String getFormattedDate(String str) {
+        return getFormattedDate(str, new Date());
+    }
+
+    public static String getFormattedDate(String str, Date date) {
+        if (date == null) {
+            date = new Date();
+        }
+        return new SimpleDateFormat(str, Locale.getDefault()).format(date);
+    }
+
+    /**
+     * 获取当前小时数（基于服务器时间）
+     *
+     * @return 当前小时数（0~23）
+     */
+    public static int getHourOfDay() {
+        long serverTime = System.currentTimeMillis(); // 替换为真正的服务器时间获取方法
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(serverTime);
+        return calendar.get(Calendar.HOUR_OF_DAY);
+    }
+
+    /**
+     * 判断当前时间是否在指定时间之后
+     *
+     * @param str 时间字符串，格式为yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+     * @return 当前时间是否在指定时间之后
+     */
+    @SuppressLint("NewApi")
+    public static boolean isAfter(String str) {
+        try {
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date parse = simpleDateFormat.parse(str);
+            if (parse != null) {
+                return Instant.now().isAfter(parse.toInstant());
+            }
+            return false;
+        } catch (Exception e) {
+            Log.printStackTrace(e);
+            return false;
+        }
     }
 }

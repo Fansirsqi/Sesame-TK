@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,6 @@ import fansirsqi.xposed.sesame.model.ModelConfig;
 import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.ui.widget.ContentPagerAdapter;
-import fansirsqi.xposed.sesame.ui.widget.ListDialog;
 import fansirsqi.xposed.sesame.ui.widget.TabAdapter;
 import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.LanguageUtil;
@@ -62,7 +60,6 @@ public class SettingActivity extends BaseActivity {
         if (intent != null) {
             this.userId = intent.getStringExtra("userId");
             this.userName = intent.getStringExtra("userName");
-
         }
         // 初始化各种配置数据
         Model.initAllModel();
@@ -105,6 +102,7 @@ public class SettingActivity extends BaseActivity {
         if (this.userName != null) {
             setBaseSubtitle(getString(R.string.settings) + ": " + this.userName);
         }
+        setBaseSubtitleTextColor(ContextCompat.getColor(this, R.color.textColorPrimary));
         initializeTabs();
     }
 
@@ -125,7 +123,6 @@ public class SettingActivity extends BaseActivity {
             ViewPager2 viewPager = findViewById(R.id.view_pager_content);
             ContentPagerAdapter contentAdapter = new ContentPagerAdapter(getSupportFragmentManager(), getLifecycle(), modelConfigMap);
             viewPager.setAdapter(contentAdapter);
-            viewPager.setUserInputEnabled(false);// 禁止用户手动滑动
             viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
                 @Override
                 public void onPageSelected(int position) {
@@ -147,7 +144,6 @@ public class SettingActivity extends BaseActivity {
         menu.add(0, 3, 3, "删除配置");
         menu.add(0, 4, 4, "单向好友");
         menu.add(0, 5, 5, "切换WEBUI");
-        menu.add(0, 6, 6, "保存");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -174,7 +170,7 @@ public class SettingActivity extends BaseActivity {
                         .setTitle("警告")
                         .setMessage("确认删除该配置？")
                         .setPositiveButton(R.string.ok, (dialog, id) -> {
-                            File userConfigDirectoryFile;
+                            java.io.File userConfigDirectoryFile;
                             if (StringUtil.isEmpty(this.userId)) {
                                 userConfigDirectoryFile = Files.getDefaultConfigV2File();
                             } else {
@@ -197,7 +193,7 @@ public class SettingActivity extends BaseActivity {
             case 5: // 切换到新 UI
                 UIConfig.INSTANCE.setUiOption(UI_OPTION_WEB);
                 if (UIConfig.save()) {
-                    Intent intent = new Intent(this, UIConfig.INSTANCE.getTargetActivityClass());
+                    Intent intent = new Intent(this, WebSettingsActivity.class);
                     intent.putExtra("userId", this.userId);
                     intent.putExtra("userName", this.userName);
                     finish();
@@ -205,9 +201,6 @@ public class SettingActivity extends BaseActivity {
                 } else {
                     ToastUtil.makeText(this, "切换失败", Toast.LENGTH_SHORT).show();
                 }
-                break;
-            case 6:
-                save();
                 break;
         }
         return super.onOptionsItemSelected(item);

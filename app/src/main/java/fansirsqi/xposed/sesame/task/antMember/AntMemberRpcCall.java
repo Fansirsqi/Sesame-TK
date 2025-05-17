@@ -105,6 +105,11 @@ public class AntMemberRpcCall {
                         "\",\"sourcePassMap\":{\"innerSource\":\"\",\"source\":\"myTab\",\"unid\":\"\"}" +
                         ",\"syncProcess\":true,\"taskConfigId\":\"" + taskConfigId + "\"}]");
     }
+
+    /**
+     * 查询全部任务列表状态
+     * @return
+     */
     public static String queryAllStatusTaskList() {
         return RequestManager.requestString("alipay.antmember.biz.rpc.membertask.h5.queryAllStatusTaskList",
                 "[{\"sourceBusiness\":\"signInAd\",\"sourcePassMap\":{\"innerSource\":\"\",\"source\":\"myTab\",\"unid\":\"\"}}]");

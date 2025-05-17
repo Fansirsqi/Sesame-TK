@@ -1,24 +1,15 @@
 package fansirsqi.xposed.sesame.util.Maps;
-
 import com.fasterxml.jackson.core.type.TypeReference;
-
-import java.io.File;
-import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import de.robv.android.xposed.XposedHelpers;
-import fansirsqi.xposed.sesame.entity.UserEntity;
-import fansirsqi.xposed.sesame.hook.ApplicationHook;
 import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.Log;
 import lombok.Getter;
+import fansirsqi.xposed.sesame.entity.UserEntity;
+import fansirsqi.xposed.sesame.hook.ApplicationHook;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 /**
  * 用于管理和操作用户数据的映射关系，
  * 通常在应用程序中用于处理用户信息，
@@ -27,7 +18,6 @@ import lombok.Getter;
  * 同时提供线程安全的访问机制。
  */
 public class UserMap {
-    private static final String TAG = UserMap.class.getSimpleName();
     // 存储用户信息的线程安全映射
     private static final Map<String, UserEntity> userMap = new ConcurrentHashMap<>();
     // 只读的用户信息映射
@@ -67,7 +57,6 @@ public class UserMap {
      * @param currentUserId 当前用户ID
      */
     public static synchronized void initUser(String currentUserId) {
-        Log.runtime(TAG ,"初始化用户数据: " + currentUserId);
         // 设置当前用户ID
         setCurrentUserId(currentUserId);
         // 在主线程中执行初始化逻辑
@@ -200,19 +189,10 @@ public class UserMap {
      */
     public static synchronized void load(String userId) {
         userMap.clear();
-        if (userId == null || userId.isEmpty()) {
-            Log.runtime(TAG, "Skip loading user map for empty userId");
-            return;
-        }
         try {
-            File friendIdMapFile = Files.getFriendIdMapFile(userId);
-            if (friendIdMapFile == null) {
-                Log.runtime(TAG, "Friend ID map file is null for userId: " + userId);
-                return;
-            }
-            String body = Files.readFromFile(friendIdMapFile);
+            String body = Files.readFromFile(Files.getFriendIdMapFile(userId));
             if (!body.isEmpty()) {
-                Map<String, UserEntity.UserDto> dtoMap = JsonUtil.parseObject(body, new TypeReference<>() {
+                Map<String, UserEntity.UserDto> dtoMap = JsonUtil.parseObject(body, new TypeReference<Map<String, UserEntity.UserDto>>() {
                 });
                 for (UserEntity.UserDto dto : dtoMap.values()) {
                     userMap.put(dto.getUserId(), dto.toEntity());

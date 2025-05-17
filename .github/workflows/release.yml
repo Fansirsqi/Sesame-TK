@@ -9,9 +9,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 获取短 SHA
-      - name: Get short SHA
-        run: echo "SHORT_SHA=${GITHUB_SHA::4}" >> $GITHUB_ENV
       # 设置时区为亚洲/上海
       - name: Set Timezone to Asia/Shanghai
         run: |
@@ -19,25 +16,16 @@ jobs:
           echo "Current time: $(date)"
 
       # 检出代码
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # 设置JDK
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
-          java-version: "23"
-          distribution: "zulu"
+          java-version: "21"
+          distribution: "temurin"
           cache: gradle
-
-      # 设置Gradle
-      - name: set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: false
-          gradle-version: wrapper
 
       # 获取原仓库的预发行版属性
       - name: Get Original Repository Pre-release Property
@@ -56,40 +44,40 @@ jobs:
 
       - name: Sign Normal APK
         id: sign_normal_apk
-        uses: ilharp/sign-android-release@v2
+        uses: ilharp/sign-android-release@v1
         with:
           releaseDir: app/build/outputs/apk/normal/release/
           signingKey: ${{ secrets.ANDROID_SIGNING_KEY }}
           keyAlias: ${{ secrets.ANDROID_KEY_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          buildToolsVersion: 36.0.0
+          buildToolsVersion: 34.0.0
 
       - name: Sign Compatible APK
         id: sign_compatible_apk
-        uses: ilharp/sign-android-release@v2
+        uses: ilharp/sign-android-release@v1
         with:
           releaseDir: app/build/outputs/apk/compatible/release/
           signingKey: ${{ secrets.ANDROID_SIGNING_KEY }}
           keyAlias: ${{ secrets.ANDROID_KEY_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          buildToolsVersion: 36.0.0
+          buildToolsVersion: 34.0.0
 
       - name: Generate APKS Checksum
         run: |
-          sha256sum ${{ steps.sign_normal_apk.outputs.signedFile  }} > CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-          sha256sum ${{ steps.sign_compatible_apk.outputs.signedFile }} > CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+          sha256sum ${{ steps.sign_normal_apk.outputs.signedFile  }} > CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.sha256
+          sha256sum ${{ steps.sign_compatible_apk.outputs.signedFile }} > CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.sha256
 
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ github.event.release.tag_name || github.ref_name }} # 发布的名称。默认为标签名称
+          nanme: Sesame-${{ github.event.release.tag_name || github.ref_name }} # 发布的名称。默认为标签名称
           files: |
             ${{ steps.sign_normal_apk.outputs.signedFile }}
             ${{ steps.sign_compatible_apk.outputs.signedFile }}
-            CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-            CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+            CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.sha256
+            CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.sha256
           tag_name: ${{ github.ref_name }}
           draft: false
           append_body: true
@@ -100,17 +88,19 @@ jobs:
               * Compatible 为兼容版本,适用于Android 7.0及以下的系统,最低支持Android 5.1
             > ## 墙内更新
               [抗揍云-LanZou](https://fansirs.lanzoue.com/b011kv6pwd) 密码:`9527`
+              [Alist分流-LanZou](https://alist.798356.xyz/LanZou/Sesame-TK) 密码:`9527`
+              [Alist分流-ALiYun](https://alist.798356.xyz/AliYun/share/Sesame-TK) 密码:`9527`
 
       - name: Sync Release to Target Repository
         uses: softprops/action-gh-release@v2
         with:
           repository: Xposed-Modules-Repo/fansirsqi.xposed.sesame # 目标仓库的拥有者和仓库名称
-          name: ${{ github.event.release.tag_name || github.ref_name }} # 发布的名称。默认为标签名称
+          nanme: Sesame-${{ github.event.release.tag_name || github.ref_name }} # 发布的名称。默认为标签名称
           files: |
             ${{ steps.sign_normal_apk.outputs.signedFile }}
             ${{ steps.sign_compatible_apk.outputs.signedFile }}
-            CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
-            CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.${{ env.SHORT_SHA }}-signed.apk.sha256
+            CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.sha256
+            CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.sha256
           token: ${{ secrets.TARGET_REPO_PAT }}
           tag_name: ${{ github.ref_name }}
           draft: false
@@ -122,9 +112,7 @@ jobs:
             ✨ **更新内容**:
             ${{ github.event.release.body || '无更新说明' }}
 
-      - name: TgBot Notification
+      - name: TgBot Notification & Upload
         run: |
-          curl -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
-          -d "chat_id=${{ secrets.TG_CHAT_ID }}" \
-          -d "text=[${{ github.event.release.tag_name }}](${{ github.event.release.html_url }}) published successfully 🚀%0A%0A${{ github.event.release.body }}" \
-          -d "parse_mode=Markdown"
+          # 发送带文件的通知消息
+          curl -F document=@${{ steps.sign_normal_apk.outputs.signedFile }} -F document=@${{ steps.sign_compatible_apk.outputs.signedFile }} -F document=@CHECKSUMS-Sesame-Normal-${{ github.event.release.tag_name || github.ref_name }}.sha256 -F document=@CHECKSUMS-Sesame-Compatible-${{ github.event.release.tag_name || github.ref_name }}.sha256 "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendDocument?chat_id=${{ secrets.TG_CHAT_ID }}&caption=📦 新版本发布 [${{ github.event.release.tag_name }}](${{ github.event.release.html_url }})%0A%0A✨ 更新内容：%0A${{ github.event.release.body }}%0A%0A🔗 下载地址：%0A${{ github.event.release.html_url }}%0A抗揍云：https://fansirs.lanzoue.com/b011kv6pwd 密码：9527&parse_mode=Markdown"

@@ -146,7 +146,7 @@ public class Config {
             }
         } catch (Exception e) {
             Log.printStackTrace(TAG, e);
-            Log.runtime("保存用户配置失败，格式化 JSON 时出错");
+            Log.record("保存用户配置失败，格式化 JSON 时出错");
             return false;
         }
         boolean success;
@@ -165,12 +165,12 @@ public class Config {
                 userName = "默认用户";
             } else {
                 UserEntity userEntity = UserMap.get(userId);
-                userName = userEntity != null ? userEntity.getShowName() : "默认";
+                userName = userEntity != null ? userEntity.getShowName() : "未知用户";
             }
-            Log.runtime("保存 [" + userName + "] 配置");
+            Log.record("保存用户[" + userName + "]配置");
         } catch (Exception e) {
             Log.printStackTrace(TAG, e);
-            Log.runtime("保存用户配置失败");
+            Log.record("保存用户配置失败");
             return false;
         }
         return true;
@@ -194,52 +194,47 @@ public class Config {
             if (StringUtil.isEmpty(userId)) {
                 configV2File = Files.getDefaultConfigV2File();
                 userName = "默认";
-                if (!configV2File.exists()) {
-                    Log.record(TAG, "默认配置文件不存在，初始化新配置");
-                    unload();
-                    Files.write2File(toSaveStr(), configV2File);
-                }
             } else {
                 configV2File = Files.getConfigV2File(userId);
                 UserEntity userEntity = UserMap.get(userId);
-                userName = (userEntity == null) ? userId : userEntity.getShowName();
+                if (userEntity == null) {
+                    userName = userId;
+                } else {
+                    userName = userEntity.getShowName();
+                }
             }
-
-            Log.record(TAG, "加载配置: " + userName);
-            boolean configV2FileExists = configV2File.exists();
-            boolean defaultConfigV2FileExists = Files.getDefaultConfigV2File().exists();
-
-            if (configV2FileExists) {
+            Log.record("加载配置: " + userName);
+            if (configV2File.exists()) {
                 String json = Files.readFromFile(configV2File);
-                Log.runtime(TAG, "读取配置文件成功: " + configV2File.getPath());
                 JsonUtil.copyMapper().readerForUpdating(INSTANCE).readValue(json);
-                Log.runtime(TAG, "格式化配置成功");
                 String formatted = toSaveStr();
                 if (formatted != null && !formatted.equals(json)) {
                     Log.runtime(TAG, "格式化配置: " + userName);
                     Files.write2File(formatted, configV2File);
                 }
-            } else if (defaultConfigV2FileExists) {
-                String json = Files.readFromFile(Files.getDefaultConfigV2File());
-                JsonUtil.copyMapper().readerForUpdating(INSTANCE).readValue(json);
-                Log.runtime(TAG, "复制新配置: " + userName);
-                Files.write2File(json, configV2File);
             } else {
-                unload();
-                Log.runtime(TAG, "初始新配置: " + userName);
-                Files.write2File(toSaveStr(), configV2File);
+                File defaultConfigV2File = Files.getDefaultConfigV2File();
+                if (defaultConfigV2File.exists()) {
+                    String json = Files.readFromFile(defaultConfigV2File);
+                    JsonUtil.copyMapper().readerForUpdating(INSTANCE).readValue(json);
+                    Log.runtime(TAG, "复制新配置: " + userName);
+                    Files.write2File(json, configV2File);
+                } else {
+                    unload();
+                    Log.runtime(TAG, "初始新配置: " + userName);
+                    Files.write2File(toSaveStr(), configV2File);
+                }
             }
         } catch (Throwable t) {
             Log.printStackTrace(TAG, t);
-            Log.runtime(TAG, "重置配置: " + userName);
+            Log.record(TAG, "重置配置: " + userName);
             try {
                 unload();
                 if (configV2File != null) {
                     Files.write2File(toSaveStr(), configV2File);
                 }
             } catch (Exception e) {
-                Log.printStackTrace(TAG, e);
-                throw new RuntimeException("重置配置失败", e);
+                Log.printStackTrace(TAG, t);
             }
         }
         INSTANCE.setInit(true);

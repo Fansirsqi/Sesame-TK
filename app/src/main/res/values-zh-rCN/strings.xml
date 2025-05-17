@@ -82,6 +82,7 @@
     <string name="import_the_statistic_file">导入统计</string>
     <string name="view_runtim_log_file">查看运行日志</string>
     <string name="view_capture">抓包记录</string>
+    <string name="test_post">模拟请求</string>
     <string name="settings">设  置</string>
     <string name="extend">扩展功能</string>
     <string name="limit_collect">限制收取</string>
@@ -198,6 +199,5 @@
     <string name="the_image_of_main">Main image</string>
     <string name="the_image_of_unactivated">The image of unactivated</string>
     <string name="debug_tips">请在debug日志查看结果！</string>
-    <string name="clear_photo">清空光盘行动图片💿</string>
 
 </resources>

@@ -38,7 +38,6 @@ public class Files {
      * 日志文件夹路径
      */
     public static final File LOG_DIR = getLogDir();
-
     /**
      * 确保指定的目录存在且不是一个文件。
      * 如果目录是一个文件，则将其删除并创建新的目录。
@@ -65,21 +64,18 @@ public class Files {
             Log.printStackTrace(TAG + " ensureDir error", e);
         }
     }
-
     /**
      * 获取配置文件夹主路径
      *
      * @return mainDir 主路径
      */
     private static File getMainDir() {
-        String storageDirStr =
-                Environment.getExternalStorageDirectory() + File.separator + "Android" + File.separator + "media" + File.separator + General.PACKAGE_NAME;
+        String storageDirStr = Environment.getExternalStorageDirectory() + File.separator + "Android" + File.separator + "media" + File.separator + General.PACKAGE_NAME;
         File storageDir = new File(storageDirStr);
         File mainDir = new File(storageDir, CONFIG_DIR_NAME);
         ensureDir(mainDir);
         return mainDir;
     }
-
     /**
      * 获取日志文件夹路径
      *
@@ -90,7 +86,6 @@ public class Files {
         ensureDir(logDir);
         return logDir.exists() ? logDir : null;
     }
-
     /**
      * 获取配置文件夹路径
      *
@@ -101,7 +96,6 @@ public class Files {
         ensureDir(configDir);
         return configDir;
     }
-
     /**
      * 获取指定用户的配置文件夹路径。
      *
@@ -112,25 +106,22 @@ public class Files {
         ensureDir(configDir);
         return configDir;
     }
-
     /**
      * 获取默认的配置文件
      *
      * @return configFile 默认配置文件
      */
     public static File getDefaultConfigV2File() {
-        return new File(CONFIG_DIR, "config_v2.json");
+        return new File(MAIN_DIR, "config_v2.json");
     }
-
     /**
      * 设置默认的配置文件
      *
      * @param json 新的配置文件内容
      */
     public static synchronized boolean setDefaultConfigV2File(String json) {
-        return write2File(json, new File(CONFIG_DIR, "config_v2.json"));
+        return write2File(json, new File(MAIN_DIR, "config_v2.json"));
     }
-
     /**
      * 获取指定用户的配置文件
      *
@@ -156,100 +147,67 @@ public class Files {
         }
         return confV2File;
     }
-
     public static synchronized boolean setConfigV2File(String userId, String json) {
         return write2File(json, new File(CONFIG_DIR + File.separator + userId, "config_v2.json"));
     }
-
-    public static synchronized File getTargetFileofUser(String userId, String fullTargetFileName) {
-        if (userId == null || userId.isEmpty()) {
-            Log.error(TAG, "Invalid userId for target file: " + fullTargetFileName);
-            // 返回一个默认文件或null
-            return null;
+    public static synchronized boolean setUIConfigFile(String json) {
+        return write2File(json, new File(MAIN_DIR, "ui_config.json"));
+    }
+    public static File getTargetFileofUser(String userId, String fullTargerFileName) {
+        File targetFile = new File(CONFIG_DIR + File.separator + userId, fullTargerFileName);
+        if (!targetFile.exists() && !targetFile.isDirectory()) {
+            if (targetFile.delete()) {
+                Log.runtime(TAG, targetFile.getName() + "[old] delete success");
+            } else {
+                Log.runtime(TAG, targetFile.getName() + "[old] delete failed");
+            }
         }
-        File targetFile = new File(CONFIG_DIR + File.separator + userId, fullTargetFileName);
-        // 如果文件不存在且不是目录，尝试创建
         if (!targetFile.exists()) {
             try {
                 if (targetFile.createNewFile()) {
-                    Log.runtime(TAG, targetFile.getName() + " created successfully");
+                    Log.runtime(TAG, targetFile.getName() + "create success");
                 } else {
-                    Log.runtime(TAG, targetFile.getName() + " creation failed");
+                    Log.runtime(TAG, targetFile.getName() + "create failed");
                 }
-            } catch (IOException e) {
-                Log.error(TAG, "Failed to create file: " + targetFile.getName());
-                Log.printStackTrace(TAG, e);
+            } catch (Throwable ignored) {
             }
         } else {
-            // 检查文件权限
-            boolean canRead = targetFile.canRead();
-            boolean canWrite = targetFile.canWrite();
-            Log.system(TAG, fullTargetFileName + " permissions: r=" + canRead + "; w=" + canWrite);
-
-            // 如果文件存在但没有写入权限，尝试设置权限
-            if (!canWrite) {
-                if (targetFile.setWritable(true)) {
-                    Log.runtime(TAG, targetFile.getName() + " write permission set successfully");
-                } else {
-                    Log.runtime(TAG, targetFile.getName() + " write permission set failed");
-                }
-            }
+            Log.system(TAG, fullTargerFileName+" permission: r;w" + targetFile.canRead() + ";" + targetFile.canWrite());
         }
-
         return targetFile;
     }
-
-    public static synchronized File getTargetFileofDir(File dir, String fullTargetFileName) {
-        // 创建目标文件对象
-        File targetFile = new File(dir, fullTargetFileName);
-
-        // 如果文件不存在，尝试创建
+    public static File getTargetFileofDir(File dir, String fullTargerFileName) {
+        File targetFile = new File(dir, fullTargerFileName);
+        if (!targetFile.exists() && !targetFile.isDirectory()) {
+            if (targetFile.delete()) {
+                Log.runtime(TAG, targetFile.getName() + "[old] delete success");
+            } else {
+                Log.runtime(TAG, targetFile.getName() + "[old] delete failed");
+            }
+        }
         if (!targetFile.exists()) {
             try {
                 if (targetFile.createNewFile()) {
-                    Log.runtime(TAG, "File created successfully: " + targetFile.getAbsolutePath());
+                    Log.runtime(TAG, targetFile.getName() + "create success");
                 } else {
-                    Log.runtime(TAG, "File creation failed: " + targetFile.getAbsolutePath());
+                    Log.runtime(TAG, targetFile.getName() + "create failed");
                 }
-            } catch (IOException e) {
-                Log.error(TAG, "Failed to create file: " + targetFile.getAbsolutePath());
-                Log.printStackTrace(TAG, e);
+            } catch (Throwable ignored) {
             }
         } else {
-            // 如果文件存在，检查权限
-            boolean canRead = targetFile.canRead();
-            boolean canWrite = targetFile.canWrite();
-            Log.system(TAG, "File permissions for " + targetFile.getAbsolutePath() + ": r=" + canRead + "; w=" + canWrite);
-
-            // 如果文件没有写入权限，尝试设置权限
-            if (!canWrite) {
-                if (targetFile.setWritable(true)) {
-                    Log.runtime(TAG, "Write permission set successfully for file: " + targetFile.getAbsolutePath());
-                } else {
-                    Log.runtime(TAG, "Write permission set failed for file: " + targetFile.getAbsolutePath());
-                }
-            }
+            Log.system(TAG, "permission: r;w" + targetFile.canRead() + ";" + targetFile.canWrite());
         }
-
         return targetFile;
     }
-
-    public static synchronized boolean setTargetFileofDir(String content, File TargetFileName) {
-        return write2File(content, TargetFileName);
-    }
-
     public static File getSelfIdFile(String userId) {
         return getTargetFileofUser(userId, "self.json");
     }
-
     public static File getFriendIdMapFile(String userId) {
         return getTargetFileofUser(userId, "friend.json");
     }
-
     public static File runtimeInfoFile(String userId) {
         return getTargetFileofUser(userId, "runtime.json");
     }
-
     /**
      * 获取用户状态文件
      *
@@ -259,14 +217,15 @@ public class Files {
     public static File getStatusFile(String userId) {
         return getTargetFileofUser(userId, "status.json");
     }
-
     /**
      * 获取统计文件
      */
     public static File getStatisticsFile() {
         return getTargetFileofDir(MAIN_DIR, "statistics.json");
     }
-
+//    public static File getUIConfigFile() {
+//        return getTargetFileofDir(MAIN_DIR, "ui_config.json");
+//    }
     /**
      * 获取已经导出的统计文件在载目录中
      *
@@ -289,15 +248,12 @@ public class Files {
             return null;
         }
     }
-
     public static File getFriendWatchFile(String userId) {
         return getTargetFileofUser(userId, "friendWatch.json");
     }
-
     public static File getWuaFile() {
         return getTargetFileofDir(MAIN_DIR, "wua.list");
     }
-
     /**
      * 导出文件到下载目录
      *
@@ -326,13 +282,12 @@ public class Files {
                 return null;
             }
         }
-        if (!copyTo(file, exportFile)) {
+        if(!copyTo(file, exportFile)){
             Log.error(TAG, "Failed to copy file: " + file.getAbsolutePath() + " to " + exportFile.getAbsolutePath());
             return null;
         }
         return exportFile;
     }
-
     /**
      * 获取城市代码文件
      *
@@ -347,7 +302,6 @@ public class Files {
         }
         return cityCodeFile;
     }
-
     /**
      * 确保日志文件存在，如果文件是一个目录则删除并创建新文件。 如果文件不存在，则创建新文件。
      *
@@ -376,7 +330,6 @@ public class Files {
         }
         return logFile;
     }
-
     /**
      * 根据日志名称生成带有日期的日志文件名。
      *
@@ -386,39 +339,30 @@ public class Files {
     public static String getLogFile(String logName) {
         return logName + ".log";
     }
-
     public static File getRuntimeLogFile() {
         return ensureLogFile(getLogFile("runtime"));
     }
-
     public static File getRecordLogFile() {
         return ensureLogFile(getLogFile("record"));
     }
-
     public static File getDebugLogFile() {
         return ensureLogFile(getLogFile("debug"));
     }
-
     public static File getCaptureLogFile() {
         return ensureLogFile(getLogFile("capture"));
     }
-
     public static File getForestLogFile() {
         return ensureLogFile(getLogFile("forest"));
     }
-
     public static File getFarmLogFile() {
         return ensureLogFile(getLogFile("farm"));
     }
-
     public static File getOtherLogFile() {
         return ensureLogFile(getLogFile("other"));
     }
-
     public static File getErrorLogFile() {
         return ensureLogFile(getLogFile("error"));
     }
-
     /**
      * 关闭流对象
      *
@@ -433,7 +377,6 @@ public class Files {
             }
         }
     }
-
     /**
      * 从文件中读取内容
      *
@@ -471,7 +414,6 @@ public class Files {
         }
         return result.toString();
     }
-
     public static boolean beforWrite(File f) {
         // 检查文件权限和目录结构
         if (f.exists()) {
@@ -494,7 +436,6 @@ public class Files {
         }
         return false;
     }
-
     /**
      * 将字符串写入文件
      *
@@ -515,7 +456,6 @@ public class Files {
             return false;
         }
     }
-
     /**
      * 将源文件的内容复制到目标文件
      *
@@ -535,7 +475,6 @@ public class Files {
         }
         return false; // 复制失败
     }
-
     /**
      * 将输入流（source）中的数据拷贝到输出流（dest）中。 会循环读取输入流的数据并写入输出流，直到读取完毕。 最终关闭输入输出流。
      *
@@ -563,7 +502,6 @@ public class Files {
         }
         return false; // 拷贝失败或发生异常
     }
-
     /**
      * 关闭流并处理可能发生的异常
      *
@@ -579,7 +517,6 @@ public class Files {
             }
         }
     }
-
     /**
      * 创建一个文件，如果文件已存在且是目录，
      * 则先删除该目录再创建文件。
@@ -615,7 +552,6 @@ public class Files {
         // 文件已存在或成功创建，返回文件对象
         return file;
     }
-
     /**
      * 清空文件内容, 并返回是否清空成功
      *
@@ -623,6 +559,7 @@ public class Files {
      * @return 是否清空成功
      */
     public static Boolean clearFile(File file) {
+        // 检查文件是否存在
         if (file.exists()) {
             FileWriter fileWriter = null;
             try {
@@ -632,13 +569,16 @@ public class Files {
                 fileWriter.flush(); // 刷新缓存，确保内容写入文件
                 return true; // 返回清空成功
             } catch (IOException e) {
+                // 发生 IO 异常时打印堆栈信息
                 Log.printStackTrace(e);
             } finally {
+                // 确保 FileWriter 在操作完成后关闭，防止资源泄露
                 try {
                     if (fileWriter != null) {
                         fileWriter.close(); // 关闭文件写入流
                     }
                 } catch (IOException e) {
+                    // 如果关闭流时发生异常，打印堆栈信息
                     Log.printStackTrace(e);
                 }
             }
@@ -646,56 +586,27 @@ public class Files {
         // 如果文件不存在，则返回 false
         return false;
     }
-
     /**
      * 删除文件或目录（包括子文件和子目录）。如果是目录，则递归删除其中的所有文件和目录。
      *
      * @param file 要删除的文件或目录
      * @return 如果删除成功返回 true，失败返回 false
      */
-    public static boolean delFile(File file) {
-        if (!file.exists()) {
-            ToastUtil.showToast(file.getAbsoluteFile() + "不存在！别勾把删了");
-            Log.record(TAG, "delFile: " + file.getAbsoluteFile() + "不存在！,无须删除");
-            return false;
-        }
-
-        if (file.isFile()) {
-            return deleteFileWithRetry(file); // 处理文件删除
-        }
-
+    public static Boolean delFile(File file) {
+        // 如果文件或目录不存在，则返回删除失败
+        if (!file.exists()) return false;
+        // 如果是文件，直接删除文件
+        if (file.isFile()) return file.delete();
+        // 如果是目录，获取目录下的所有文件和子目录
         File[] files = file.listFiles();
-        if (files == null) {
-            return deleteFileWithRetry(file); // 处理空文件夹删除
-        }
-
-        // 递归删除子文件和子文件夹
-        boolean allSuccess = true;
+        // 如果目录为空或无法列出文件，尝试删除目录
+        if (files == null) return file.delete();
+        // 遍历所有文件和子目录，递归调用 deleteFile 删除
         for (File innerFile : files) {
-            if (!delFile(innerFile)) {
-                allSuccess = false;
-            }
+            // 如果递归删除失败，返回 false
+            if (!delFile(innerFile)) return false;
         }
-
-        return allSuccess && deleteFileWithRetry(file);
-    }
-
-    private static boolean deleteFileWithRetry(File file) {
-        int retryCount = 3; // 重试次数
-        while (retryCount > 0) {
-            if (file.delete()) {
-                return true;
-            }
-            retryCount--;
-            Log.runtime(TAG, "删除失败，重试中: " + file.getAbsolutePath());
-            try {
-                Thread.sleep(500); // 等待 500ms 后重试
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-        Log.error(TAG, "删除失败: " + file.getAbsolutePath());
-        return false;
+        // 删除空目录
+        return file.delete();
     }
 }

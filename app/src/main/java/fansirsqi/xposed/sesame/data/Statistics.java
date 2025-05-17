@@ -119,6 +119,7 @@ public class Statistics {
                         String formatted = JsonUtil.formatJson(INSTANCE);
                         if (formatted != null && !formatted.equals(json)) {
                             Log.runtime(TAG, "重新格式化 statistics.json");
+                            Log.system(TAG, "重新格式化 statistics.json");
                             Files.write2File(formatted, statisticsFile);
                         }
                     } catch (Exception e) {
@@ -134,6 +135,7 @@ public class Statistics {
         } catch (Throwable t) {
             Log.printStackTrace(TAG, t);
             Log.runtime(TAG, "统计文件格式有误，已重置统计文件");
+            Log.system(TAG, "统计文件格式有误，已重置统计文件");
             resetToDefault();
         }
         return INSTANCE;
@@ -163,6 +165,7 @@ public class Statistics {
             JsonUtil.copyMapper().updateValue(INSTANCE, newInstance);
             Files.write2File(JsonUtil.formatJson(INSTANCE), Files.getStatisticsFile());
             Log.runtime(TAG, "已重置为默认值");
+            Log.system(TAG, "已重置为默认值");
         } catch (JsonMappingException e) {
             Log.printStackTrace(TAG, e);
         }
@@ -190,9 +193,9 @@ public class Statistics {
      */
     public static synchronized void save(Calendar nowDate) {
         if (updateDay(nowDate)) {
-            Log.runtime(TAG, "重置 statistics.json");
+            Log.system(TAG, "重置 statistics.json");
         } else {
-            Log.runtime(TAG, "保存 statistics.json");
+            Log.system(TAG, "保存 statistics.json");
         }
         Files.write2File(JsonUtil.formatJson(INSTANCE), Files.getStatisticsFile());
     }
@@ -220,7 +223,24 @@ public class Statistics {
         }
         return true;
     }
-
+    public static void updateDay() {
+        Calendar nowDate = Calendar.getInstance();
+        int currentYear = nowDate.get(Calendar.YEAR);
+        int currentMonth = nowDate.get(Calendar.MONTH) + 1; // 注意：Calendar.MONTH 从0开始
+        int currentDay = nowDate.get(Calendar.DAY_OF_MONTH);
+        if (currentYear != INSTANCE.year.time) {
+            INSTANCE.year.reset(currentYear);
+            INSTANCE.month.reset(currentMonth);
+            INSTANCE.day.reset(currentDay);
+        } else if (currentMonth != INSTANCE.month.time) {
+            INSTANCE.month.reset(currentMonth);
+            INSTANCE.day.reset(currentDay);
+        } else if (currentDay != INSTANCE.day.time) {
+            INSTANCE.day.reset(currentDay);
+        } else {
+            Log.system(TAG, "日期更新失败！");
+        }
+    }
     public enum TimeType {
         YEAR, MONTH, DAY
     }

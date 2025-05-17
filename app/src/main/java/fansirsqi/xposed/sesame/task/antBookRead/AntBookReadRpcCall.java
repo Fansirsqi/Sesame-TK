@@ -6,12 +6,12 @@ import fansirsqi.xposed.sesame.util.RandomUtil;
  * @since 2024/01/18
  */
 public class AntBookReadRpcCall {
-    private static final String VERSION = "1.0.1397";
+    private static final String VERSION = "1.5.0";
     /* 读书 */
     public static String queryTaskCenterPage() {
         return RequestManager.requestString("com.alipay.antbookpromo.taskcenter.queryTaskCenterPage",
-                "[{\"bannerId\":\"\",\"chInfo\":\"ch_appcenter__chsub_9patch\",\"hasAddHome\":false,\"miniClientVersion\":\"1.0.0\",\"supportFeatures\":[\"prize_task_20230831\"],\"yuyanVersion\":\""
-                        + VERSION + "\"}]");
+                "[{\"bannerId\":\"\",\"chInfo\":\"ch_alipaysearch__chsub_normal\",\"hasAddHome\":false,\"miniClientVersion\":\"1.0.7\",\"queryAction\":\"\",\"supportFeatures\":[\"prize_task_20230831\",\"auto_sign_in_20231211\",\"podcast_version_20240801\"],\"yuyanVersion\":\""
+                        +VERSION+"\"}]");
     }
     public static String queryMiniTaskCenterInfo() {
         return RequestManager.requestString("com.alipay.antbookpromo.minitaskcenter.queryMiniTaskCenterInfo",

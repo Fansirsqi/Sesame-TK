@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Method 输入框 -->
+        <EditText
+            android:id="@+id/method"
+            android:scrollbars="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:hint="Method"
+            android:maxLines="3"
+            android:inputType="textMultiLine"/>
+
+        <!-- Data 输入框 -->
+        <EditText
+            android:id="@+id/data"
+            android:scrollbars="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:hint="Data"
+            android:maxLines="10"
+            android:inputType="textMultiLine"/>
+
+        <!-- 标题（备注）输入框 -->
+        <EditText
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Title (备注)"
+            android:inputType="text"/>
+
+        <!-- 操作按钮 -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+            <Button
+                android:id="@+id/save_request"
+                android:layout_width="50sp"
+                android:layout_height="wrap_content"
+                android:text="保存"/>
+            <Button
+                android:id="@+id/post"
+                android:layout_width="50sp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:text="发送"/>
+            <Button
+                android:id="@+id/view_log"
+                android:layout_width="60sp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:text="抓包日志"/>
+            <Button
+                android:id="@+id/view_log2"
+                android:layout_width="60sp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:text="请求日志"/>
+            <Button
+                android:id="@+id/test1"
+                android:layout_width="50sp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="16dp"
+                android:text="测试"/>
+        </LinearLayout>
+
+        <!-- 请求列表 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="保存的请求列表"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/request_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:nestedScrollingEnabled="false"/> <!-- 禁用 RecyclerView 的内部滚动 -->
+
+        <!-- 结果显示区域 -->
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:fillViewport="true"
+            android:overScrollMode="never">
+
+        <TextView
+            android:id="@+id/result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="结果:"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:padding="8dp"
+            android:maxLines="20"
+            android:scrollbars="vertical"
+            android:textIsSelectable="true"
+            android:textSize="16sp" />
+    </ScrollView>
+
+        <Button
+            android:id="@+id/toggle_zoom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="放大显示"/>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -19,7 +19,7 @@ public class FriendWatch extends MapperEntity {
 
     private static final String TAG = FriendWatch.class.getSimpleName();
 
-    private static JSONObject joFriendWatch= new JSONObject();
+    private static JSONObject joFriendWatch;
 
     private String startTime;
 
@@ -45,9 +45,6 @@ public class FriendWatch extends MapperEntity {
 
     public static void friendWatch(String id, int collectedEnergy) {
         try {
-            if (joFriendWatch == null) {
-            joFriendWatch = new JSONObject();
-        }
             JSONObject joSingle = joFriendWatch.optJSONObject(id);
             if (joSingle == null) {
                 joSingle = new JSONObject();
@@ -65,10 +62,6 @@ public class FriendWatch extends MapperEntity {
 
     public static synchronized void save(String userId) {
         try {
-            if (joFriendWatch == null) {
-            joFriendWatch = new JSONObject();
-            Log.runtime(TAG, "初始化joFriendWatch对象");
-        }
             String notformat = joFriendWatch.toString();
             String formattedJson = JsonUtil.formatJson(joFriendWatch);
 //            Log.debug(TAG, "friendWatch save: " + formattedJson + " " + notformat);
@@ -111,10 +104,6 @@ public class FriendWatch extends MapperEntity {
 
     public static synchronized Boolean load(String userId) {
         try {
-            if (userId == null) {
-                return false;
-            }
-
             String strFriendWatch = Files.readFromFile(Files.getFriendWatchFile(userId));
             if (!strFriendWatch.isEmpty()) {
                 joFriendWatch = new JSONObject(strFriendWatch);

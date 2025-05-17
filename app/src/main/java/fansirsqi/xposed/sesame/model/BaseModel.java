@@ -1,9 +1,7 @@
 package fansirsqi.xposed.sesame.model;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import fansirsqi.xposed.sesame.model.modelFieldExt.BooleanModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.ChoiceModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.IntegerModelField;
@@ -19,7 +17,6 @@ import fansirsqi.xposed.sesame.util.Maps.ReserveaMap;
 import fansirsqi.xposed.sesame.util.RandomUtil;
 import fansirsqi.xposed.sesame.util.ThreadUtil;
 import lombok.Getter;
-
 /**
  * 基础配置模块
  */
@@ -56,14 +53,14 @@ public class BaseModel extends Model {
      */
     @Getter
     private static final ListModelField.ListJoinCommaToStringModelField energyTime =
-            new ListModelField.ListJoinCommaToStringModelField("energyTime", "只收能量时间(范围|关闭:-1)", ListUtil.newArrayList("0700-0730"));
+            new ListModelField.ListJoinCommaToStringModelField("energyTime", "只收能量时间(范围)", ListUtil.newArrayList("0700-0730"));
 
     /**
      * 模块休眠时间范围
      */
     @Getter
     private static final ListModelField.ListJoinCommaToStringModelField modelSleepTime =
-            new ListModelField.ListJoinCommaToStringModelField("modelSleepTime", "模块休眠时间(范围|关闭:-1)", ListUtil.newArrayList("0100-0540"));
+            new ListModelField.ListJoinCommaToStringModelField("modelSleepTime", "模块休眠时间(范围)", ListUtil.newArrayList("0100-0540"));
 
     /**
      * 定时任务模式选择
@@ -86,9 +83,6 @@ public class BaseModel extends Model {
      */
     @Getter
     private static final BooleanModelField errNotify = new BooleanModelField("errNotify", "开启异常通知", false);
-
-    @Getter
-    private static final IntegerModelField setMaxErrorCount = new IntegerModelField("setMaxErrorCount", "异常次数阈值", 8);
     /**
      * 是否启用新接口（最低支持版本 v10.3.96.8100）
      */
@@ -99,10 +93,6 @@ public class BaseModel extends Model {
      */
     @Getter
     private static final BooleanModelField debugMode = new BooleanModelField("debugMode", "开启抓包(基于新接口)", false);
-
-    @Getter
-    private static final BooleanModelField hideVPNStatus = new BooleanModelField("hideVPNStatus", "隐藏VPN", true);
-
     /**
      * 是否申请支付宝的后台运行权限
      */
@@ -143,27 +133,22 @@ public class BaseModel extends Model {
     private static final BooleanModelField sendHookData = new BooleanModelField("sendHookData", "启用Hook数据转发", false);
     @Getter
     static final StringModelField sendHookDataUrl = new StringModelField("sendHookDataUrl", "Hook数据转发地址", "http://127.0.0.1:9527/hook");
-
     @Override
     public String getName() {
         return "基础";
     }
-
     @Override
     public ModelGroup getGroup() {
         return ModelGroup.BASE;
     }
-
     @Override
     public String getIcon() {
         return "BaseModel.png";
     }
-
     @Override
     public String getEnableFieldName() {
         return "启用模块";
     }
-
     @Override
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
@@ -177,10 +162,8 @@ public class BaseModel extends Model {
         modelFields.addField(timeoutRestart);//超时是否重启
         modelFields.addField(waitWhenException);//异常发生时的等待时间
         modelFields.addField(errNotify);//异常通知开关
-        modelFields.addField(setMaxErrorCount);//异常次数阈值
         modelFields.addField(newRpc);//是否启用新接口
         modelFields.addField(debugMode);//是否开启抓包调试模式
-        modelFields.addField(hideVPNStatus);//是否开启VPN隐藏
         modelFields.addField(sendHookData);//启用Hook数据转发
         modelFields.addField(sendHookDataUrl);//Hook数据转发地址
         modelFields.addField(batteryPerm);//是否申请支付宝的后台运行权限
@@ -192,7 +175,6 @@ public class BaseModel extends Model {
         modelFields.addField(toastOffsetY);//气泡提示的纵向偏移量
         return modelFields;
     }
-
     /**
      * 初始化数据，通过异步线程加载初始化 Reserve 和 Beach 任务数据。
      */
@@ -210,7 +192,6 @@ public class BaseModel extends Model {
                 })
                 .start();
     }
-
     /**
      * 清理数据，在模块销毁时调用，清空 Reserve 和 Beach 数据。
      */
@@ -224,7 +205,6 @@ public class BaseModel extends Model {
             Log.printStackTrace(e);
         }
     }
-
     /**
      * 初始化保护地任务。通过 ReserveRpc 接口查询可兑换的树项目，将符合条件的保护地任务存入 ReserveIdMapUtil。 条件：项目类型为 "RESERVE" 且状态为 "AVAILABLE"。若调用失败则加载备份的 ReserveIdMapUtil。
      */
@@ -278,7 +258,6 @@ public class BaseModel extends Model {
             IdMapManager.getInstance(ReserveaMap.class).load(); // 加载备份的 ReserveIdMapUtil
         }
     }
-
     /**
      * 初始化沙滩任务。
      * 通过调用 AntOceanRpc 接口查询养成列表，
@@ -335,7 +314,6 @@ public class BaseModel extends Model {
             IdMapManager.getInstance(BeachMap.class).load(); // 加载保存的 BeachMap 备份
         }
     }
-
     public interface TimedTaskModel {
         int SYSTEM = 0;
         int PROGRAM = 1;

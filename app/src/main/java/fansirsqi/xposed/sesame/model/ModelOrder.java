@@ -13,9 +13,13 @@ import fansirsqi.xposed.sesame.task.antOcean.AntOcean;
 import fansirsqi.xposed.sesame.task.antOrchard.AntOrchard;
 import fansirsqi.xposed.sesame.task.antSports.AntSports;
 import fansirsqi.xposed.sesame.task.antStall.AntStall;
-import fansirsqi.xposed.sesame.task.consumeGold.ConsumeGold;
+import fansirsqi.xposed.sesame.task.exchange.NeverLandEX;
+import fansirsqi.xposed.sesame.task.exchange.PrivilegeEX;
 import fansirsqi.xposed.sesame.task.greenFinance.GreenFinance;
+import fansirsqi.xposed.sesame.task.otherTask.OtherTask;
+import fansirsqi.xposed.sesame.task.otherTask2.OtherTask2;
 import fansirsqi.xposed.sesame.task.reserve.Reserve;
+import fansirsqi.xposed.sesame.task.welfareCenter.WelfareCenter;
 import lombok.Getter;
 public class ModelOrder {
     @SuppressWarnings("unchecked")
@@ -33,10 +37,16 @@ public class ModelOrder {
             AntMember.class,//会员
             AntStall.class,//蚂蚁新村
             GreenFinance.class,//绿色经营
+            WelfareCenter.class,//福利中心
+            PrivilegeEX.class,//青春特权兑换
+            NeverLandEX.class,//健康岛兑换
+            OtherTask.class, //其他任务
+            OtherTask2.class, //其他任务2
+            AnswerAI.class,//AI答题
 //            AntBookRead.class,//读书
 //            ConsumeGold.class,//消费金
 //            OmegakoiTown.class,//小镇
-            AnswerAI.class,//AI答题
+
     };
     @Getter private  static final List<Class<? extends Model>> clazzList = new ArrayList<>();
     static {

@@ -161,7 +161,7 @@ public class Vitality {
     private static Boolean VitalityExchange(String spuId, String skuId) {
         try {
             JSONObject jo = new JSONObject(AntForestRpcCall.exchangeBenefit(spuId, skuId));
-            return ResUtil.checkResultCode(TAG, jo);
+            return ResUtil.checkResCode(TAG, jo);
         } catch (Throwable th) {
             Log.runtime(TAG, "VitalityExchange err:" + spuId + "," + skuId);
             Log.printStackTrace(TAG, th);
