@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 
 import fansirsqi.xposed.sesame.entity.MemberBenefit;
+import fansirsqi.xposed.sesame.hook.RequestManager;
 import fansirsqi.xposed.sesame.model.BaseModel;
 import fansirsqi.xposed.sesame.model.ModelFields;
 import fansirsqi.xposed.sesame.model.ModelGroup;
@@ -51,6 +52,8 @@ public class AntMember extends ModelTask {
   private BooleanModelField merchantMoreTask;
   private BooleanModelField beanSignIn;
   private BooleanModelField beanExchangeBubbleBoost;
+
+  private final int executeIntervalInt = 2000;
   @Override
   public ModelFields getFields() {
     ModelFields modelFields = new ModelFields();
@@ -91,7 +94,11 @@ public class AntMember extends ModelTask {
         doMemberSign();
       }
       if (memberTask.getValue()) {
-        doAllMemberAvailableTask();
+//        doAllMemberAvailableTask();
+        signPageTaskList();
+        queryAllStatusTaskList();
+        memTaskListQueryFacade();
+        queryPointCert(1, 8, false);
       }
       if (memberPointExchangeBenefit.getValue()) {
         memberPointExchangeBenefit();
@@ -941,4 +948,327 @@ public class AntMember extends ModelTask {
       Log.printStackTrace(TAG, t);
     }
   }
+
+
+  public void memTaskListQueryFacade() throws JSONException {
+    JSONObject requestString;
+    Object valueByPathObject;
+    try {
+      requestString = RequestManager.requestString("com.alipay.amic.memtask.h5.MemTaskListQueryFacade.signPageTaskList", "\"source\": \"antmember\",\"sourcePassMap\": {\"innerSource\": \"\",\"source\": \"myTab\",\"unid\": \"\"},\"spaceCode\": \"ant_member_xlight_task\",\"taskTopConfigId\": \"\"",true);
+    } finally {
+      try {
+      } finally {
+      }
+    }
+    if (requestString == null) {
+      return;
+    }
+    JSONArray jSONArray = requestString.getJSONObject("resultData").getJSONArray("adTaskList");
+    for (int i = 0; i < jSONArray.length(); i++) {
+      JSONObject jSONObject = jSONArray.getJSONObject(i);
+      String valueByPath = JsonUtil.getValueByPath(jSONObject, "lightsAdExtMap.bizId");
+      String valueByPath2 = JsonUtil.getValueByPath(jSONObject, "simpleTaskConfig.title");
+      if (!valueByPath.isEmpty()) {
+        JSONObject requestString2 = RequestManager.requestString("com.alipay.adtask.biz.mobilegw.service.task.finish", "\"bizId\": \"" + valueByPath + "\",\"extendInfo\": {}",true);
+        TimeUtil.sleep(2000);
+        if (requestString2 != null && (valueByPathObject = JsonUtil.getValueByPathObject(requestString2, "extendInfo.rewardInfo")) != null) {
+          JSONObject jSONObject2 = (JSONObject) valueByPathObject;
+          Log.other(getName() + "🎖️完成任务[" + valueByPath2 + "]+" + jSONObject2.getString("rewardAmount") + jSONObject2.getString("rewardTypeName"));
+        }
+      }
+    }
+  }
+
+  public void queryPointCert(int i, int i2, boolean z) throws JSONException {
+    JSONObject jSONObject;
+    try {
+      jSONObject = new JSONObject(AntMemberRpcCall.queryPointCert(i, i2));
+    } finally {
+      try {
+      } finally {
+      }
+    }
+    if (!"SUCCESS".equals(jSONObject.getString("resultCode"))) {
+      Log.error(TAG + ".queryPointCert err " + jSONObject.getString("resultDesc"));
+    } else {
+      boolean z2 = jSONObject.getBoolean("hasNextPage");
+      JSONArray jSONArray = jSONObject.getJSONArray("certList");
+      for (int i3 = 0; i3 < jSONArray.length(); i3++) {
+        JSONObject jSONObject2 = jSONArray.getJSONObject(i3);
+        String string = jSONObject2.getString("bizTitle");
+        String string2 = jSONObject2.getString("id");
+        int i4 = jSONObject2.getInt("pointAmount");
+        TimeUtil.sleep(executeIntervalInt);
+        JSONObject jSONObject3 = new JSONObject(AntMemberRpcCall.receivePointByUser(string2));
+        if (!"SUCCESS".equals(jSONObject3.getString("resultCode"))) {
+          Log.error(TAG + ".receivePointByUser err " + jSONObject3.getString("resultDesc"));
+        } else {
+          Log.other(getName() + "🎖️领取奖励[" + string + "]#" + i4 + "积分");
+          if (z) {
+          }
+        }
+      }
+      if (z2) {
+        queryPointCert(i + 1, i2, z);
+      }
+    }
+  }
+
+  private void signPageTaskList() throws JSONException {
+    int i;
+    JSONObject jSONObject = null;
+    int i2 = 0;
+    int i3 = 3;
+    while (true) {
+      if (i3 <= 0) {
+        break;
+      }
+      try {
+        try {
+          jSONObject = new JSONObject(AntMemberRpcCall.signPageTaskList());
+        } finally {
+        }
+      } catch (Exception e) {
+        i3--;
+        Log.printStackTrace(TAG, e);
+        i = executeIntervalInt;
+      }
+      if (!jSONObject.getBoolean("success")) {
+        i2 = executeIntervalInt;
+        break;
+      }
+      if (!jSONObject.has("categoryTaskList")) {
+        i2 = executeIntervalInt;
+        break;
+      }
+      JSONArray jSONArray = jSONObject.getJSONArray("categoryTaskList");
+      boolean z = false;
+      for (int i4 = 0; i4 < jSONArray.length(); i4++) {
+        JSONObject jSONObject2 = jSONArray.getJSONObject(i4);
+        JSONArray jSONArray2 = jSONObject2.getJSONArray("taskList");
+        String string = jSONObject2.getString("type");
+        if ("BROWSE".equals(string)) {
+          z = doTask(jSONArray2);
+        } else if ("OTHERS".equals(string)) {
+          doOtherTask(jSONArray2);
+        }
+      }
+      if (!z) {
+        TimeUtil.sleep(executeIntervalInt);
+        break;
+      }
+      try {
+        i = executeIntervalInt;
+        TimeUtil.sleep(i);
+      } finally {
+        try {
+          return;
+        } finally {
+        }
+      }
+    }
+    TimeUtil.sleep(i2);
+  }
+
+  private void queryAllStatusTaskList() throws JSONException {
+    JSONObject jSONObject;
+    try {
+      jSONObject = new JSONObject(AntMemberRpcCall.queryAllStatusTaskList());
+    } finally {
+      try {
+      } finally {
+      }
+    }
+    if (jSONObject.optBoolean("success") && jSONObject.has("availableTaskList")) {
+      if (doTask(jSONObject.getJSONArray("availableTaskList"))) {
+        queryAllStatusTaskList();
+      }
+    }
+  }
+
+  private boolean doTask(JSONArray jSONArray) {
+    int i;
+    int i2;
+    int i3;
+    boolean z;
+    int i4;
+    Long l;
+    String str;
+    String str2;
+    String str3;
+    int i5 = 0;
+    int i6 = 0;
+    int i7 = 0;
+    boolean z2 = false;
+    while (i7 < jSONArray.length()) {
+      Throwable th;
+      try {
+        JSONObject jSONObject = jSONArray.getJSONObject(i7);
+        boolean z3 = jSONObject.getBoolean("hybrid");
+        if (z3) {
+          JSONObject jSONObject2 = jSONObject.getJSONObject("extInfo");
+          i2 = jSONObject2.getInt("PERIOD_CURRENT_COUNT");
+          i = jSONObject2.getInt("PERIOD_TARGET_COUNT");
+          i3 = i > i2 ? i - i2 : i6;
+        } else {
+          i = i6;
+          i2 = i;
+          i3 = 1;
+        }
+        if (i3 > 0) {
+          JSONObject jSONObject3 = jSONObject.getJSONObject("taskConfigInfo");
+          String string = jSONObject3.getString("name");
+          Long valueOf = Long.valueOf(jSONObject3.getLong("id"));
+          String string2 = jSONObject3.getJSONObject("awardParam").getString("awardParamPoint");
+          String string3 = jSONObject3.getJSONArray("targetBusiness").getString(i6);
+          int i8 = i6;
+          while (i8 < i3) {
+            try {
+              z = z2;
+              try {
+                JSONObject jSONObject4 = new JSONObject(AntMemberRpcCall.applyTask(string, valueOf));
+                if (!"SUCCESS".equals(jSONObject4.getString("resultCode"))) {
+                  i4 = i3;
+                  l = valueOf;
+                  Log.debug(TAG, "signPageTaskList.applyTask err:" + jSONObject4.optString("resultDesc"));
+                  try {
+                    i5 = executeIntervalInt;
+                  } catch (Throwable th1) {
+                    th = th1;
+                    z2 = z;
+                    try {
+                      Log.printStackTrace(TAG, th);
+                      return z2;
+                    } finally {
+                      TimeUtil.sleep(executeIntervalInt);
+                    }
+                  }
+                } else {
+                  i4 = i3;
+                  l = valueOf;
+                  String[] split = string3.split("#");
+                  if (split.length > 2) {
+                    str = split[2];
+                    str2 = split[1];
+                  } else {
+                    str = split[1];
+                    str2 = split[0];
+                  }
+                  JSONObject jSONObject5 = new JSONObject(AntMemberRpcCall.executeTask(str, str2));
+                  if (!"SUCCESS".equals(jSONObject5.getString("resultCode"))) {
+                    Log.debug(TAG, "signPageTaskList.executeTask err:" + jSONObject5.optString("resultDesc"));
+                    i5 = executeIntervalInt;
+                  } else {
+                    String str4 = "";
+                    if (z3) {
+                      str4 = "(" + (i2 + i8 + 1) + "/" + i + ")";
+                    }
+                    Log.other(getName() + "完成任务[" + string + str4 + "]#" + string2 + "积分");
+                    try {
+                      str3 = string3;
+                      TimeUtil.sleep(executeIntervalInt);
+                      z2 = true;
+                      i8++;
+                      string3 = str3;
+                      i3 = i4;
+                      valueOf = l;
+                    } catch (Throwable th2) {
+                      th = th2;
+                      z2 = true;
+                      Log.printStackTrace(TAG, th);
+                      return z2;
+                    }
+                  }
+                }
+                TimeUtil.sleep(i5);
+                str3 = string3;
+                z2 = z;
+                i8++;
+                string3 = str3;
+                i3 = i4;
+                valueOf = l;
+              } catch (Throwable th3) {
+                th = th3;
+                throw th;
+              }
+            } catch (Throwable th4) {
+              th = th4;
+              z = z2;
+            }
+          }
+        }
+        i7++;
+        i6 = 0;
+      } catch (Throwable th5) {
+      }
+    }
+    return z2;
+  }
+
+  private void doOtherTask(JSONArray jSONArray) throws JSONException {
+    int i;
+    int i2;
+    int i3;
+    int i4 = 0;
+    int i5 = 0;
+    while (i5 < jSONArray.length()) {
+      try {
+        JSONObject jSONObject = jSONArray.getJSONObject(i5);
+        boolean z = jSONObject.getBoolean("hybrid");
+        if (z) {
+          JSONObject jSONObject2 = jSONObject.getJSONObject("extInfo");
+          i2 = jSONObject2.getInt("PERIOD_CURRENT_COUNT");
+          i = jSONObject2.getInt("PERIOD_TARGET_COUNT");
+          i3 = i > i2 ? i - i2 : i4;
+        } else {
+          i = i4;
+          i2 = i;
+          i3 = 1;
+        }
+        if (i3 > 0) {
+          JSONObject jSONObject3 = jSONObject.getJSONObject("taskConfigInfo");
+          String string = jSONObject3.getString("name");
+          Long valueOf = Long.valueOf(jSONObject3.getLong("id"));
+          String string2 = jSONObject3.getJSONObject("awardParam").getString("awardParamPoint");
+          String string3 = jSONObject3.getJSONArray("targetBusiness").getString(i4);
+          if (string3.startsWith("ngfe") && "uvChangeBusinessType".equals(jSONObject3.getString("businessType"))) {
+            String str = string3.split("#")[i4];
+            for (int i6 = i4; i6 < i3; i6++) {
+              JSONObject jSONObject4 = new JSONObject(AntMemberRpcCall.applyTask(string, valueOf));
+              int i7 = i;
+              TimeUtil.sleep(executeIntervalInt);
+              if (!"SUCCESS".equals(jSONObject4.getString("resultCode"))) {
+                Log.debug(TAG, "signPageTaskList.applyTask err:" + jSONObject4.optString("resultDesc"));
+              } else {
+                JSONObject jSONObject5 = new JSONObject(AntMemberRpcCall.ngfeUpdate(str));
+                TimeUtil.sleep(executeIntervalInt);
+                if (!jSONObject5.optBoolean("success")) {
+                  Log.debug(TAG, "signPageTaskList.update err:" + jSONObject5);
+                } else {
+                  String str2 = "";
+                  if (z) {
+                    i = i7;
+                    str2 = "(" + (i2 + i6 + 1) + "/" + i + ")";
+                  } else {
+                    i = i7;
+                  }
+                  Log.other(getName() + "🎖️完成任务[" + string + str2 + "]#" + string2 + "积分");
+                }
+              }
+              i = i7;
+            }
+          }
+        }
+        i5++;
+        i4 = 0;
+      } finally {
+        try {
+        } finally {
+        }
+      }
+    }
+  }
+
+
+
 }

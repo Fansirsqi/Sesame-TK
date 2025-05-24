@@ -24,6 +24,7 @@ public class AntMemberRpcCall {
         String args1 = "[{\"page\":" + page + ",\"pageSize\":" + pageSize + "}]";
         return RequestManager.requestString("alipay.antmember.biz.rpc.member.h5.queryPointCert", args1);
     }
+
     public static String receivePointByUser(String certId) {
         String args1 = "[{\"certId\":" + certId + "}]";
         return RequestManager.requestString("alipay.antmember.biz.rpc.member.h5.receivePointByUser", args1);
@@ -89,16 +90,24 @@ public class AntMemberRpcCall {
                         + "\"],\"channel\":\"MRCH_SELF\",\"outBizNo\":\"" + getUniqueId() + "\"}]");
     }
     /* 会员任务 */
-    public static String signPageTaskList() {
+    public static String signPageTaskList1() {
         return RequestManager.requestString("alipay.antmember.biz.rpc.membertask.h5.signPageTaskList",
                 "[{\"sourceBusiness\":\"antmember\",\"spaceCode\":\"ant_member_xlight_task\"}]");
     }
+
+    public static String signPageTaskList() {
+        return RequestManager.requestString("alipay.antmember.biz.rpc.membertask.h5.signPageTaskList",
+                "[{\"sourceBusiness\":\"antmember\",\"spaceCode\":\"ant_member_xlight_task\",\"sourcePassMap\": {\"innerSource\": \"\",\"source\": \"myTab\",\"unid\": \"\"},}]");
+    }
+
     public static String applyTask(String darwinName, Long taskConfigId) {
         return RequestManager.requestString("alipay.antmember.biz.rpc.membertask.h5.applyTask",
                 "[{\"darwinExpParams\":{\"darwinName\":\"" + darwinName
                         + "\"},\"sourcePassMap\":{\"innerSource\":\"\",\"source\":\"myTab\",\"unid\":\"\"},\"taskConfigId\":"
                         + taskConfigId + "}]");
     }
+
+
     public static String executeTask(String bizParam, String bizSubType, String bizType, Long taskConfigId) {
         return RequestManager.requestString("alipay.antmember.biz.rpc.membertask.h5.executeTask",
                 "[{\"bizOutNo\":\"" + TimeUtil.getFormatDate().replaceAll("-", "") +
@@ -106,14 +115,30 @@ public class AntMemberRpcCall {
                         "\",\"sourcePassMap\":{\"innerSource\":\"\",\"source\":\"myTab\",\"unid\":\"\"}" +
                         ",\"syncProcess\":true,\"taskConfigId\":\"" + taskConfigId + "\"}]");
     }
-    public static String queryAllStatusTaskList() {
+
+    public static String executeTask(String str, String str2) {
+        return RequestManager.requestString("alipay.antmember.biz.rpc.membertask.h5.executeTask", "[{\"bizOutNo\":\"" + (System.currentTimeMillis() - 16000) + "\",\"bizParam\":\"" + str + "\",\"bizSubType\":\"" + str2 + "\",\"bizType\":\"BROWSE\"}]");
+    }
+
+    public static String queryAllStatusTaskList1() {
         return RequestManager.requestString("alipay.antmember.biz.rpc.membertask.h5.queryAllStatusTaskList",
                 "[{\"sourceBusiness\":\"signInAd\",\"sourcePassMap\":{\"innerSource\":\"\",\"source\":\"myTab\",\"unid\":\"\"}}]");
     }
+
+    public static String queryAllStatusTaskList() {
+        return RequestManager.requestString("alipay.antmember.biz.rpc.membertask.h5.queryAllStatusTaskList",
+                "[{\"sourceBusiness\":\"signInAd\"}]");
+    }
+
     public static String rpcCall_signIn() {
         String args1 = "[{\"sceneCode\":\"KOUBEI_INTEGRAL\",\"source\":\"ALIPAY_TAB\",\"version\":\"2.0\"}]";
         return RequestManager.requestString("alipay.kbmemberprod.action.signIn", args1);
     }
+
+    public static String ngfeUpdate(String str) {
+        return RequestManager.requestString("com.alipay.csprod.prom.camp.ngfe.update", "[{\"tagCode\":\"" + str + "\"}]");
+    }
+
     /**
      * 黄金票收取
      *

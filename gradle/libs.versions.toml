@@ -1,5 +1,5 @@
 [versions]
-android-plugin = "8.9.2"
+android-plugin = "8.9.3"
 kotlin-plugin = "2.2.0-Beta2"
 kotlin-stdlib = "2.2.0-Beta2"
 slf4j = "2.1.0-alpha1"
@@ -13,8 +13,8 @@ lombok = "1.18.38"
 okhttp = "5.0.0-alpha.14"
 jackson = "2.19.0"
 #noinspection NewerVersionAvailable
-jackson-compatible = "2.13.5"
-webkit = "1.14.0-alpha01"
+jackson-compatible = "2.19.0"
+webkit = "1.14.0-rc01"
 core-ktx = "1.16.0"
 dexkit = "2.0.4"
 [libraries]

@@ -1,5 +1,10 @@
 package fansirsqi.xposed.sesame.hook;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import fansirsqi.xposed.sesame.entity.RpcEntity;
+import fansirsqi.xposed.sesame.util.Log;
+
 /**
  * @author Byseven
  * @date 2025/1/6
@@ -50,4 +55,27 @@ public class RequestManager {
     public static RpcEntity requestObject(String method, String data, int tryCount, int retryInterval) {
         return ApplicationHook.rpcBridge.requestObject(method, data, tryCount, retryInterval);
     }
+
+    public static JSONObject requestString(String str, String str2, boolean z) throws JSONException {
+        JSONObject requestStringAll = requestStringAll(str, str2);
+        if (1009 == requestStringAll.optInt("error")) {
+            throw new IllegalStateException(requestStringAll.optString("errorMessage"));
+        }
+        if (requestStringAll.optBoolean("success", false)) {
+            return requestStringAll;
+        }
+        if (z) {
+            Log.error(".requestString err " + str + "\r\n参数：" + (str2 == null ? null : "[{" + str2 + "}]") + "\r\n结果：" + requestStringAll);
+        }
+        return null;
+    }
+
+    public static JSONObject requestStringAll(String str, String str2) throws JSONException {
+        return new JSONObject(requestString(str, str2 == null ? null : "[{" + str2 + "}]"));
+    }
+
+    public static JSONObject requestStringAllNew(String str, String str2) throws JSONException {
+        return new JSONObject(requestString(str, str2));
+    }
+
 }
