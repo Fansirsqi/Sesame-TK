@@ -973,7 +973,7 @@ public class AntMember extends ModelTask {
         TimeUtil.sleep(2000);
         if (requestString2 != null && (valueByPathObject = JsonUtil.getValueByPathObject(requestString2, "extendInfo.rewardInfo")) != null) {
           JSONObject jSONObject2 = (JSONObject) valueByPathObject;
-          Log.other(getName() + "🎖️完成任务[" + valueByPath2 + "]+" + jSONObject2.getString("rewardAmount") + jSONObject2.getString("rewardTypeName"));
+          Log.other(getName() + "积分🎖️完成任务[" + valueByPath2 + "]+" + jSONObject2.getString("rewardAmount") + jSONObject2.getString("rewardTypeName"));
         }
       }
     }
@@ -1163,7 +1163,7 @@ public class AntMember extends ModelTask {
                     if (z3) {
                       str4 = "(" + (i2 + i8 + 1) + "/" + i + ")";
                     }
-                    Log.other(getName() + "完成任务[" + string + str4 + "]#" + string2 + "积分");
+                    Log.other(getName() + "积分🎖️完成任务[" + string + str4 + "]#" + string2 + "积分");
                     try {
                       str3 = string3;
                       TimeUtil.sleep(executeIntervalInt);
@@ -1252,7 +1252,7 @@ public class AntMember extends ModelTask {
                   } else {
                     i = i7;
                   }
-                  Log.other(getName() + "🎖️完成任务[" + string + str2 + "]#" + string2 + "积分");
+                  Log.other(getName() + "积分🎖️完成任务[" + string + str2 + "]#" + string2 + "积分");
                 }
               }
               i = i7;

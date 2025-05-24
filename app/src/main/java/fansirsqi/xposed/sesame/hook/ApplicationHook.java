@@ -17,6 +17,7 @@ import android.os.Looper;
 import android.os.PowerManager;
 
 import androidx.annotation.NonNull;
+import androidx.webkit.internal.ApiFeature;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -69,9 +70,11 @@ import fansirsqi.xposed.sesame.task.BaseTask;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.task.antMember.AntMemberRpcCall;
+import fansirsqi.xposed.sesame.task.recreation.Recreation;
 import fansirsqi.xposed.sesame.util.AssetUtil;
 import fansirsqi.xposed.sesame.util.Detector;
 import fansirsqi.xposed.sesame.util.GlobalThreadPools;
+import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.Maps.UserMap;
 import fansirsqi.xposed.sesame.util.Notify;
@@ -681,6 +684,14 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                                 Res.put("Method", recordArray[1]);
                                                 Res.put("Params", recordArray[2]);
                                                 Res.put("Data", recordArray[3]);
+
+                                                Object[] objArr2 = param.args;
+                                                if (objArr2 == null || objArr2.length < 15 || (objArr2[15]) == null) {
+                                                    Log.runtime(TAG,"Hook鱼塘Token数据检查失败");
+                                                }
+                                                setConfig(recordArray[1].toString(), recordArray[2].toString(), recordArray[3]);
+                                                Log.runtime(TAG,"记录\n时间: " + recordArray[0] + "\n方法: " + recordArray[1] + "\n参数: " + recordArray[2] + "\n数据: " + recordArray[3] + "\n");
+
                                                 if (BaseModel.getSendHookData().getValue()) {
                                                     HookSender.sendHookData(Res);
                                                 }
@@ -1077,4 +1088,27 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         intentFilter.addAction("com.eg.android.AlipayGphone.sesame.rpctest"); // 调试RPC的动作
         return intentFilter;
     }
+
+    public void setConfig(String str, String str2, Object obj) {
+        try {
+            if (!str2.isEmpty() && obj != null) {
+                if ("com.alipay.antfishpond.fishpondAngle".equals(str)) {
+                    String valueByPath = JsonUtil.getValueByPath(new JSONObject(str2), "requestData.[0].riskToken");
+                    if (Objects.equals(Recreation.getFishpondToken().getValue(), valueByPath)) {
+                        Log.runtime(TAG,"福气鱼塘已保存相同Token:"+valueByPath);
+                        return;
+                    } else {
+                        Recreation.getFishpondToken().setValue(valueByPath);
+                        Log.runtime(TAG,"保存福气鱼塘Token:"+valueByPath);
+                        Toast.show("🎉 已为您自动获取保存福气鱼塘Token");
+                    }
+                }
+                Config.save(UserMap.getCurrentUid(), false);
+            }
+        } catch (Throwable th) {
+            Log.printStackTrace(TAG, th);
+        }
+    }
+
+
 }

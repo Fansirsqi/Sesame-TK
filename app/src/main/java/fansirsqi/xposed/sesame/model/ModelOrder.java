@@ -15,6 +15,7 @@ import fansirsqi.xposed.sesame.task.antSports.AntSports;
 import fansirsqi.xposed.sesame.task.antStall.AntStall;
 import fansirsqi.xposed.sesame.task.consumeGold.ConsumeGold;
 import fansirsqi.xposed.sesame.task.greenFinance.GreenFinance;
+import fansirsqi.xposed.sesame.task.recreation.Recreation;
 import fansirsqi.xposed.sesame.task.reserve.Reserve;
 import lombok.Getter;
 public class ModelOrder {
@@ -33,6 +34,7 @@ public class ModelOrder {
             AntMember.class,//会员
             AntStall.class,//蚂蚁新村
             GreenFinance.class,//绿色经营
+            Recreation.class, //娱乐
 //            AntBookRead.class,//读书
 //            ConsumeGold.class,//消费金
 //            OmegakoiTown.class,//小镇
