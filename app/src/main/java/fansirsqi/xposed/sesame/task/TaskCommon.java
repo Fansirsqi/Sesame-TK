@@ -25,12 +25,15 @@ public class TaskCommon {
             IS_ENERGY_TIME = TimeUtil.checkInTimeRange(currentTimeMillis, isEnergyTime);
         }
 
+        /*
         List<String> isModuleSleepTime = BaseModel.getModelSleepTime().getValue();
         if (isModuleSleepTime.contains("-1")) {
             IS_MODULE_SLEEP_TIME = false;
         } else {
             IS_MODULE_SLEEP_TIME = TimeUtil.checkInTimeRange(currentTimeMillis, isModuleSleepTime);
         }
+
+         */
 
         IS_AFTER_8AM = TimeUtil.isAfterOrCompareTimeStr(currentTimeMillis, "0800");
     }

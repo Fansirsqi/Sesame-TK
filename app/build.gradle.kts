@@ -11,6 +11,7 @@ tasks.register("testClasses") {
     group = "Verification"
 }
 android {
+
     namespace = "fansirsqi.xposed.sesame"
     compileSdk = 36
 
@@ -82,6 +83,8 @@ android {
                 it.enabled = false
             }
         }
+
+
     }
 
     buildFeatures {
@@ -196,6 +199,7 @@ dependencies {
     implementation(libs.viewpager2)
     implementation(libs.material)
     implementation(libs.webkit)
+    implementation(libs.extension.okhttp)
     compileOnly(libs.xposed.api)
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

@@ -26,6 +26,7 @@ public class TimeUtil {
         try {
             String[] timeRangeArray = timeRange.split("-");
             if (timeRangeArray.length == 2) {
+                Log.runtime(String.format(Locale.ROOT,"模块设定休眠时间为%s-%s",timeRangeArray[0],timeRangeArray[1]));
                 String min = timeRangeArray[0];
                 String max = timeRangeArray[1];
                 return isAfterOrCompareTimeStr(timeMillis, min) && isBeforeOrCompareTimeStr(timeMillis, max);
@@ -168,7 +169,6 @@ public class TimeUtil {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         }
     }
@@ -185,6 +185,15 @@ public class TimeUtil {
         calendar.setFirstDayOfWeek(Calendar.MONDAY);
         return calendar.get(Calendar.WEEK_OF_YEAR);
     }
+
+
+    public static int getWeekNumber(Date date, int i) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.setFirstDayOfWeek(i);
+        return calendar.get(3);
+    }
+
     /**
      * 比较第一个日历的天数小于第二个日历的天数
      *
@@ -266,6 +275,17 @@ public class TimeUtil {
     @SuppressLint("SimpleDateFormat")
     public static String getCommonDate(Long timestamp) {
         return getCommonDateFormat().format(timestamp);
+    }
+
+    public static String getFormattedDate(String str) {
+        return getFormattedDate(str, new Date());
+    }
+
+    public static String getFormattedDate(String str, Date date) {
+        if (date == null) {
+            date = new Date();
+        }
+        return new SimpleDateFormat(str, Locale.getDefault()).format(date);
     }
 
     public static final ThreadLocal<SimpleDateFormat> DATE_FORMAT_THREAD_LOCAL = new ThreadLocal<SimpleDateFormat>() {

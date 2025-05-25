@@ -1,5 +1,5 @@
 [versions]
-android-plugin = "8.9.3"
+android-plugin = "8.10.0"
 kotlin-plugin = "2.2.0-Beta2"
 kotlin-stdlib = "2.2.0-Beta2"
 slf4j = "2.1.0-alpha1"
@@ -17,6 +17,7 @@ jackson-compatible = "2.19.0"
 webkit = "1.14.0-rc01"
 core-ktx = "1.16.0"
 dexkit = "2.0.4"
+extension-okhttp = "2.18.5"
 [libraries]
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin-stdlib" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
@@ -37,6 +38,7 @@ jackson-core-compatible = { module = "com.fasterxml.jackson.core:jackson-core", 
 jackson-databind-compatible = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson-compatible" }
 jackson-annotations-compatible = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson-compatible" }
 dexkit = { module = "org.luckypray:dexkit", version.ref = "dexkit" }
+extension-okhttp = { group = "com.google.android.exoplayer", name = "extension-okhttp", version.ref = "extension-okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "android-plugin" }

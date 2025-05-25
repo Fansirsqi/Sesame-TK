@@ -15,20 +15,13 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
-
 import androidx.annotation.NonNull;
-import androidx.webkit.internal.ApiFeature;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.luckypray.dexkit.DexKitBridge;
-
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -86,40 +79,40 @@ import lombok.Getter;
 public class ApplicationHook implements IXposedHookLoadPackage {
     static final String TAG = ApplicationHook.class.getSimpleName();
     @Getter
-    private static final String modelVersion = BuildConfig.VERSION_NAME;
-    private static final Map<Object, Object[]> rpcHookMap = new ConcurrentHashMap<>();
-    private static final Map<String, PendingIntent> wakenAtTimeAlarmMap = new ConcurrentHashMap<>();
+    public static final String modelVersion = BuildConfig.VERSION_NAME;
+    public static final Map<Object, Object[]> rpcHookMap = new ConcurrentHashMap<>();
+    public static final Map<String, PendingIntent> wakenAtTimeAlarmMap = new ConcurrentHashMap<>();
     @Getter
-    private static ClassLoader classLoader = null;
+    public static ClassLoader classLoader = null;
     @Getter
-    private static Object microApplicationContextObject = null;
+    public static Object microApplicationContextObject = null;
     @Getter
     @SuppressLint("StaticFieldLeak")
     static Context context = null;
     @Getter
-    static AlipayVersion alipayVersion = new AlipayVersion("");
+    public static AlipayVersion alipayVersion = new AlipayVersion("");
     @Getter
-    private static volatile boolean hooked = false;
-    private static volatile boolean init = false;
-    static volatile Calendar dayCalendar;
+    public static volatile boolean hooked = false;
+    public static volatile boolean init = false;
+    public static volatile Calendar dayCalendar;
     @Getter
-    static volatile boolean offline = false;
+    public static volatile boolean offline = false;
 
     @Getter
-    static final AtomicInteger reLoginCount = new AtomicInteger(0);
+    public static final AtomicInteger reLoginCount = new AtomicInteger(0);
     @SuppressLint("StaticFieldLeak")
-    static Service service;
+    public static Service service;
     @Getter
-    static Handler mainHandler;
-    static BaseTask mainTask;
-    static RpcBridge rpcBridge;
+    public static Handler mainHandler;
+    public static BaseTask mainTask;
+    public static RpcBridge rpcBridge;
     @Getter
-    private static RpcVersion rpcVersion;
-    private static PowerManager.WakeLock wakeLock;
-    private static PendingIntent alarm0Pi;
-    private static XC_MethodHook.Unhook rpcRequestUnhook;
-    private static XC_MethodHook.Unhook rpcResponseUnhook;
-    private final ExecutorService MAIN_THREAD_POOL = GlobalThreadPools.getGeneralPurposeExecutor();
+    public static RpcVersion rpcVersion;
+    public static PowerManager.WakeLock wakeLock;
+    public static PendingIntent alarm0Pi;
+    public static XC_MethodHook.Unhook rpcRequestUnhook;
+    public static XC_MethodHook.Unhook rpcResponseUnhook;
+    public final ExecutorService MAIN_THREAD_POOL = GlobalThreadPools.getGeneralPurposeExecutor();
 
     public static void setOffline(boolean offline) {
         ApplicationHook.offline = offline;
@@ -127,7 +120,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
 
     private volatile long lastExecTime = 0; // 添加为类成员变量
 
-    static {
+     static {
         // 初始化dayCalendar
         dayCalendar = Calendar.getInstance();
         dayCalendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -558,7 +551,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     }
 
     @SuppressLint("WakelockTimeout")
-    private synchronized Boolean initHandler(Boolean force) {
+    private static synchronized Boolean initHandler(Boolean force) {
         try {
             TaskCommon.update();
             if (service == null) {
@@ -997,7 +990,14 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 });
     }
 
-    class AlipayBroadcastReceiver extends BroadcastReceiver {
+    public static class AlipayBroadcastReceiver extends BroadcastReceiver {
+        public static final String EXTRA_DATA = "data";
+        public static final String EXTRA_METHOD = "method";
+        public static final String EXTRA_RESULT = "result";
+        public static final String EXTRA_TYPE = "type";
+
+        public AlipayBroadcastReceiver() {
+        }
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -1032,9 +1032,9 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         break;
                     case "com.eg.android.AlipayGphone.sesame.rpctest":
                         try {
-                            String method = intent.getStringExtra("method");
-                            String data = intent.getStringExtra("data");
-                            String type = intent.getStringExtra("type");
+                            String method = intent.getStringExtra(EXTRA_METHOD);
+                            String data = intent.getStringExtra(EXTRA_DATA);
+                            String type = intent.getStringExtra(EXTRA_TYPE);
                             DebugRpc rpcInstance = new DebugRpc(); // 创建实例
                             rpcInstance.start(method, data, type); // 通过实例调用非静态方法
                         } catch (Throwable th) {
@@ -1089,7 +1089,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         return intentFilter;
     }
 
-    public void setConfig(String str, String str2, Object obj) {
+    public static void setConfig(String str, String str2, Object obj) {
         try {
             if (!str2.isEmpty() && obj != null) {
                 if ("com.alipay.antfishpond.fishpondAngle".equals(str)) {

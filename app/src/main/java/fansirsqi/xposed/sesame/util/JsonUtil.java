@@ -124,6 +124,15 @@ public class JsonUtil {
         }
     }
 
+    public static String toFormatJsonString(Object obj) {
+        try {
+            return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     /**
      * 创建 JSON 解析器
      *

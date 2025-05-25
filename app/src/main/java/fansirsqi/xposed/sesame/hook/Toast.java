@@ -58,7 +58,7 @@ public class Toast {
      * @param context 上下文
      * @param message 要显示的消息
      */
-    private static void createAndShowToast(Context context, CharSequence message) {
+    public static void createAndShowToast(Context context, CharSequence message) {
         try {
             android.widget.Toast toast = android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT);
             toast.setGravity(
@@ -72,4 +72,6 @@ public class Toast {
             Log.printStackTrace(TAG, t);
         }
     }
+
+
 }

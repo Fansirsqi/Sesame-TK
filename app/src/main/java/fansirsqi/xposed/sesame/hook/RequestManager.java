@@ -3,7 +3,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import fansirsqi.xposed.sesame.entity.RpcEntity;
-import fansirsqi.xposed.sesame.util.Log;
 
 /**
  * @author Byseven
@@ -19,6 +18,13 @@ public class RequestManager {
         return result;
     }
 
+    private static JSONObject checkJsonResult(String result, String method) throws JSONException {
+        if (result == null || result.trim().isEmpty()) {
+            throw new IllegalStateException("Empty response from RPC method: " + method);
+        }
+        return new JSONObject(result);
+    }
+
     public static String requestString(RpcEntity rpcEntity) {
         String result = ApplicationHook.rpcBridge.requestString(rpcEntity, 3, -1);
         return checkResult(result, rpcEntity.getMethodName());
@@ -31,6 +37,12 @@ public class RequestManager {
         String result = ApplicationHook.rpcBridge.requestString(method, data);
         return checkResult(result, method);
     }
+
+    public static JSONObject requestJson(String method, String data) throws JSONException {
+        String result = ApplicationHook.rpcBridge.requestString(method, data);
+        return checkJsonResult(result, method);
+    }
+
     public static String requestString(String method, String data, String relation) {
         String result = ApplicationHook.rpcBridge.requestString(method, data, relation);
         return checkResult(result, method);
@@ -56,6 +68,7 @@ public class RequestManager {
         return ApplicationHook.rpcBridge.requestObject(method, data, tryCount, retryInterval);
     }
 
+    /*
     public static JSONObject requestString(String str, String str2, boolean z) throws JSONException {
         JSONObject requestStringAll = requestStringAll(str, str2);
         if (1009 == requestStringAll.optInt("error")) {
@@ -77,5 +90,7 @@ public class RequestManager {
     public static JSONObject requestStringAllNew(String str, String str2) throws JSONException {
         return new JSONObject(requestString(str, str2));
     }
+
+     */
 
 }

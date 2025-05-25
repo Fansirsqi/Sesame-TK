@@ -1,4 +1,6 @@
 package fansirsqi.xposed.sesame.util;
+import static fansirsqi.xposed.sesame.task.antFarm.AntFarm.GetFeedType.RANDOM;
+
 import java.util.Random;
 /**
  * 随机数工具类，提供生成随机数和随机字符串的方法。
@@ -24,6 +26,11 @@ public class RandomUtil {
         if (min >= max) return min;
         return rnd.nextInt(max - min) + min;
     }
+
+    public static int nextInt(int i) {
+        return rnd.nextInt();
+    }
+
     /**
      * 生成一个随机的长整数。
      *

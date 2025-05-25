@@ -10,6 +10,12 @@ allprojects {
     }
 }
 
+repositories {
+    maven("https://maven.aliyun.com/repository/spring")
+    mavenCentral()
+    google()
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
