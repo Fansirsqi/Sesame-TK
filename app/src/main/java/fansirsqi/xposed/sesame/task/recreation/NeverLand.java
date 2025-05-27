@@ -42,10 +42,12 @@ public class NeverLand extends BaseCommTask {
         queryTaskInfo();
         queryBubbleTask();
         if (Recreation.getNeverLandJump().getValue()) {
+            boolean isFinished = false;
             if (!queryMapStageRewardInfo()) {
-                Log.other(this.displayName + "地图阶段奖励已领完，注意手动切换地图");
+                isFinished = true;
+                Log.other(this.displayName + "地图阶段奖励已领完，注意手动切换地图，现为您继续跳一跳，直到连续10次未获取碎片停止");
             }
-            walkGrid();
+            walkGrid(isFinished);
         }else{
             Log.other("悦动健康岛🍰跳一跳未启用");
         }
@@ -157,15 +159,21 @@ public class NeverLand extends BaseCommTask {
         }
     }
 
-    private void walkGrid() {
+    private void walkGrid(boolean isFinished) {
         try {
             if (this.mapId.isEmpty()) {
                 return;
             }
+            int count =0;
+            JSONObject requestString = null;
             while (true) {
-                JSONObject requestString = requestString("com.alipay.neverland.biz.rpc.walkGrid", "\"branchId\": \"MASTER\",\"drilling\": false,\"mapId\": \"" + this.mapId + "\",\"source\":\"jkddicon\"");
-                if (requestString == null) {
-                    return;
+                try {
+                    requestString = requestString("com.alipay.neverland.biz.rpc.walkGrid", "\"branchId\": \"MASTER\",\"drilling\": false,\"mapId\": \"" + this.mapId + "\",\"source\":\"jkddicon\"");
+                    if (requestString == null) {
+                        return;
+                    }
+                }catch (Exception e){
+                    Log.printStackTrace(this.TAG, e);
                 }
                 JSONObject jSONObject = requestString.getJSONObject(ApplicationHook.AlipayBroadcastReceiver.EXTRA_DATA);
                 int i = jSONObject.getInt("leftCount");
@@ -173,14 +181,22 @@ public class NeverLand extends BaseCommTask {
                 JSONObject jSONObject2 = jSONObject.getJSONObject("starData");
                 String str = this.displayName + "跳跳跳，前进[" + JsonUtil.getValueByPath(jSONObject, "mapAwards.[0].step") + "步]剩余能量：" + i;
                 if (valueByPathObject != null) {
+                    count=0;
                     JSONObject jSONObject3 = (JSONObject) valueByPathObject;
                     str = str + "，获得[" + jSONObject3.getString("modifyCount") + jSONObject3.getString(Action.NAME_ATTRIBUTE) + "]";
                 }
+
+
                 Log.other(str);
                 jSONObject2.getInt("curr");
                 jSONObject2.getInt("count");
                 jSONObject2.getInt("rewardLevel");
                 jSONObject2.getJSONArray("stageRewardRecord").length();
+                count++;
+                if(isFinished &&count>10){
+                    Log.other(displayName+"地图奖励已领完，连续10次未获取碎片，停止跳一跳");
+                    return;
+                }
                 if (i < 5) {
                     return;
                 } else {

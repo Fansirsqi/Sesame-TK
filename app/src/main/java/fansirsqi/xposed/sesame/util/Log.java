@@ -3,7 +3,6 @@ package fansirsqi.xposed.sesame.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fansirsqi.xposed.sesame.BuildConfig;
 import fansirsqi.xposed.sesame.model.BaseModel;
 
 /**

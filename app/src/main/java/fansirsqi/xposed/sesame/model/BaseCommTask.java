@@ -66,6 +66,15 @@ public abstract class BaseCommTask {
         return null;
     }
 
+    // 可在基类配置
+    protected int getMaxRetry() {
+        return 3;
+    }
+
+    protected int getCoolDownInterval() {
+        return 500;
+    }
+
     protected JSONObject requestStringAll(String str, String str2) throws JSONException {
         return new JSONObject(RequestManager.requestString(str, str2 == null ? null : "[{" + str2 + "}]"));
     }

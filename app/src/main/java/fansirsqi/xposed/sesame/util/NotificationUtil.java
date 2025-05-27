@@ -21,10 +21,10 @@ import fansirsqi.xposed.sesame.model.BaseModel;
 import lombok.Getter;
 
 public class NotificationUtil {
-    private static final String CHANNEL_ID = "leo.xposed.sesame.ANTFOREST_NOTIFY_CHANNEL";
+    private static final String CHANNEL_ID = "fansirsqi.xposed.sesame.ANTFOREST_NOTIFY_CHANNEL";
     private static final String CHANNEL_NAME = "提醒";
     private static final int NOTIFICATION_ID = 99;
-    private static final String NOTIFY_CHANNEL_ID = "leo.xposed.sesame.NOTIFY_CHANNEL";
+    private static final String NOTIFY_CHANNEL_ID = "fansirsqi.xposed.sesame.NOTIFY_CHANNEL";
     private static int NOTIFY_NOTIFICATION_ID = 1;
     private static Notification.Builder builder = null;
     private static String contentText = "";
