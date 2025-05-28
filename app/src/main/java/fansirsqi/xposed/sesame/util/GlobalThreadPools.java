@@ -34,8 +34,8 @@ public class GlobalThreadPools {
 
         // 确保在JVM关闭时优雅地关闭线程池
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            shutdownAndAwaitTermination(GENERAL_PURPOSE_EXECUTOR, "GeneralPurposeExecutor");
-            shutdownAndAwaitTermination(SCHEDULED_EXECUTOR, "ScheduledExecutor");
+            shutdownAndAwaitTermination(GENERAL_PURPOSE_EXECUTOR,30, "GeneralPurposeExecutor");
+            shutdownAndAwaitTermination(SCHEDULED_EXECUTOR, 30,"ScheduledExecutor");
         }));
     }
 
@@ -57,35 +57,6 @@ public class GlobalThreadPools {
         return SCHEDULED_EXECUTOR;
     }
 
-    /**
-     * 关闭指定的 ExecutorService
-     *
-     * @param pool     ExecutorService 实例
-     * @param poolName 线程池名称，用于日志记录
-     */
-    private static void shutdownAndAwaitTermination(ExecutorService pool, String poolName) {
-        if (pool == null || pool.isShutdown()) {
-            return;
-        }
-        Log.runtime(TAG, "Shutting down executor service: " + poolName);
-        pool.shutdown(); // 禁用新任务提交
-        try {
-            // 等待现有任务完成
-            if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                pool.shutdownNow(); // 取消当前执行的任务
-                // 等待任务响应被取消
-                if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                    Log.error(TAG, "Executor service " + poolName + " did not terminate.");
-                }
-            }
-        } catch (InterruptedException ie) {
-            // (重新)取消如果当前线程也被中断
-            pool.shutdownNow();
-            // 保留中断状态
-            Thread.currentThread().interrupt();
-        }
-        Log.runtime(TAG, "Executor service " + poolName + " has been shut down.");
-    }
 
     /**
      * 使当前线程暂停指定的毫秒数。
@@ -96,27 +67,27 @@ public class GlobalThreadPools {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
-            Log.error(TAG, "Thread sleep interrupted" + e.getMessage());
-            Thread.currentThread().interrupt();
+            Log.error(TAG, "Thread sleep interrupted " + e.getMessage());
+//            Thread.currentThread().interrupt();
         } catch (Exception e1) {
             Log.printStackTrace(e1);
-            Thread.currentThread().interrupt();
-            Log.error(TAG, "Thread sleep interrupted" + e1.getMessage());
+//            Thread.currentThread().interrupt();
+            Log.error(TAG, "Thread sleep interrupted " + e1.getMessage());
         } catch (Throwable t) {
             Log.printStackTrace(t);
-            Thread.currentThread().interrupt();
-            Log.error(TAG, "Thread sleep interrupted" + t.getMessage());
+//            Thread.currentThread().interrupt();
+            Log.error(TAG, "Thread sleep interrupted " + t.getMessage());
         }
     }
 
-    public static void shutdownAndAwaitTermination(ExecutorService pool, long timeout, TimeUnit unit) {
+    public static void shutdownAndAwaitTermination(ExecutorService pool, long timeout, String poolName) {
         if (pool != null && !pool.isShutdown()) {
             pool.shutdown();
             try {
                 if (!pool.awaitTermination(1, TimeUnit.SECONDS)) {
                     pool.shutdownNow();
-                    if (!pool.awaitTermination(timeout, unit)) {
-                        Log.runtime(TAG, "thread pool can't close");
+                    if (!pool.awaitTermination(timeout, TimeUnit.SECONDS)) {
+                        Log.runtime(TAG, "thread " + poolName + " can't close");
                     }
                 }
             } catch (InterruptedException ie) {

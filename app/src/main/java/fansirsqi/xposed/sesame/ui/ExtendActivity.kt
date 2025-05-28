@@ -128,8 +128,8 @@ class ExtendActivity : BaseActivity() {
                         .setView(inputEditText)
                         .setPositiveButton(R.string.ok) { _, _ ->
                             val inputText = inputEditText.text.toString()
-                            val photoList = DataCache.getData<List<Map<String, String>>>(inputText)
-                            ToastUtil.showToast(this, "${photoList?.randomOrNull()} 输入内容: $inputText")
+                            val output = DataCache.getData<Any>(inputText)
+                            ToastUtil.showToast(this, "$output \n输入内容: $inputText")
                         }
                         .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
                         .show()

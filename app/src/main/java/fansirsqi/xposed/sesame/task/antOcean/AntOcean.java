@@ -1,14 +1,21 @@
 package fansirsqi.xposed.sesame.task.antOcean;
+
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import fansirsqi.xposed.sesame.data.DataCache;
 import fansirsqi.xposed.sesame.entity.AlipayBeach;
 import fansirsqi.xposed.sesame.entity.AlipayUser;
+import fansirsqi.xposed.sesame.hook.Toast;
 import fansirsqi.xposed.sesame.model.BaseModel;
 import fansirsqi.xposed.sesame.model.ModelFields;
 import fansirsqi.xposed.sesame.model.ModelGroup;
@@ -18,10 +25,12 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
-import fansirsqi.xposed.sesame.task.antFarm.AntFarm.TaskStatus;
+import fansirsqi.xposed.sesame.task.TaskStatus;
 import fansirsqi.xposed.sesame.task.antForest.AntForestRpcCall;
 import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.Log;
+import fansirsqi.xposed.sesame.util.Maps.BeachMap;
+import fansirsqi.xposed.sesame.util.Maps.IdMapManager;
 import fansirsqi.xposed.sesame.util.Maps.UserMap;
 import fansirsqi.xposed.sesame.util.ResUtil;
 import fansirsqi.xposed.sesame.util.StringUtil;
@@ -32,41 +41,63 @@ import fansirsqi.xposed.sesame.util.StringUtil;
  */
 public class AntOcean extends ModelTask {
     private static final String TAG = AntOcean.class.getSimpleName();
+
+
     @Override
     public String getName() {
         return "海洋";
     }
+
     @Override
     public ModelGroup getGroup() {
         return ModelGroup.FOREST;
     }
+
     @Override
     public String getIcon() {
         return "AntOcean.png";
     }
-    /**每日海洋任务*/
+
+    /**
+     * 海洋任务
+     */
     private BooleanModelField dailyOceanTask;
-    /**领取碎片奖励*/
-    private BooleanModelField receiveOceanTaskAward;
-    /**清理 | 开启*/
+
+    /**
+     * 清理 | 开启
+     */
     private BooleanModelField cleanOcean;
-    /**清理 | 动作*/
+    /**
+     * 清理 | 动作
+     */
     private ChoiceModelField cleanOceanType;
-    /**清理 | 好友列表*/
+    /**
+     * 清理 | 好友列表
+     */
     private SelectModelField cleanOceanList;
-    /**神奇海洋 | 制作万能拼图*/
+    /**
+     * 神奇海洋 | 制作万能拼图
+     */
     private BooleanModelField exchangeProp;
-    /**神奇海洋 | 使用万能拼图*/
+    /**
+     * 神奇海洋 | 使用万能拼图
+     */
     private BooleanModelField usePropByType;
-    /**保护 | 开启*/
+    /**
+     * 保护 | 开启
+     */
     private BooleanModelField protectOcean;
-    /**保护 | 海洋列表*/
+    /**
+     * 保护 | 海洋列表
+     */
     private SelectAndCountModelField protectOceanList;
+
+    private BooleanModelField PDL_task;
+
     @Override
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
-        modelFields.addField(dailyOceanTask = new BooleanModelField("dailyOceanTask", "每日海洋任务", false));
-        modelFields.addField(receiveOceanTaskAward = new BooleanModelField("receiveOceanTaskAward", "领取碎片奖励", false));
+        modelFields.addField(dailyOceanTask = new BooleanModelField("dailyOceanTask", "海洋任务", false));
         modelFields.addField(cleanOcean = new BooleanModelField("cleanOcean", "清理 | 开启", false));
         modelFields.addField(cleanOceanType = new ChoiceModelField("cleanOceanType", "清理 | 动作", CleanOceanType.DONT_CLEAN, CleanOceanType.nickNames));
         modelFields.addField(cleanOceanList = new SelectModelField("cleanOceanList", "清理 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
@@ -74,47 +105,137 @@ public class AntOcean extends ModelTask {
         modelFields.addField(usePropByType = new BooleanModelField("usePropByType", "神奇海洋 | 使用万能拼图", false));
         modelFields.addField(protectOcean = new BooleanModelField("protectOcean", "保护 | 开启", false));
         modelFields.addField(protectOceanList = new SelectAndCountModelField("protectOceanList", "保护 | 海洋列表", new LinkedHashMap<>(), AlipayBeach::getList));
+        modelFields.addField(PDL_task = new BooleanModelField("PDL_task", "潘多拉任务", false));
         return modelFields;
     }
+
     @Override
     public Boolean check() {
-        if (TaskCommon.IS_ENERGY_TIME){
-            Log.record(TAG,"⏸ 当前为只收能量时间【"+ BaseModel.getEnergyTime().getValue() +"】，停止执行" + getName() + "任务！");
+        if (TaskCommon.IS_ENERGY_TIME) {
+            Log.record(TAG, "⏸ 当前为只收能量时间【" + BaseModel.getEnergyTime().getValue() + "】，停止执行" + getName() + "任务！");
             return false;
-        }else if (TaskCommon.IS_MODULE_SLEEP_TIME) {
-            Log.record(TAG,"💤 模块休眠时间【"+ BaseModel.getModelSleepTime().getValue() +"】停止执行" + getName() + "任务！");
+        } else if (TaskCommon.IS_MODULE_SLEEP_TIME) {
+            Log.record(TAG, "💤 模块休眠时间【" + BaseModel.getModelSleepTime().getValue() + "】停止执行" + getName() + "任务！");
             return false;
         } else {
             return true;
         }
     }
+
     @Override
     public void run() {
         try {
-            Log.record(TAG,"执行开始-" + getName());
-            String s = AntOceanRpcCall.queryOceanStatus();
-            JSONObject jo = new JSONObject(s);
-            if (ResUtil.checkResultCode(jo)) {
-                if (jo.getBoolean("opened")) {
-                    queryHomePage();
-                } else {
-                    getEnableField().setValue(false);
-                    Log.other("请先开启神奇海洋，并完成引导教程");
-                }
-            } else {
-                Log.runtime(TAG, jo.getString("resultDesc"));
+            Log.record(TAG, "执行开始-" + getName());
+
+            if (!queryOceanStatus()) {
+                return;
             }
+            queryHomePage();
+            if (dailyOceanTask.getValue()) {
+                receiveTaskAward();//日常任务
+            }
+
             if (protectOcean.getValue()) {
-                protectOcean();
+                protectOcean();//保护
             }
+
+            // 制作万能碎片
+            if (exchangeProp.getValue()) {
+                exchangeProp();
+            }
+            // 使用万能拼图
+            if (usePropByType.getValue()) {
+                usePropByType();
+            }
+
+            if (PDL_task.getValue()) {
+                doOceanPDLTask();// 潘多拉任务领取
+            }
+
         } catch (Throwable t) {
             Log.runtime(TAG, "start.run err:");
             Log.printStackTrace(TAG, t);
-        }
-        finally {
-            Log.record(TAG,"执行结束-" + getName());
+        } finally {
+            Log.record(TAG, "执行结束-" + getName());
         }
     }
+
+    /**
+     * 初始化沙滩任务。
+     * 通过调用 AntOceanRpc 接口查询养成列表，
+     * 并将符合条件的任务加入 BeachMap。
+     * 条件：养成项目的类型必须为 BEACH、COOPERATE_SEA_TREE 或 SEA_ANIMAL，
+     * 并且其状态为 AVAILABLE。最后将符合条件的任务保存到 BeachMap 中。
+     */
+    public static void initBeach() {
+        try {
+            String response = AntOceanRpcCall.queryCultivationList();
+            JSONObject jsonResponse = new JSONObject(response);
+            if ("SUCCESS".equals(jsonResponse.optString("resultCode", ""))) {
+                // 获取 cultivationItemVOList 列表，包含所有养成项目
+                JSONArray cultivationList = jsonResponse.optJSONArray("cultivationItemVOList");
+                if (cultivationList != null) {
+                    for (int i = 0; i < cultivationList.length(); i++) {
+                        JSONObject item = cultivationList.getJSONObject(i);
+                        // 跳过未定义 templateSubType 字段的项目
+                        if (!item.has("templateSubType")) {
+                            continue;
+                        }
+                        // 检查 templateSubType 是否符合指定类型
+                        String templateSubType = item.getString("templateSubType");
+                        if (!"BEACH".equals(templateSubType) && !"COOPERATE_SEA_TREE".equals(templateSubType) && !"SEA_ANIMAL".equals(templateSubType)) {
+                            continue;
+                        }
+                        // 检查 applyAction 是否为 AVAILABLE
+                        if (!"AVAILABLE".equals(item.getString("applyAction"))) {
+                            continue;
+                        }
+                        // 将符合条件的项目添加到 BeachMap
+                        String templateCode = item.getString("templateCode");
+                        String cultivationName = item.getString("cultivationName");
+                        int energy = item.getInt("energy");
+                        IdMapManager.getInstance(BeachMap.class).add(templateCode, cultivationName + "(" + energy + "g)");
+                    }
+                    Log.runtime(TAG, "初始化沙滩数据成功。");
+                }
+                // 将所有筛选结果保存到 BeachMap
+                IdMapManager.getInstance(BeachMap.class).save();
+            } else {
+                // 若 resultCode 不为 SUCCESS，记录错误描述
+                Log.runtime(jsonResponse.optString("resultDesc", "未知错误"));
+            }
+        } catch (JSONException e) {
+            // 记录 JSON 解析过程中的异常
+            Log.runtime(TAG, "JSON 解析错误：" + e.getMessage());
+            Log.printStackTrace(e);
+            IdMapManager.getInstance(BeachMap.class).load(); // 若出现异常则加载保存的 BeachMap 备份
+        } catch (Exception e) {
+            // 捕获所有其他异常并记录
+            Log.runtime(TAG, "初始化沙滩任务时出错：" + e.getMessage());
+            Log.printStackTrace(e);
+            IdMapManager.getInstance(BeachMap.class).load(); // 加载保存的 BeachMap 备份
+        }
+    }
+
+
+    private Boolean queryOceanStatus() {
+        try {
+            JSONObject jo = new JSONObject(AntOceanRpcCall.queryOceanStatus());
+            if (ResUtil.checkResultCode(TAG, jo)) {
+                if (!jo.getBoolean("opened")) {
+                    getEnableField().setValue(false);
+                    Log.record("请先开启神奇海洋，并完成引导教程");
+                    return false;
+                }
+                return true;
+            }
+        } catch (Throwable t) {
+            Log.runtime(TAG, "queryOceanStatus err:");
+            Log.printStackTrace(TAG, t);
+        }
+        return false;
+    }
+
     private void queryHomePage() {
         try {
             JSONObject joHomePage = new JSONObject(AntOceanRpcCall.queryHomePage());
@@ -133,24 +254,13 @@ public class AntOcean extends ModelTask {
                         ipOpenSurprise();
                     }
                 }
-                queryReplicaHome();
                 queryMiscInfo();
-                queryUserRanking();
+
+                queryReplicaHome();
+                queryUserRanking(); //清理
                 querySeaAreaDetailList();
-                if (dailyOceanTask.getValue()) {
-                    doOceanDailyTask();
-                }
-                if (receiveOceanTaskAward.getValue()) {
-                    receiveTaskAward();
-                }
-                // 制作万能碎片
-                if (exchangeProp.getValue()) {
-                    exchangeProp();
-                }
-                // 使用万能拼图
-                if (usePropByType.getValue()) {
-                    usePropByType();
-                }
+
+
             } else {
                 Log.runtime(TAG, joHomePage.getString("resultDesc"));
             }
@@ -159,6 +269,28 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
+    private static void queryMiscInfo() {
+        try {
+            String s = AntOceanRpcCall.queryMiscInfo();
+            JSONObject jo = new JSONObject(s);
+            if (ResUtil.checkResultCode(jo)) {
+                JSONObject miscHandlerVOMap = jo.getJSONObject("miscHandlerVOMap");
+                JSONObject homeTipsRefresh = miscHandlerVOMap.getJSONObject("HOME_TIPS_REFRESH");
+                if (homeTipsRefresh.optBoolean("fishCanBeCombined") || homeTipsRefresh.optBoolean("canBeRepaired")) {
+                    querySeaAreaDetailList();
+                }
+                switchOceanChapter();
+            } else {
+                Log.runtime(TAG, jo.getString("resultDesc"));
+            }
+        } catch (Throwable t) {
+            Log.runtime(TAG, "queryMiscInfo err:");
+            Log.printStackTrace(TAG, t);
+        }
+    }
+
+
     private static void collectEnergy(JSONArray bubbleVOList) {
         try {
             for (int i = 0; i < bubbleVOList.length(); i++) {
@@ -178,8 +310,8 @@ public class AntOcean extends ModelTask {
                                 JSONObject retBubble = retBubbles.optJSONObject(j);
                                 if (retBubble != null) {
                                     int collectedEnergy = retBubble.getInt("collectedEnergy");
-                                    Log.forest("神奇海洋🌊收取[" + UserMap.getMaskName(userId) + "]的海洋能量#"
-                                            + collectedEnergy + "g");
+                                    Log.forest("神奇海洋🌊收取[" + UserMap.getMaskName(userId) + "]#" + collectedEnergy + "g");
+                                    Toast.show("海洋能量🌊收取[" + UserMap.getMaskName(userId) + "]#" + collectedEnergy + "g");
                                 }
                             }
                         }
@@ -193,6 +325,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static void cleanOcean(String userId, int rubbishNumber) {
         try {
             for (int i = 0; i < rubbishNumber; i++) {
@@ -211,6 +344,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static void ipOpenSurprise() {
         try {
             String s = AntOceanRpcCall.ipOpenSurprise();
@@ -226,6 +360,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static void combineFish(String fishId) {
         try {
             String s = AntOceanRpcCall.combineFish(fishId);
@@ -242,6 +377,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static void checkReward(JSONArray rewards) {
         try {
             for (int i = 0; i < rewards.length(); i++) {
@@ -269,6 +405,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static void collectReplicaAsset(int canCollectAssetNum) {
         try {
             for (int i = 0; i < canCollectAssetNum; i++) {
@@ -285,6 +422,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static void unLockReplicaPhase(String replicaCode, String replicaPhaseCode) {
         try {
             String s = AntOceanRpcCall.unLockReplicaPhase(replicaCode, replicaPhaseCode);
@@ -300,6 +438,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static void queryReplicaHome() {
         try {
             String s = AntOceanRpcCall.queryReplicaHome();
@@ -326,6 +465,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static void queryOceanPropList() {
         try {
             String s = AntOceanRpcCall.queryOceanPropList();
@@ -340,6 +480,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static void switchOceanChapter() {
         String s = AntOceanRpcCall.queryOceanChapterList();
         try {
@@ -381,6 +522,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static void querySeaAreaDetailList() {
         try {
             String s = AntOceanRpcCall.querySeaAreaDetailList();
@@ -412,25 +554,8 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
-    private static void queryMiscInfo() {
-        try {
-            String s = AntOceanRpcCall.queryMiscInfo();
-            JSONObject jo = new JSONObject(s);
-            if (ResUtil.checkResultCode(jo)) {
-                JSONObject miscHandlerVOMap = jo.getJSONObject("miscHandlerVOMap");
-                JSONObject homeTipsRefresh = miscHandlerVOMap.getJSONObject("HOME_TIPS_REFRESH");
-                if (homeTipsRefresh.optBoolean("fishCanBeCombined") || homeTipsRefresh.optBoolean("canBeRepaired")) {
-                    querySeaAreaDetailList();
-                }
-                switchOceanChapter();
-            } else {
-                Log.runtime(TAG, jo.getString("resultDesc"));
-            }
-        } catch (Throwable t) {
-            Log.runtime(TAG, "queryMiscInfo err:");
-            Log.printStackTrace(TAG, t);
-        }
-    }
+
+
     private void cleanFriendOcean(JSONObject fillFlag) {
         if (!fillFlag.optBoolean("canClean")) {
             return;
@@ -449,8 +574,7 @@ public class AntOcean extends ModelTask {
             if (ResUtil.checkResultCode(jo)) {
                 s = AntOceanRpcCall.cleanFriendOcean(userId);
                 jo = new JSONObject(s);
-                Log.forest("神奇海洋🌊[帮助:" + UserMap.getMaskName
-                        (userId) + "清理海域]");
+                Log.forest("神奇海洋🌊[帮助:" + UserMap.getMaskName(userId) + "清理海域]");
                 if (ResUtil.checkResultCode(jo)) {
                     JSONArray cleanRewardVOS = jo.getJSONArray("cleanRewardVOS");
                     checkReward(cleanRewardVOS);
@@ -465,6 +589,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private void queryUserRanking() {
         try {
             String s = AntOceanRpcCall.queryUserRanking();
@@ -485,107 +610,76 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
-    @SuppressWarnings("unused")
-    private static boolean isTargetTask(String taskType) {
-        // 在这里添加其他任务类型，以便后续扩展
-        return "DAOLIU_TAOJINBI".equals(taskType) // 去逛淘金币看淘金仔
-                || "DAOLIU_NNYY".equals(taskType) // 逛余额宝新春活动
-                || "ANTOCEAN_TASK#DAOLIU_GUANGHUABEIBANGHAI".equals(taskType) // 逛逛花呗活动会场
-                || "BUSINESS_LIGHTS01".equals(taskType) // 逛一逛市集15s
-                || "DAOLIU_ELEMEGUOYUAN".equals(taskType) // 去逛饿了么夺宝
-                || "ZHUANHUA_NONGCHANGYX".equals(taskType) // 去玩趣味小游戏
-                || "ZHUANHUA_HUIYUN_OZB".equals(taskType); // 一键传球欧洲杯
-    }
-    private static void doOceanDailyTask() {
-        try {
-            JSONObject jo = new JSONObject(AntOceanRpcCall.queryTaskList());
-            if (ResUtil.checkResultCode(jo)) {
-                JSONArray jaTaskList = jo.getJSONArray("antOceanTaskVOList");
-                for (int i = 0; i < jaTaskList.length(); i++) {
-                    JSONObject taskJson = jaTaskList.getJSONObject(i);
-                    if (TaskStatus.TODO.name().equals(taskJson.getString("taskStatus"))){
-                        finishTask(taskJson);
-                    }
-                    GlobalThreadPools.sleep(500);
-                }
-            }
-        } catch (Throwable t) {
-            Log.runtime(TAG, "doOceanDailyTask err:");
-            Log.printStackTrace(TAG, t);
-        }
-    }
-    private static void finishTask(JSONObject task) {
-        try {
-            if (task.has("taskProgress")) {
-                return;
-            }
-            JSONObject bizInfo = new JSONObject(task.getString("bizInfo"));
-            String taskTitle = bizInfo.optString("taskTitle");
-            if (taskTitle.contains("答题学海洋知识")) {
-                // 答题操作
-                answerQuestion();
-            } else if (taskTitle.startsWith("随机任务：") || taskTitle.startsWith("绿色任务：")) {
-                String sceneCode = task.getString("sceneCode");
-                String taskType = task.getString("taskType");
-                if(Objects.equals(taskType,"mokuai_senlin_hy")){
-                    return;
-                }
-                int rightsTimes = task.optInt("rightsTimes", 1);
-                int rightsTimesLimit = task.optInt("rightsTimesLimit", 1);
-                int times = rightsTimesLimit - rightsTimes;
-                for (int i = 0; i < times; i++) {
-                    JSONObject jo = new JSONObject(AntOceanRpcCall.finishTask(sceneCode, taskType));
-                    if (ResUtil.checkSuccess(TAG, jo)) {
-                        Log.forest("海洋任务🧾️完成[" + taskTitle + "]" + (times > 1 ? "#第" + (i + 1) + "次" : ""));
-                    } else {
-                        return;
-                    }
-                    GlobalThreadPools.sleep(2000);
-                }
-            }
-        } catch (Throwable t) {
-            Log.runtime(TAG, "finishOceanTask err:");
-            Log.printStackTrace(TAG, t);
-        }
-    }
+
+
     private static void receiveTaskAward() {
         try {
-            JSONObject jo = new JSONObject(AntOceanRpcCall.queryTaskList());
-            if (ResUtil.checkResultCode(jo)) {
+            Set<String> taskList = new HashSet<>(Objects.requireNonNull(DataCache.INSTANCE.getData("oceanTaskList", new ArrayList<>())));
+            while (true) {
+                boolean done = false;
+                String s = AntOceanRpcCall.queryTaskList();
+                JSONObject jo = new JSONObject(s);
+                if (!ResUtil.checkResultCode(jo)) {
+                    Log.record(TAG, "查询任务列表失败：" + jo.getString("resultDesc"));
+                }
                 JSONArray jaTaskList = jo.getJSONArray("antOceanTaskVOList");
                 for (int i = 0; i < jaTaskList.length(); i++) {
-                    jo = jaTaskList.getJSONObject(i);
-                    if (!TaskStatus.FINISHED.name().equals(jo.getString("taskStatus")))
-                        continue;
-                    JSONObject bizInfo = new JSONObject(jo.getString("bizInfo"));
-                    String taskType = jo.getString("taskType");
-                    String sceneCode = jo.getString("sceneCode");
-                    jo = new JSONObject(AntOceanRpcCall.receiveTaskAward(sceneCode, taskType));
-                    GlobalThreadPools.sleep(500);
-                    if (jo.optBoolean("success")) {
-                        String taskTitle = bizInfo.optString("taskTitle", taskType);
-                        String awardCount = bizInfo.optString("awardCount", "0");
-                        Log.forest("海洋奖励🎖️[" + taskTitle + "]得:#" + awardCount + "碎片");
-                        // 潘多拉任务领取
-                        doOceanPDLTask();
-                    } else {
-                        Log.record(jo.getString("desc"));
-                        Log.runtime(jo.toString());
+                    JSONObject task = jaTaskList.getJSONObject(i);
+                    JSONObject bizInfo = new JSONObject(task.getString("bizInfo"));
+                    String taskTitle = bizInfo.optString("taskTitle");
+                    String awardCount = bizInfo.optString("awardCount", "0");
+                    String sceneCode = task.getString("sceneCode");
+                    String taskType = task.getString("taskType");
+                    String taskStatus = task.getString("taskStatus");
+                    if (TaskStatus.FINISHED.name().equals(taskStatus)) {
+                        JSONObject joAward = new JSONObject(AntOceanRpcCall.receiveTaskAward(sceneCode, taskType));
+                        if (ResUtil.checkSuccess(TAG, joAward)) {
+                            Log.forest("海洋奖励🌊[" + taskTitle + "]# " + awardCount + "拼图");
+
+                            done = true;
+                        } else {
+                            Log.error(joAward.getString("desc"));
+                            Log.runtime(joAward.toString());
+                        }
+                    } else if (TaskStatus.TODO.name().equals(taskStatus)) {
+                        if (!taskList.contains(taskType)) {
+                            if (taskTitle.contains("答题")) {
+                                answerQuestion();
+                            }
+                            JSONObject joFinishTask = new JSONObject(AntOceanRpcCall.finishTask(sceneCode, taskType));
+                            if (ResUtil.checkSuccess(TAG, joFinishTask)) {
+                                Log.forest("海洋任务🧾️完成[" + taskTitle + "]");
+                                done = true;
+                            } else {
+                                Log.error(TAG, "完成任务失败，" + taskTitle);
+                                taskList.add(taskType);
+                            }
+                        }
                     }
+                    GlobalThreadPools.sleep(500);
+
                 }
+                if (!done) break;
+                DataCache.INSTANCE.saveData("oceanTaskList", taskList);
+                Log.runtime("海洋任务列表已保存");
             }
-        } catch (Throwable t) {
+        } catch (JSONException e) {
+            Log.record(TAG, "JSON解析错误: " + e.getMessage());
+            Log.printStackTrace(TAG, e);
+        } catch (
+                Throwable t) {
             Log.runtime(TAG, "receiveTaskAward err:");
             Log.printStackTrace(TAG, t);
         }
     }
+
     // 海洋答题任务
     private static void answerQuestion() {
         try {
             String questionResponse = AntOceanRpcCall.getQuestion();
             JSONObject questionJson = new JSONObject(questionResponse);
             if (questionJson.getBoolean("answered")) {
-                Log.record(TAG,"问题已经被回答过，跳过答题流程");
+                Log.record(TAG, "问题已经被回答过，跳过答题流程");
                 return;
             }
             if (questionJson.getInt("resultCode") == 200) {
@@ -596,21 +690,25 @@ public class AntOcean extends ModelTask {
                 GlobalThreadPools.sleep(500);
                 JSONObject submitJson = new JSONObject(submitResponse);
                 if (submitJson.getInt("resultCode") == 200) {
-                    Log.record(TAG,"海洋答题成功");
+                    Log.record(TAG, "海洋答题成功");
                 } else {
-                    Log.record(TAG,"答题失败：" + submitJson.getString("resultMsg"));
+                    Log.record(TAG, "答题失败：" + submitJson.getString("resultMsg"));
                 }
             } else {
-                Log.record(TAG,"获取问题失败：" + questionJson.getString("resultMsg"));
+                Log.record(TAG, "获取问题失败：" + questionJson.getString("resultMsg"));
             }
         } catch (Throwable t) {
             Log.runtime(TAG, "answerQuestion err:");
             Log.printStackTrace(TAG, t);
         }
     }
-    /**潘多拉海洋任务领取*/
+
+    /**
+     * 潘多拉海洋任务领取
+     */
     private static void doOceanPDLTask() {
         try {
+            Log.runtime(TAG, "执行潘多拉海域任务");
             String homeResponse = AntOceanRpcCall.PDLqueryReplicaHome();
             JSONObject homeJson = new JSONObject(homeResponse);
             if (ResUtil.checkResultCode(homeJson)) {
@@ -635,21 +733,22 @@ public class AntOcean extends ModelTask {
                             Log.forest("海洋奖励🌊[领取:" + taskTitle + "]获得潘多拉能量x" + awardCount);
                         } else {
                             if (receiveTaskJson.has("message")) {
-                                Log.record(TAG,"领取任务奖励失败: " + receiveTaskJson.getString("message"));
+                                Log.record(TAG, "领取任务奖励失败: " + receiveTaskJson.getString("message"));
                             } else {
-                                Log.record(TAG,"领取任务奖励失败，未返回错误信息");
+                                Log.record(TAG, "领取任务奖励失败，未返回错误信息");
                             }
                         }
                     }
                 }
             } else {
-                Log.record(TAG,"PDLqueryReplicaHome调用失败: " + homeJson.optString("message"));
+                Log.record(TAG, "PDLqueryReplicaHome调用失败: " + homeJson.optString("message"));
             }
         } catch (Throwable t) {
             Log.runtime(TAG, "doOceanPDLTask err:");
             Log.printStackTrace(TAG, t);
         }
     }
+
     private void protectOcean() {
         try {
             String s = AntOceanRpcCall.queryCultivationList();
@@ -691,6 +790,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static void oceanExchangeTree(String cultivationCode, String projectCode, String itemName, int count) {
         try {
             String s;
@@ -708,8 +808,7 @@ public class AntOcean extends ModelTask {
                         jo = awardInfos.getJSONObject(i);
                         award.append(jo.getString("name")).append("*").append(jo.getInt("num"));
                     }
-                    String str = "保护海洋🏖️[" + itemName + "]#第" + appliedTimes + "次"
-                            + "-获得奖励" + award;
+                    String str = "保护海洋🏖️[" + itemName + "]#第" + appliedTimes + "次" + "-获得奖励" + award;
                     Log.forest(str);
                 } else {
                     Log.record(jo.getString("resultDesc"));
@@ -730,6 +829,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     private static int queryCultivationDetail(String cultivationCode, String projectCode, int count) {
         int appliedTimes = -1;
         try {
@@ -762,6 +862,7 @@ public class AntOcean extends ModelTask {
         }
         return appliedTimes;
     }
+
     // 制作万能碎片
     private static void exchangeProp() {
         try {
@@ -776,7 +877,6 @@ public class AntOcean extends ModelTask {
                     int duplicatePieceNum = propListObj.getInt("duplicatePieceNum");
                     // 如果道具重复数量小于10，直接返回并停止循环
                     if (duplicatePieceNum < 10) {
-                        shouldContinue = false;
                         return;
                     }
                     // 如果道具重复数量大于等于10，则执行道具兑换操作
@@ -803,6 +903,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     // 使用万能拼图
     private static void usePropByType() {
         try {
@@ -878,6 +979,7 @@ public class AntOcean extends ModelTask {
             Log.printStackTrace(TAG, t);
         }
     }
+
     @SuppressWarnings("unused")
     public interface CleanOceanType {
         int CLEAN = 0;

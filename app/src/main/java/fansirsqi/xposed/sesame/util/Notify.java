@@ -143,13 +143,6 @@ public class Notify {
             if (forestPauseTime > System.currentTimeMillis()) {
                 status = "❌ 触发异常，等待至" + TimeUtil.getCommonDate(forestPauseTime) + "恢复运行";
             }
-
-            if (builder != null && BaseModel.getEnableProgress().getValue() && !ModelTask.isAllTaskFinished()) {
-                builder.setProgress(100, ModelTask.completedTaskPercentage(), false);
-            } else if (builder != null) {
-                builder.setProgress(0, 0, false);
-            }
-
             titleText = status;
             mainHandler.post(() -> sendText(true));
         } catch (Exception e) {
@@ -169,14 +162,7 @@ public class Notify {
             if (nextExecTime != -1) {
                 nextExecTimeCache = nextExecTime;
             }
-            if (BaseModel.getEnableProgress().getValue() && !ModelTask.isAllTaskFinished()) {
-                builder.setProgress(100, ModelTask.completedTaskPercentage(), false);
-            } else if (builder != null) {
-                builder.setProgress(0, 0, false);
-            }
-            if (ModelTask.isAllTaskFinished()) {
-                titleText = nextExecTimeCache > 0 ? "⏰ 下次执行 " + TimeUtil.getTimeStr(nextExecTimeCache) : "";
-            }
+            titleText = nextExecTimeCache > 0 ? "⏰ 下次执行 " + TimeUtil.getTimeStr(nextExecTimeCache) : "";
             mainHandler.post(() -> sendText(false));
         } catch (Exception e) {
             Log.printStackTrace(e);
@@ -189,14 +175,7 @@ public class Notify {
     public static void forceUpdateText() {
         if (!isNotificationStarted || context == null || builder == null || mNotifyManager == null)
             return;
-        if (BaseModel.getEnableProgress().getValue() && !ModelTask.isAllTaskFinished()) {
-            builder.setProgress(100, ModelTask.completedTaskPercentage(), false);
-        } else if (builder != null) {
-            builder.setProgress(0, 0, false);
-        }
-        if (ModelTask.isAllTaskFinished()) {
-            titleText = nextExecTimeCache > 0 ? "⏰ 下次执行 " + TimeUtil.getTimeStr(nextExecTimeCache) : "";
-        }
+        titleText = nextExecTimeCache > 0 ? "⏰ 下次执行 " + TimeUtil.getTimeStr(nextExecTimeCache) : "";
         mainHandler.post(() -> sendText(true));
     }
 
@@ -228,9 +207,6 @@ public class Notify {
 
             if (forestPauseTime > System.currentTimeMillis()) {
                 titleText = "❌ 触发异常，等待至" + TimeUtil.getCommonDate(forestPauseTime) + "恢复运行";
-            }
-            if (builder != null && BaseModel.getEnableProgress().getValue()) {
-                builder.setProgress(100, 0, false);
             }
             titleText = "⚙️ 芝麻粒正在施工中...";
             if (builder != null) {
@@ -282,9 +258,6 @@ public class Notify {
                 builder.setContentTitle(titleText);
                 if (!StringUtil.isEmpty(contentText)) {
                     builder.setContentText(contentText);
-                }
-                if (!BaseModel.getEnableProgress().getValue()) {
-                    builder.setProgress(0, 0, false);
                 }
                 mNotifyManager.notify(NOTIFICATION_ID, builder.build());
             }

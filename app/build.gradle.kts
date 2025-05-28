@@ -31,7 +31,7 @@ android {
         val major = 0
         val minor = 2
         val patch = 5
-        val buildTag = "beta.8"
+        val buildTag = "beta.9"
         
         val buildDate = SimpleDateFormat("yyyy-MM-dd", Locale.CHINA).apply {
             timeZone = TimeZone.getTimeZone("GMT+8")

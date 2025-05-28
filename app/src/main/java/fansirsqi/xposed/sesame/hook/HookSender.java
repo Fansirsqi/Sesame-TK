@@ -1,9 +1,7 @@
 package fansirsqi.xposed.sesame.hook;
 import androidx.annotation.NonNull;
-import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.IOException;
-import java.util.Map;
 import fansirsqi.xposed.sesame.model.BaseModel;
 import fansirsqi.xposed.sesame.util.Log;
 import okhttp3.Call;

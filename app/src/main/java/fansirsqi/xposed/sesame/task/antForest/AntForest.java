@@ -49,7 +49,7 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.StringModelField;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
-import fansirsqi.xposed.sesame.task.antFarm.AntFarm.TaskStatus;
+import fansirsqi.xposed.sesame.task.TaskStatus;
 import fansirsqi.xposed.sesame.ui.ObjReference;
 import fansirsqi.xposed.sesame.util.Average;
 import fansirsqi.xposed.sesame.util.GlobalThreadPools;
@@ -656,7 +656,7 @@ public class AntForest extends ModelTask {
             if (usingUserProps == null || usingUserProps.length() == 0) {
                 return; // 如果没有使用中的用户道具，直接返回
             }
-            Log.runtime(TAG, "尝试遍历使用中的道具:" + usingUserProps);
+//            Log.runtime(TAG, "尝试遍历使用中的道具:" + usingUserProps);
             for (int i = 0; i < usingUserProps.length(); i++) {
                 JSONObject jo = usingUserProps.getJSONObject(i);
                 if (!"animal".equals(jo.getString("propGroup"))) {
@@ -1576,20 +1576,18 @@ public class AntForest extends ModelTask {
 
                         if (TaskStatus.FINISHED.name().equals(taskStatus)) {
                             JSONObject joAward = new JSONObject(AntForestRpcCall.receiveTaskAward(sceneCode, taskType)); // 领取奖励请求
-                            GlobalThreadPools.sleep(500); // 等待500毫秒
-                            if (joAward.optBoolean("success")) {
-                                Log.forest("任务[" + taskTitle + "]# 已完成-奖励🎖️" + awardCount + "活力值");
+                            if (ResUtil.checkSuccess(TAG, joAward)) {
+                                Log.forest("森林奖励🎖️[" + taskTitle + "]# " + awardCount + "活力值");
                                 SumawardCount = SumawardCount + awardCount;
                                 doubleCheck = true; // 标记需要重新检查任务
                             } else {
-                                Log.record(TAG, "领取失败: " + taskTitle); // 记录领取失败信息
+                                Log.error(TAG, "领取失败: " + taskTitle); // 记录领取失败信息
                                 Log.runtime(joAward.toString()); // 打印奖励响应
                             }
                         } else if (TaskStatus.TODO.name().equals(taskStatus)) {
                             if (!taskList.contains(taskType)) {
                                 JSONObject joFinishTask = new JSONObject(AntForestRpcCall.finishTask(sceneCode, taskType)); // 完成任务请求
-                                GlobalThreadPools.sleep(500); // 等待500毫秒
-                                if (joFinishTask.optBoolean("success")) {
+                                if (ResUtil.checkSuccess(TAG, joFinishTask)) {
                                     Log.forest("森林任务🧾️[" + taskTitle + "]");
                                     doubleCheck = true; // 标记需要重新检查任务
                                 } else {
@@ -1599,9 +1597,9 @@ public class AntForest extends ModelTask {
                             }
 
                         }
+                        GlobalThreadPools.sleep(500);
                     }
                 }
-                // 如果需要重新检查任务，则继续循环
                 if (!doubleCheck) break;
                 DataCache.INSTANCE.saveData("forestTaskList", taskList);
             }

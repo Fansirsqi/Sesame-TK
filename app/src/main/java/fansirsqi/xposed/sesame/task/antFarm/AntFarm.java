@@ -32,6 +32,7 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.StringModelField;
 import fansirsqi.xposed.sesame.task.AnswerAI.AnswerAI;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
+import fansirsqi.xposed.sesame.task.TaskStatus;
 import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.Log;
@@ -2411,10 +2412,6 @@ public class AntFarm extends ModelTask {
         public Long startEatTime;
         public Double consumeSpeed;
         public Double foodHaveEatten;
-    }
-
-    public enum TaskStatus {
-        TODO, FINISHED, RECEIVED
     }
 
     private static class RewardFriend {

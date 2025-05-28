@@ -13,7 +13,7 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.ChoiceModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
-import fansirsqi.xposed.sesame.task.antFarm.AntFarm.TaskStatus;
+import fansirsqi.xposed.sesame.task.TaskStatus;
 import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.Maps.UserMap;
