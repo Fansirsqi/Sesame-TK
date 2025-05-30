@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -145,7 +146,6 @@ public class AntFishpond extends BaseCommTask {
                     Log.runtime(this.TAG, "!TODO");
                     if (requestString("com.alipay.antiep.finishTask", string3 + ",\"outBizNo\":\"" + UserMap.getCurrentUid() + System.currentTimeMillis() + str) == null) {
                         Log.runtime(this.TAG, "antiep.finishTask");
-                        TimeUtil.sleep(500);
                         receiveTaskAward(string3);
                     }
                 }
@@ -155,16 +155,17 @@ public class AntFishpond extends BaseCommTask {
         }
     }
 
+    // 收取奖励
     private void receiveTaskAward(String str) {
         int i = 0;
         do {
             try {
-                TimeUtil.sleep(i * (this.executeIntervalInt));
+                TimeUtil.sleep((long) (i + 1) * (this.executeIntervalInt));
                 requestString("com.alipay.antiep.receiveTaskAward", str + ",\"ignoreLimit\":false");
                 break;
             } catch (Exception e) {
                 i++;
-                Log.runtime(this.TAG, "receiveTaskAward异常:" + e);
+                Log.runtime(this.TAG, "receiveTaskAward收取奖励异常:" + e);
             }
         } while (i < 3);
     }
@@ -177,10 +178,10 @@ public class AntFishpond extends BaseCommTask {
                     String data = getData("ANTFISHPOND_SHARE_P2P");
                     String str = "";
                     JSONArray jSONArray = new JSONArray();
-                    ArrayList arrayList = new ArrayList(set);
+                    ArrayList<String> arrayList = new ArrayList<>(set);
                     for (int i2 = 0; i2 < i; i2++) {
                         if (i2 < arrayList.size()) {
-                            str = (String) arrayList.get(i2);
+                            str = arrayList.get(i2);
                         }
                         JSONObject jSONObject = new JSONObject();
                         jSONObject.put("beInvitedUserId", str);

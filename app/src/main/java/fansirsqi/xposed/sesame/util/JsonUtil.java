@@ -132,6 +132,63 @@ public class JsonUtil {
         }
     }
 
+    /**
+     * 通过路径获取嵌套的JSON对象
+     * @param root 根JSON对象
+     * @param path 点分隔的路径，数组索引使用 [index] 表示
+     * @return 找到的JSON对象，未找到返回null
+     */
+    public static JSONObject getNestedObject(JSONObject root, String path) {
+        if (root == null || path == null || path.isEmpty()) {
+            return null;
+        }
+
+        Object current = root;
+        String[] parts = path.split("\\.");
+
+        try {
+            for (String part : parts) {
+                if (current == null) {
+                    return null;
+                }
+
+                // 处理数组索引 [index]
+                if (part.startsWith("[") && part.endsWith("]")) {
+                    if (!(current instanceof JSONArray)) {
+                        return null;
+                    }
+
+                    JSONArray array = (JSONArray) current;
+                    int index = Integer.parseInt(part.substring(1, part.length() - 1));
+
+                    if (index < 0 || index >= array.length()) {
+                        return null;
+                    }
+
+                    current = array.get(index);
+                }
+                // 处理对象键
+                else {
+                    if (!(current instanceof JSONObject)) {
+                        return null;
+                    }
+
+                    JSONObject obj = (JSONObject) current;
+                    current = obj.opt(part);
+                }
+            }
+
+            return (current instanceof JSONObject) ? (JSONObject) current : null;
+
+        } catch (NumberFormatException e) {
+            // 数组索引解析失败
+            return null;
+        } catch (Exception e) {
+            // 其他JSON解析异常
+            return null;
+        }
+    }
+
 
     /**
      * 创建 JSON 解析器

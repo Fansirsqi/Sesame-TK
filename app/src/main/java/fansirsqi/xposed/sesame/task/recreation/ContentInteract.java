@@ -11,6 +11,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -90,14 +91,17 @@ public class ContentInteract extends BaseCommTask {
     protected void handle() {
         try {
             if (Boolean.TRUE.equals(this.mapHandler.get("contentInteract"))) {
+                /*
                 if (!Status.getCompletedDay(CompletedKeyEnum.ContentInteractReserve)) {
                     reward();
                     reserve();
-                    carry();
-                    carryy();
+                   carry();
+                   carryy();
                     youthPrivilege();
                     Status.setCompletedDay(CompletedKeyEnum.ContentInteractReserve);
                 }
+
+                 */
                 if (!Status.getCompletedDay(CompletedKeyEnum.ContentInteractRecord)) {
                     this.recreation.addChildTask(new ModelTask.ChildModelTask("Recreation.ContentInteract.radicalRed", "Recreation", new Runnable() {
                         @Override
@@ -129,7 +133,7 @@ public class ContentInteract extends BaseCommTask {
                     }
                 }
             }
-        } catch (RuntimeException | JSONException e) {
+        } catch (RuntimeException e) {
             throw new RuntimeException(e);
         }
     }
@@ -147,8 +151,7 @@ public class ContentInteract extends BaseCommTask {
                     break;
                 }
                 // 休眠指定时间
-                long interval = (long) this.executeIntervalInt;
-                TimeUtil.sleep(interval);
+                TimeUtil.sleep((long) this.executeIntervalInt);
                 // 检查重试次数是否还剩
                 if (retryCount.get() <= 0) {
                     break;
@@ -172,6 +175,11 @@ public class ContentInteract extends BaseCommTask {
         this.vvRecord(key, value);
     }
 
+    private JSONObject query(String str) throws JSONException {
+        return requestString("alipay.content.interact.task.query", str);
+    }
+
+
     private Boolean query(AtomicInteger retryCount) {
         String completedKey = "completed";
         boolean success = false;
@@ -191,7 +199,7 @@ public class ContentInteract extends BaseCommTask {
                 JSONObject task = taskList.getJSONObject(index);
                 String taskType = task.getString("taskType");
                 boolean isCompleted = task.getBoolean("completed");
-
+                Log.runtime(this.TAG, "query taskType:" + taskType);
                 if (!isCompleted) {
                     if ("radicalRed".equals(taskType)) {
                         StringBuilder logBuilder = new StringBuilder();
@@ -233,8 +241,7 @@ public class ContentInteract extends BaseCommTask {
             }
 
             for (int i = 0; i < maxTasks; i++) {
-                JSONObject taskCopy =  new JSONObject(taskData.toString());
-//                Future<JSONObject> future = executor.submit(new ContentInteractRun(this, taskCopy));
+                JSONObject taskCopy = new JSONObject(taskData.toString());
                 Future<JSONObject> future = executor.submit(new Callable<JSONObject>() {
                     @Override
                     public JSONObject call() throws Exception {
@@ -302,7 +309,7 @@ public class ContentInteract extends BaseCommTask {
             while (index < envelopeDetails.length()) {
                 JSONObject envelope = envelopeDetails.getJSONObject(index);
                 String taskType = envelope.getString("type");
-
+                Log.runtime(this.TAG, "walletReward taskType:" + taskType);
                 if ("radicalRed".equals(taskType)) {
                     // 提取红包信息
                     JSONArray envelopeVOList = envelope.getJSONArray("envelopeVOList");
@@ -322,8 +329,9 @@ public class ContentInteract extends BaseCommTask {
                     String rewardParamsStr = requestParams.toString().replace("\\/", "/");
                     String trimmedParams = rewardParamsStr.substring(1, rewardParamsStr.length() - 1);
 
+                    Log.runtime(this.TAG, "walletReward调接口alipay.content.interact.task.reward发起奖励请求参数：" + trimmedParams);
                     JSONObject rewardResult = this.requestString("alipay.content.interact.task.reward", trimmedParams);
-
+                    Log.runtime(this.TAG, "walletReward发起奖励请求返回：" + rewardResult);
                     if (rewardResult != null && !rewardResult.isNull("result")) {
                         // 记录奖励信息
                         StringBuilder logBuilder = new StringBuilder();
@@ -420,7 +428,7 @@ public class ContentInteract extends BaseCommTask {
         JSONObject result = null;
         try {
             // 调用requestString方法获取JSON结果
-          requestString(source, params);
+            requestString(source, params);
             // 捕获异常并处理
         } catch (Exception e) {
             // 记录异常堆栈信息
@@ -429,25 +437,21 @@ public class ContentInteract extends BaseCommTask {
             throw e;
         }
         // 获取执行间隔时间并休眠
-        long executeInterval = (long) this.executeIntervalInt;
-        TimeUtil.sleep(executeInterval);
+        TimeUtil.sleep((long) this.executeIntervalInt);
     }
 
     private void carry() throws JSONException {
-        // 声明局部变量
-//        String api = "alipay.content.interact.task.extend.carry";
-//        String params = "{\"carry\":\"UJ0SKjTEmssaau8ZhT4ZvbAxNB+r/ZjWQxQuLz6YbPmIXQ8ejXSHbeClRPu+E/7F4MSQIQrPRxnrgA6XJEN/HQ==\",\"taskExt\":\"{\\\"shareSource\\\":\\\"dailyJoy\\\"}\"}";
-        JSONObject result = null;
         try {
-            // 调用requestString方法获取JSON结果
-            requestString("alipay.content.interact.task.extend.carry", "\"carry\":\"UJ0SKjTEmssaau8ZhT4ZvSE9g8HzX/EwLRH6gDM1lwDsLE/k1yvlXcIAfUZRqyeP4MSQIQrPRxnrgA6XJEN/HQ==\"");
+//            requestString("alipay.content.interact.task.extend.carry",
+//                    "\"carry\":\"UJ0SKjTEmssaau8ZhT4ZvSE9g8HzX/EwLRH6gDM1lwDsLE/k1yvlXcIAfUZRqyeP4MSQIQrPRxnrgA6XJEN/HQ==\"");
+            requestString("alipay.content.interact.task.extend.carry",
+                    "\"carry\":\"1\"");
         } catch (Exception e) {
             Log.printStackTrace(this.TAG, e);
             throw e;
         }
         // 获取执行间隔时间并休眠
-        long executeInterval = (long) this.executeIntervalInt;
-        TimeUtil.sleep(executeInterval);
+        TimeUtil.sleep((long) this.executeIntervalInt);
     }
 
     private void carryy() {
@@ -503,8 +507,7 @@ public class ContentInteract extends BaseCommTask {
 
             if (response == null || response.length() == 0) {
                 // 无响应时休眠
-                long interval = (long) this.executeIntervalInt;
-                TimeUtil.sleep(interval);
+                TimeUtil.sleep((long) this.executeIntervalInt);
                 return;
             }
 
@@ -516,9 +519,7 @@ public class ContentInteract extends BaseCommTask {
             logBuilder.append("|");
             logBuilder.append(p1.optString("loginId"));
             logBuilder.append("]");
-
             Log.other(logBuilder.toString());
-
         } catch (Exception e) {
             // 异常处理
             Log.printStackTrace(this.TAG, e);
@@ -585,36 +586,25 @@ public class ContentInteract extends BaseCommTask {
     }
 
     private void reserve() throws JSONException {
-        // 定义常量参数
-        String api = "alipay.content.interact.task.reserve";
-        String params = "{\"sourcePage\":\"\",\"taskType\":\"reserve\"}";
 
         try {
             // 调用requestString方法获取JSON结果
-            JSONObject result = this.requestString(api, params);
-
+            JSONObject result = this.requestString("alipay.content.interact.task.reserve", "{\"sourcePage\":\"\",\"taskType\":\"reserve\"}");
             // 判断结果是否非空
             if (result != null && !result.isNull("result")) {
                 // 构建日志信息
                 StringBuilder logBuilder = new StringBuilder();
                 logBuilder.append(this.displayName)
                         .append("预约成功");
-
                 Log.other(logBuilder.toString());
             } else {
                 // 无结果时休眠
-                long interval = (long) this.executeIntervalInt;
-                TimeUtil.sleep(interval);
+                TimeUtil.sleep((long) this.executeIntervalInt);
             }
-
         } catch (Exception e) {
-            // 异常处理：记录日志并抛出
             Log.printStackTrace(this.TAG, e);
-            throw e;
         } finally {
-            // 最终休眠
-            long interval = (long) this.executeIntervalInt;
-            TimeUtil.sleep(interval);
+            TimeUtil.sleep((long) this.executeIntervalInt);
         }
     }
 
@@ -777,7 +767,5 @@ public class ContentInteract extends BaseCommTask {
         }
     }
 
-    private JSONObject query(String str) throws JSONException {
-        return requestString("alipay.content.interact.task.query", str);
-    }
+
 }
