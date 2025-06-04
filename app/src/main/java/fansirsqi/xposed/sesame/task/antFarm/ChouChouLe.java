@@ -73,6 +73,7 @@ public class ChouChouLe {
                 List<TaskInfo> tasks = parseTasks(farmTaskList);
 
                 for (TaskInfo task : tasks) {
+                    GlobalThreadPools.sleep(300L);
                     if (TaskStatus.FINISHED.name().equals(task.taskStatus)) {
                         if (receiveTaskAward(drawType, task.taskId)) {
                             doubleCheck = true;
@@ -170,7 +171,7 @@ public class ChouChouLe {
             int drawTimes = jo.optInt("drawTimes", 0);
             for (int i = 0; i < drawTimes; i++) {
                 drawPrize("IP抽抽乐", AntFarmRpcCall.drawMachine());
-                GlobalThreadPools.sleep(800L);
+                GlobalThreadPools.sleep(1500L);
             }
 
         } catch (Throwable t) {
@@ -203,7 +204,7 @@ public class ChouChouLe {
             for (int i = 0; i < leftDrawTimes; i++) {
                 String call = activityId.equals("null") ? AntFarmRpcCall.DrawPrize() : AntFarmRpcCall.DrawPrize(activityId);
                 drawPrize("抽抽乐", call);
-                GlobalThreadPools.sleep(800L);
+                GlobalThreadPools.sleep(1500L);
             }
 
         } catch (Throwable t) {
@@ -224,6 +225,8 @@ public class ChouChouLe {
                 String title = jo.getString("title");
                 int prizeNum = jo.optInt("prizeNum", 1);
                 Log.farm(prefix + "🎁[领取: " + title + "*" + prizeNum + "]");
+            }else {
+                Log.record(TAG, prefix + "🎁[领取失败]");
             }
         } catch (Exception ignored) {
         }
