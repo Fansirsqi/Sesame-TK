@@ -18,23 +18,23 @@ public class TaskCommon {
 
     public static void update() {
 
-        Log.runtime("TaskCommon Update:");
-        long currentTimeMillis = System.currentTimeMillis();
-        List<String> isEnergyTime = BaseModel.getEnergyTime().getValue();
-        if (isEnergyTime.contains("-1")) {
-            IS_ENERGY_TIME = false;
-        } else {
-            IS_ENERGY_TIME = TimeUtil.checkInTimeRange(currentTimeMillis, isEnergyTime);
-        }
+        // Log.runtime("TaskCommon Update:");
+        // long currentTimeMillis = System.currentTimeMillis();
+        // List<String> isEnergyTime = BaseModel.getEnergyTime().getValue();
+        // if (isEnergyTime.contains("-1")) {
+        //     IS_ENERGY_TIME = false;
+        // } else {
+        //     IS_ENERGY_TIME = TimeUtil.checkInTimeRange(currentTimeMillis, isEnergyTime);
+        // }
 
-        List<String> isModuleSleepTime = BaseModel.getModelSleepTime().getValue();
-        Log.runtime("获取模块休眠配置:" + isModuleSleepTime);
-        if (isModuleSleepTime.contains("-1")) {
-            Log.runtime("模块休眠配置 -1，不进行休眠");
-            IS_MODULE_SLEEP_TIME = false;
-        } else {
-            IS_MODULE_SLEEP_TIME = TimeUtil.checkInTimeRange(currentTimeMillis, isModuleSleepTime);
-        }
+        // List<String> isModuleSleepTime = BaseModel.getModelSleepTime().getValue();
+        // Log.runtime("获取模块休眠配置:" + isModuleSleepTime);
+        // if (isModuleSleepTime.contains("-1")) {
+        //     Log.runtime("模块休眠配置 -1，不进行休眠");
+        //     IS_MODULE_SLEEP_TIME = false;
+        // } else {
+        //     IS_MODULE_SLEEP_TIME = TimeUtil.checkInTimeRange(currentTimeMillis, isModuleSleepTime);
+        // }
 
         IS_AFTER_8AM = TimeUtil.isAfterOrCompareTimeStr(currentTimeMillis, "0800");
     }
