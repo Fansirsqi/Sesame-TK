@@ -1,7 +1,5 @@
 ![Sesame-TK](https://socialify.git.ci/myblsky66/Sesame-TK/image?description=1&font=Source%20Code%20Pro&forks=1&issues=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fmyblsky66%2FSesame-TK%2Frefs%2Fheads%2Fmain%2Fapp%2Fsrc%2Fmain%2Fassets%2Fweb%2FSesame-TK-logo.svg&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Auto)
 
-[![License](https://img.shields.io/github/license/myblsky66/Sesame-TK?labelColor=fff&label=License&logo=gnuprivacyguard)](https://raw.githubusercontent.com/myblsky66/Sesame-TK/refs/heads/main/LICENSE)  
-[![Latest Release](https://img.shields.io/github/release/myblsky66/Sesame-TK?labelColor=fff&label=Releases&logo=gitlfs)](../../releases)  
 
 
 
@@ -65,14 +63,37 @@
 <details>  
 <summary>Preview Images</summary>  
 
-@@ -114,9 +128,7 @@
+@@ -114,32 +128,30 @@
 
 ## 授权说明
 
 本项目fork自  
 基于 [constanline版XQuickEnergy](https://github.com/constanline/XQuickEnergy)  
 与 [pansong291版XQuickEnergy](https://github.com/pansong291/XQuickEnergy)  
-本项目fork自  基于 [constanline版XQuickEnergy](https://github.com/constanline/XQuickEnergy)  与 [pansong291版XQuickEnergy](https://github.com/pansong291/XQuickEnergy)  More actions
+本项目fork自  基于 [constanline版XQuickEnergy](https://github.com/constanline/XQuickEnergy)  与 [pansong291版XQuickEnergy](https://github.com/pansong291/XQuickEnergy)  
 开发的项目[Sesame-TK](https://github.com/TKaxv-7S/Sesame-TK)  
 并且在其基础上进行了少量的功能改进与优化。得益于GPT4-o模型的强大能力使得本项目能有这么多提交  
 但是不确定是否是有效修改，请自行斟酌考虑使用。
+
+所有图片由 ༒激༙྇流༙྇泉༙྇༒ 授权使用
+
+## 协议说明
+自 **北京时间2024年7月15日开始** 提交的所有代码 ，遵循 GPLv3 协议，并禁止用于任何商业用途、禁止二次修改后闭源发布
+
+## 鸣谢
+
+<a href="https://github.com/Fansirsqi/Sesame-TK/graphs/contributors">  
+  <img src="https://contrib.rocks/image?repo=Fansirsqi/Sesame-TK"  alt="contributors"/>  
+</a>  
+
+贡献名单使用 [contrib.rocks](https://contrib.rocks) 生成
+
+## Star History
+
+<a href="https://star-history.com/#Fansirsqi/Sesame-TK&Timeline">  
+ <picture>  
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline&theme=dark" />  More actions
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline" />  
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline" />  
+ </picture>  
+</a>
