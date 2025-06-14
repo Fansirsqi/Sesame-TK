@@ -182,7 +182,7 @@ class MainActivity : BaseActivity() {
             }
 
             R.id.btn_github -> {
-                data = "https://github.com/Fansirsqi/Sesame-TK"
+                data = "https://github.com/myblsky66/Sesame-TK"
             }
 
             R.id.btn_settings -> {
