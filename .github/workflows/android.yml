@@ -197,7 +197,7 @@ jobs:
             ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY }}
             > ## 下载说明
               * Normal 为正常版本,适用于`Android 8.0`及以上的系统
-              * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`
+              * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.2`
 
             > ~~墙内不再更新~~ 倒卖必死全家
       - name: Sync Release to Target Repository
