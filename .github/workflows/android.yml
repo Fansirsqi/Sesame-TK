@@ -80,17 +80,17 @@ jobs:
             fi
           done
 
-      - name: Upload APK - Compatible
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-compatible
-          path: ${{ steps.extract_apks.outputs.signed_compatible }}
+     ## - name: Upload APK - Compatible
+     ##   uses: actions/upload-artifact@v4
+     ##   with:
+     ##     name: apk-compatible
+     ##     path: ${{ steps.extract_apks.outputs.signed_compatible }}
 
-      - name: Upload APK - Normal
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-normal
-          path: ${{ steps.extract_apks.outputs.signed_normal }}
+     ## - name: Upload APK - Normal
+     ##   uses: actions/upload-artifact@v4
+     ##   with:
+     ##     name: apk-normal
+     ##     path: ${{ steps.extract_apks.outputs.signed_normal }}
 
       - name: Extract file names
         id: extract_info
@@ -168,11 +168,3 @@ jobs:
           to: ${{ secrets.TG_CHAT_ID }}
           token: ${{ secrets.TG_BOT_TOKEN }}
           document: ${{ steps.extract_apks.outputs.signed_compatible }}
-
-      - name: Create Tag from Version
-        if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
-        run: |
-          VERSION_TAG="v${{ steps.extract_info.outputs.version }}"
-          echo "Creating tag: $VERSION_TAG"
-          git tag "$VERSION_TAG"
-          git push origin "$VERSION_TAG"
