@@ -53,13 +53,25 @@ import lombok.ToString;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AntFarm extends ModelTask {
     private static final String TAG = AntFarm.class.getSimpleName();
     private String ownerFarmId;
     private String userId;
+    private Animal[] animals;
+    private Animal ownerAnimal = new Animal();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    /**
+     * 小鸡饲料g
+     */
     private Animal[] animals;
     private Animal ownerAnimal = new Animal();
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -85,9 +97,9 @@ public class AntFarm extends ModelTask {
     private static final List<String> bizKeyList;
 
 
-    static {
+static {
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
+     
         bizKeyList = new ArrayList<>();
         bizKeyList.add("ADD_GONGGE_NEW");
         bizKeyList.add("USER_STARVE_PUSH");
@@ -112,8 +124,34 @@ public class AntFarm extends ModelTask {
         bizKeyList.add("TAOBAO_renshenggyg");// 去淘宝人生逛一逛
         bizKeyList.add("TOUTIAO_daoduan");// 去今日头条极速版逛一逛
         bizKeyList.add("SLEEP");// 让小鸡去睡觉
+        // taskID填入此处
+        // 新增内容
+        bizKeyList.add("25WFYX_xiaojiliaoli_v2");// 去小鸡乐园开2次宝箱，完成可得90g饲料
+        bizKeyList.add("25WFYX_xiaojinuoche");// 去小鸡乐园开2次宝箱，完成可得90g饲料
+        bizKeyList.add("HUABEI2023");// 去花呗花花卡逛一逛，完成可得90g饲料
+        bizKeyList.add("XJLY_meishiqiyuji30");// 去小鸡乐园开2次宝箱，完成可得90g饲料
+        bizKeyList.add("25WFYX_shiguangzahuodian");// 去小鸡乐园开2次宝箱，完成可得90g饲料
+        bizKeyList.add("XJLYKBX1_sl90");// 去小鸡乐园开2次宝箱，完成可得90g饲料
+        bizKeyList.add("CAINIAOGUOGUO2023V2");// 去菜鸟做公益，完成可得90g饲料
+        bizKeyList.add("VIDEO_TASK");// 看庄园小视频，浏览15s可得90g饲料
+        bizKeyList.add("25WFYX_duiudipeng");// 玩对对碰乐园完成20次消除，完成得1个乐园宝箱和限时180g饲料
+        bizKeyList.add("mangheshipai");// 家庭小盲盒实拍照片来啦，通过家庭活动获得小盲盒，还可获得90g饲料
+        bizKeyList.add("25WFYX_baoweixiangrikui");// 玩向日葵通过1关主线新关卡，完成可得1个小鸡乐园宝箱和90g饲料
+        bizKeyList.add("2025618dacu");// 去淘金币618赢10亿，完成浏览可得90g饲料
+        //bizKeyList.add("HEART_DONATE");// 爱心捐赠（每天2次），捐任意金额可得180g饲料（为保证项目正常运行，禁止使用此项！）
+        bizKeyList.add("BBNC_gyg");// 去芭芭农场逛一逛，完成可得90g饲料
+        bizKeyList.add("COOK");// 小鸡厨房，每天做美食可得90g饲料
+        bizKeyList.add("ANTMEMBER_RICHANGQIANDAO");// 去支付宝会员签到，完成可得90g饲料
+        bizKeyList.add("tab3_gyg");// 逛一逛热门短视频，完成看视频进度最高可得240g饲料
+        bizKeyList.add("baiduditu");// 去百度地图逛一逛，完成可得90g饲料
+        bizKeyList.add("OFFLINE_PAY");// 到店付款，完成可得180g饲料
+        bizKeyList.add("ONLINE_PAY");// 线上支付，完成可得180g饲料
+        bizKeyList.add("30001229221356342088142133303848");// 一起拿小鸡饲料，每天可给5位好友送饲料，7天内好友完成领取，自己可获1包饲料（不扣自己的饲料，且奖励不会过期）
+        bizKeyList.add("30001935487934202088142133303848");// 庄园小课堂，每天答题最高可得180g饲料
+        bizKeyList.add("chouchoule_xiaritianqi");// 抽抽乐每日抽1次可得90g饲料
+        bizKeyList.add("HEART_DONATION_ADVANCED_FOOD_V2");// 每天单笔捐赠1元可得爱心美食
     }
-
+    
     @Override
     public String getName() {
         return "庄园";
