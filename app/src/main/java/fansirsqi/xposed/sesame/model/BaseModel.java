@@ -29,7 +29,6 @@ import lombok.Getter;
 public class BaseModel extends Model {
     private static final String TAG = "BaseModel";
 
-    public static final ExecutorService MAIN_THREAD_POOL = fansirsqi.xposed.sesame.util.GlobalThreadPools.getGeneralPurposeExecutor();
     /**
      * 是否保持唤醒状态
      */
@@ -193,17 +192,16 @@ public class BaseModel extends Model {
      * 初始化数据，通过异步线程加载初始化 Reserve 和 Beach 任务数据。
      */
     public static void initData() {
-        MAIN_THREAD_POOL.submit(
-                () -> {
-                    try {
-                        Log.runtime(TAG,"🍼初始化海洋，保护地数据");
-                        GlobalThreadPools.sleep(RandomUtil.nextInt(4500, 6000));
-                        Reserve.initReserve();
-                        AntOcean.initBeach();
-                    } catch (Exception e) {
-                        Log.printStackTrace(e);
-                    }
-                });
+        new Thread(() -> {
+            try {
+                Log.runtime(TAG, "🍼初始化海洋，保护地数据");
+                GlobalThreadPools.sleep(RandomUtil.nextInt(4500, 6000));
+                Reserve.initReserve();
+                AntOcean.initBeach();
+            } catch (Exception e) {
+                Log.printStackTrace(e);
+            }
+        }).start();;
     }
 
     /**
@@ -211,7 +209,7 @@ public class BaseModel extends Model {
      */
     public static void destroyData() {
         try {
-            Log.runtime(TAG,"🧹清理所有数据");
+            Log.runtime(TAG, "🧹清理所有数据");
             IdMapManager.getInstance(BeachMap.class).clear();
 //            IdMapManager.getInstance(ReserveaMap.class).clear();
 //            IdMapManager.getInstance(CooperateMap.class).clear();
@@ -223,7 +221,6 @@ public class BaseModel extends Model {
             Log.printStackTrace(e);
         }
     }
-
 
 
     public interface TimedTaskModel {

@@ -45,7 +45,8 @@ public class AntOcean extends ModelTask {
     @Getter
     public enum ApplyAction {
         AVAILABLE(0, "可用"),
-        NO_STOCK(1, "无库存");
+        NO_STOCK(1, "无库存"),
+        ENERGY_LACK(2, "能量不足");
 
         private final int code;
         private final String desc;
@@ -62,7 +63,9 @@ public class AntOcean extends ModelTask {
                     return action;
                 }
             }
-            throw new IllegalArgumentException("Invalid ApplyAction: " + value);
+            // 可选：记录日志或处理未知状态
+            Log.error("ApplyAction", "Unknown applyAction: " + value);
+            return null; // 或者返回一个 UNKNOWN 枚举项
         }
     }
 
