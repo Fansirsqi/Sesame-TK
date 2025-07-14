@@ -1,4 +1,4 @@
-package fansirsqi.xposed.sesame.util.maps;
+package fansirsqi.xposed.sesame.util.Maps;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -36,7 +36,7 @@ public class UserMap {
      * 当前用户ID
      */
     @Getter
-    public static String currentUid = null;
+    private static String currentUid = null;
     /**
      * 获取只读的用户信息映射
      *
@@ -77,7 +77,7 @@ public class UserMap {
                 // 获取类加载器
                 loader = ApplicationHook.getClassLoader();
             } catch (Exception e) {
-                Log.runtime(TAG,"Error getting classloader");
+                Log.runtime("Error getting classloader");
                 return;
             }
             try {
@@ -116,7 +116,7 @@ public class UserMap {
                             }
                             UserMap.add(userEntity);
                         } catch (Throwable t) {
-                            Log.runtime(TAG,"addUserObject err:");
+                            Log.runtime("addUserObject err:");
                             Log.printStackTrace(t);
                         }
                     }
@@ -125,7 +125,7 @@ public class UserMap {
                 }
                 UserMap.save(selfId);
             } catch (Throwable t) {
-                Log.runtime(TAG,"checkUnknownId.run err:");
+                Log.runtime("checkUnknownId.run err:");
                 Log.printStackTrace(t);
             }
         });
@@ -247,7 +247,7 @@ public class UserMap {
         try {
             String body = Files.readFromFile(Files.getSelfIdFile(userId));
             if (!body.isEmpty()) {
-                UserEntity.UserDto dto = JsonUtil.parseObject(body, new TypeReference<>() {
+                UserEntity.UserDto dto = JsonUtil.parseObject(body, new TypeReference<UserEntity.UserDto>() {
                 });
                 userMap.put(dto.getUserId(), dto.toEntity());
             }

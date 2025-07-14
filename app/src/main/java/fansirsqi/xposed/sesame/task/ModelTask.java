@@ -1,33 +1,43 @@
 package fansirsqi.xposed.sesame.task;
-
 import android.os.Build;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
 import fansirsqi.xposed.sesame.model.BaseModel;
 import fansirsqi.xposed.sesame.model.Model;
 import fansirsqi.xposed.sesame.model.ModelFields;
 import fansirsqi.xposed.sesame.model.ModelType;
-import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.Notify;
 import fansirsqi.xposed.sesame.util.StringUtil;
+import fansirsqi.xposed.sesame.util.ThreadUtil;
 import lombok.Getter;
-import lombok.Setter;
-
 public abstract class ModelTask extends Model {
+    // 存储所有主任务与线程的映射
     private static final Map<ModelTask, Thread> MAIN_TASK_MAP = new ConcurrentHashMap<>();
-    private static final ThreadPoolExecutor MAIN_THREAD_POOL = new ThreadPoolExecutor(getModelArray().length, Integer.MAX_VALUE, 30L, TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadPoolExecutor.CallerRunsPolicy());
+
+    // 线程同步计数
+    private static CountDownLatch taskCompletionLatch;
+
+    // 主任务线程池，线程池大小为模型数组长度，最大线程数无限制，空闲时间30秒
+    private static final ThreadPoolExecutor MAIN_THREAD_POOL = new ThreadPoolExecutor(
+            Math.max(1, getModelArray().length)// 核心线程数，至少为 1
+            , Math.min(Integer.MAX_VALUE, getModelArray().length * 2)// 最大线程数
+            , 30L// 空闲线程存活时间
+            , TimeUnit.SECONDS
+//            , new SynchronousQueue<>()
+            , new LinkedBlockingQueue<>(getModelArray().length * 2)// 队列容量
+            , new ThreadPoolExecutor.CallerRunsPolicy()
+    );
+    // 存储子任务的映射
     private final Map<String, ChildModelTask> childTaskMap = new ConcurrentHashMap<>();
     private ChildTaskExecutor childTaskExecutor;
     @Getter
     private final Runnable mainRunnable = new Runnable() {
         private final ModelTask task = ModelTask.this;
-
         @Override
         public void run() {
             if (MAIN_TASK_MAP.get(task) != null) {
@@ -41,13 +51,13 @@ public abstract class ModelTask extends Model {
                 Log.printStackTrace(e);
             } finally {
                 MAIN_TASK_MAP.remove(task);
+                taskCompletionLatch.countDown();
+                Notify.updateNextExecText(-1);
             }
         }
     };
-
     public ModelTask() {
     }
-
     /**
      * 准备任务执行环境
      */
@@ -55,7 +65,6 @@ public abstract class ModelTask extends Model {
     public final void prepare() {
         childTaskExecutor = newTimedTaskExecutor();
     }
-
     /**
      * 获取任务ID
      *
@@ -64,7 +73,6 @@ public abstract class ModelTask extends Model {
     public String getId() {
         return toString();
     }
-
     /**
      * 获取任务类型
      *
@@ -73,28 +81,24 @@ public abstract class ModelTask extends Model {
     public ModelType getType() {
         return ModelType.TASK;
     }
-
     /**
      * 获取任务名称
      *
      * @return 任务名称
      */
     public abstract String getName();
-
     /**
      * 获取任务的字段
      *
      * @return 任务字段
      */
     public abstract ModelFields getFields();
-
     /**
      * 检查任务是否可执行
      *
      * @return Boolean值，表示是否通过检查
      */
     public abstract Boolean check();
-
     /**
      * 是否为同步任务
      *
@@ -103,12 +107,10 @@ public abstract class ModelTask extends Model {
     public Boolean isSync() {
         return false;
     }
-
     /**
      * 执行任务
      */
     public abstract void run();
-
     /**
      * 检查任务是否包含指定的子任务
      *
@@ -118,7 +120,6 @@ public abstract class ModelTask extends Model {
     public Boolean hasChildTask(String childId) {
         return childTaskMap.containsKey(childId);
     }
-
     /**
      * 获取指定ID的子任务
      *
@@ -128,7 +129,6 @@ public abstract class ModelTask extends Model {
     public ChildModelTask getChildTask(String childId) {
         return childTaskMap.get(childId);
     }
-
     /**
      * 添加子任务
      *
@@ -141,7 +141,7 @@ public abstract class ModelTask extends Model {
                 if (value != null) {
                     value.cancel();
                 }
-                childTask.setModelTask(this);
+                childTask.modelTask = this;
                 if (childTaskExecutor.addChildTask(childTask)) {
                     return childTask;
                 }
@@ -153,14 +153,13 @@ public abstract class ModelTask extends Model {
                 if (oldTask != null) {
                     oldTask.cancel();
                 }
-                childTask.setModelTask(this);
+                childTask.modelTask = this;
                 if (childTaskExecutor.addChildTask(childTask)) {
                     childTaskMap.put(childId, childTask);
                 }
             }
         }
     }
-
     /**
      * 移除指定ID的子任务
      *
@@ -184,7 +183,6 @@ public abstract class ModelTask extends Model {
             }
         }
     }
-
     /**
      * 获取当前任务的子任务数量
      *
@@ -193,7 +191,6 @@ public abstract class ModelTask extends Model {
     public Integer countChildTask() {
         return childTaskMap.size();
     }
-
     /**
      * 启动任务
      *
@@ -202,7 +199,6 @@ public abstract class ModelTask extends Model {
     public Boolean startTask() {
         return startTask(false);
     }
-
     /**
      * 启动任务
      *
@@ -220,6 +216,7 @@ public abstract class ModelTask extends Model {
             if (isEnable() && check()) {
                 if (isSync()) {
                     mainRunnable.run();
+                    taskCompletionLatch.countDown();
                 } else {
                     MAIN_THREAD_POOL.execute(mainRunnable);
                 }
@@ -230,7 +227,6 @@ public abstract class ModelTask extends Model {
         }
         return false;
     }
-
     /**
      * 停止当前任务及其所有子任务
      */
@@ -249,14 +245,12 @@ public abstract class ModelTask extends Model {
         MAIN_THREAD_POOL.remove(mainRunnable);
         MAIN_TASK_MAP.remove(this);
     }
-
     /**
      * 启动所有任务
      */
     public static void startAllTask() {
         startAllTask(false);
     }
-
     /**
      * 启动所有任务
      *
@@ -264,18 +258,33 @@ public abstract class ModelTask extends Model {
      */
     public static void startAllTask(Boolean force) {
         Notify.setStatusTextExec();
+        taskCompletionLatch = new CountDownLatch(getModelArray().length);
+        // 启动一个线程等待所有任务完成
+        new Thread(() -> {
+            try {
+                taskCompletionLatch.await(); // 等待所有任务完成
+                Notify.forceUpdateText();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
         for (Model model : getModelArray()) {
             if (model != null) {
                 if (ModelType.TASK == model.getType()) {
                     if (((ModelTask) model).startTask(force)) {
-                        GlobalThreadPools.sleep(750);
+                        ThreadUtil.sleep(750);
+                    } else {
+                        taskCompletionLatch.countDown();
                         Notify.updateNextExecText(-1);
                     }
+                } else {
+                    // normal模块直接标记已完成
+                    taskCompletionLatch.countDown();
+                    Notify.updateNextExecText(-1);
                 }
             }
         }
     }
-
     /**
      * 停止所有任务
      */
@@ -292,7 +301,6 @@ public abstract class ModelTask extends Model {
             }
         }
     }
-
     /**
      * 创建一个新的子任务执行器
      *
@@ -310,30 +318,40 @@ public abstract class ModelTask extends Model {
         }
         return childTaskExecutor;
     }
-
-    @Getter
     public static class ChildModelTask implements Runnable {
-        @Setter
+        @Getter
         private ModelTask modelTask;
+        @Getter
         private final String id;
+        @Getter
         private final String group;
         private final Runnable runnable;
+        @Getter
         private final Long execTime;
         private CancelTask cancelTask;
+        @Getter
         private Boolean isCancel = false;
-
+        public ChildModelTask() {
+            this(null, null, () -> {
+            }, 0L);
+        }
+        public ChildModelTask(String id) {
+            this(id, null, () -> {
+            }, 0L);
+        }
+        public ChildModelTask(String id, String group) {
+            this(id, group, () -> {
+            }, 0L);
+        }
         protected ChildModelTask(String id, long execTime) {
             this(id, null, null, execTime);
         }
-
         public ChildModelTask(String id, Runnable runnable) {
             this(id, null, runnable, 0L);
         }
-
         public ChildModelTask(String id, String group, Runnable runnable) {
             this(id, group, runnable, 0L);
         }
-
         public ChildModelTask(String id, String group, Runnable runnable, Long execTime) {
             if (StringUtil.isEmpty(id)) {
                 id = toString();
@@ -349,7 +367,6 @@ public abstract class ModelTask extends Model {
             this.runnable = runnable;
             this.execTime = execTime;
         }
-
         /**
          * 设置子任务的运行逻辑
          *
@@ -358,14 +375,12 @@ public abstract class ModelTask extends Model {
         public Runnable setRunnable() {
             return null;
         }
-
         /**
          * 执行子任务
          */
         public final void run() {
-            getRunnable().run();
+            runnable.run();
         }
-
         /**
          * 设置取消任务的逻辑
          *
@@ -374,30 +389,37 @@ public abstract class ModelTask extends Model {
         protected void setCancelTask(CancelTask cancelTask) {
             this.cancelTask = cancelTask;
         }
-
         /**
          * 取消子任务
          */
         public final void cancel() {
-            if (getCancelTask() != null) {
+            if (cancelTask != null) {
                 try {
-                    getCancelTask().cancel();
-                    setCancel(true);
+                    cancelTask.cancel();
+                    isCancel = true;
                 } catch (Exception e) {
                     Log.printStackTrace(e);
                 }
             }
         }
-
-        public Boolean getCancel() {
-            return isCancel;
-        }
-
-        public void setCancel(Boolean cancel) {
-            isCancel = cancel;
-        }
+    }
+    /**
+     * 返回是否还有未结束的任务
+     */
+    public static boolean isAllTaskFinished() {
+        return taskCompletionLatch == null || taskCompletionLatch.getCount() == 0;
     }
 
+    /**
+     * 获取总任务执行进度 100%
+     */
+    public static int completedTaskPercentage() {
+        if (taskCompletionLatch == null) {
+            return 100;
+        }
+        int totalTaskCount = getModelArray().length;
+        return (int) ((totalTaskCount - taskCompletionLatch.getCount()) * 100 / totalTaskCount);
+    }
     public interface CancelTask {
         void cancel();
     }

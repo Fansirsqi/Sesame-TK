@@ -3,7 +3,6 @@ package fansirsqi.xposed.sesame.ui
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
-import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,7 +20,6 @@ import fansirsqi.xposed.sesame.util.ToastUtil
  * 扩展功能页面
  */
 class ExtendActivity : BaseActivity() {
-    private val TAG = ExtendActivity::class.java.simpleName
     private var debugTips: String? = null
     private lateinit var recyclerView: RecyclerView
     private lateinit var extendFunctionAdapter: ExtendFunctionAdapter
@@ -79,9 +77,9 @@ class ExtendActivity : BaseActivity() {
             ExtendFunctionItem(getString(R.string.clear_photo)) {
                 AlertDialog.Builder(this)
                     .setTitle(R.string.clear_photo)
-                    .setMessage("确认清空${DataCache.getData<List<Map<String, String>>>("guangPanPhoto")?.size ?: 0}组光盘行动图片？")
+                    .setMessage("确认清空${DataCache.guangPanPhotoCount}组光盘行动图片？")
                     .setPositiveButton(R.string.ok) { _, _ ->
-                        if (DataCache.removeData("guangPanPhoto")) {
+                        if (DataCache.clearGuangPanPhoto()) {
                             ToastUtil.showToast(this, "光盘行动图片清空成功")
                         } else {
                             ToastUtil.showToast(this, "光盘行动图片清空失败")
@@ -95,22 +93,18 @@ class ExtendActivity : BaseActivity() {
         if(ViewAppInfo.isApkInDebug){
             extendFunctions.add(
                 ExtendFunctionItem("写入光盘") {
+                    val photos = HashMap<String, String>()
                     AlertDialog.Builder(this)
                         .setTitle("Test")
                         .setMessage("xxxx")
                         .setPositiveButton(R.string.ok) { _, _ ->
-                            val newPhotoEntry = HashMap<String, String>()
                             val randomStr = FansirsqiUtil.getRandomString(10)
-                            newPhotoEntry["before"] = "before$randomStr"
-                            newPhotoEntry["after"] = "after$randomStr"
-
-                            val existingPhotos = DataCache.getData<MutableList<Map<String, String>>>("guangPanPhoto")?.toMutableList() ?: mutableListOf()
-                            existingPhotos.add(newPhotoEntry)
-
-                            if (DataCache.saveData("guangPanPhoto", existingPhotos)) {
-                                ToastUtil.showToast(this, "写入成功$newPhotoEntry")
+                            photos["before"] = "before$randomStr"
+                            photos["after"] = "after$randomStr"
+                            if (DataCache.saveGuangPanPhoto(photos)) {
+                                ToastUtil.showToast(this, "写入成功$photos")
                             } else {
-                                ToastUtil.showToast(this, "写入失败$newPhotoEntry")
+                                ToastUtil.showToast(this, "写入失败$photos")
                             }
                         }
                         .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
@@ -118,18 +112,13 @@ class ExtendActivity : BaseActivity() {
                 }
             )
 
-            //我想在这加一个编辑框，里面支持输入文字，下面的展示随机光盘的字段从编辑框里面取
-
             extendFunctions.add(
-                ExtendFunctionItem("获取DataCache字段") {
-                    val inputEditText = EditText(this)
+                ExtendFunctionItem("展示随机光盘") {
                     AlertDialog.Builder(this)
-                        .setTitle("输入字段Key")
-                        .setView(inputEditText)
+                        .setTitle("看看效果")
+                        .setMessage("xxxx")
                         .setPositiveButton(R.string.ok) { _, _ ->
-                            val inputText = inputEditText.text.toString()
-                            val output = DataCache.getData<Any>(inputText)
-                            ToastUtil.showToast(this, "$output \n输入内容: $inputText")
+                            ToastUtil.showToast(this, "${DataCache.randomGuangPanPhoto}")
                         }
                         .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
                         .show()
@@ -150,6 +139,6 @@ class ExtendActivity : BaseActivity() {
         intent.putExtra("data", "")
         intent.putExtra("type", type)
         sendBroadcast(intent) // 发送广播
-        Log.debug(TAG,"扩展工具主动调用广播查询📢：$type")
+        Log.debug("扩展工具主动调用广播查询📢：$type")
     }
 }

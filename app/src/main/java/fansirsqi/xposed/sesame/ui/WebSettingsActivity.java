@@ -1,7 +1,7 @@
 package fansirsqi.xposed.sesame.ui;
 
 import static fansirsqi.xposed.sesame.data.UIConfig.UI_OPTION_NEW;
-
+import static fansirsqi.xposed.sesame.data.ViewAppInfo.isApkInDebug;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -39,7 +39,6 @@ import fansirsqi.xposed.sesame.BuildConfig;
 import fansirsqi.xposed.sesame.R;
 import fansirsqi.xposed.sesame.data.Config;
 import fansirsqi.xposed.sesame.data.UIConfig;
-import fansirsqi.xposed.sesame.data.ViewAppInfo;
 import fansirsqi.xposed.sesame.entity.AlipayUser;
 import fansirsqi.xposed.sesame.model.Model;
 import fansirsqi.xposed.sesame.model.ModelConfig;
@@ -57,19 +56,18 @@ import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.LanguageUtil;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.maps.BeachMap;
-import fansirsqi.xposed.sesame.util.maps.CooperateMap;
-import fansirsqi.xposed.sesame.util.maps.IdMapManager;
-import fansirsqi.xposed.sesame.util.maps.MemberBenefitsMap;
-import fansirsqi.xposed.sesame.util.maps.ParadiseCoinBenefitIdMap;
-import fansirsqi.xposed.sesame.util.maps.ReserveaMap;
-import fansirsqi.xposed.sesame.util.maps.UserMap;
-import fansirsqi.xposed.sesame.util.maps.VitalityRewardsMap;
+import fansirsqi.xposed.sesame.util.Maps.BeachMap;
+import fansirsqi.xposed.sesame.util.Maps.CooperateMap;
+import fansirsqi.xposed.sesame.util.Maps.IdMapManager;
+import fansirsqi.xposed.sesame.util.Maps.MemberBenefitsMap;
+import fansirsqi.xposed.sesame.util.Maps.ParadiseCoinBenefitIdMap;
+import fansirsqi.xposed.sesame.util.Maps.ReserveaMap;
+import fansirsqi.xposed.sesame.util.Maps.UserMap;
+import fansirsqi.xposed.sesame.util.Maps.VitalityRewardsMap;
 import fansirsqi.xposed.sesame.util.PortUtil;
 import fansirsqi.xposed.sesame.util.StringUtil;
 
 public class WebSettingsActivity extends BaseActivity {
-    private static final String TAG = "WebSettingsActivity";
     private static final Integer EXPORT_REQUEST_CODE = 1;
     private static final Integer IMPORT_REQUEST_CODE = 2;
     private ActivityResultLauncher<Intent> exportLauncher;
@@ -97,7 +95,7 @@ public class WebSettingsActivity extends BaseActivity {
         if (intent != null) {
             userId = intent.getStringExtra("userId");
             userName = intent.getStringExtra("userName");
-            intent.getBooleanExtra("debug", ViewAppInfo.INSTANCE.isApkInDebug());
+            intent.getBooleanExtra("debug", isApkInDebug());
         }
         Model.initAllModel();
         UserMap.setCurrentUserId(userId);
@@ -116,10 +114,10 @@ public class WebSettingsActivity extends BaseActivity {
             @Override
             public void handleOnBackPressed() {
                 if (webView.canGoBack()) {
-                    Log.runtime(TAG,"WebSettingsActivity.handleOnBackPressed: go back");
+                    Log.runtime("WebSettingsActivity.handleOnBackPressed: go back");
                     webView.goBack();
                 } else {
-                    Log.runtime(TAG,"WebSettingsActivity.handleOnBackPressed: save");
+                    Log.runtime("WebSettingsActivity.handleOnBackPressed: save");
                     save();
                     finish();
                 }
@@ -184,7 +182,7 @@ public class WebSettingsActivity extends BaseActivity {
                 return false;
             }
         });
-        if (ViewAppInfo.INSTANCE.isApkInDebug()) {
+        if (isApkInDebug()) {
             WebView.setWebContentsDebuggingEnabled(true);
 //            webView.loadUrl("http://192.168.31.69:5500/app/src/main/assets/web/index.html");
             webView.loadUrl("file:///android_asset/web/index.html");
@@ -212,7 +210,7 @@ public class WebSettingsActivity extends BaseActivity {
                 if (webView.canGoBack()) {
                     webView.goBack();
                 } else {
-                    Log.runtime(TAG,"WebAppInterface onBackPressed: save");
+                    Log.runtime("WebAppInterface onBackPressed: save");
                     save();
                     WebSettingsActivity.this.finish();
                 }
@@ -229,8 +227,8 @@ public class WebSettingsActivity extends BaseActivity {
         @JavascriptInterface
         public String getTabs() {
             String result = JsonUtil.formatJson(tabList, false);
-            if (ViewAppInfo.INSTANCE.isApkInDebug()) {
-                Log.runtime(TAG,"WebSettingsActivity.getTabs: " + result);
+            if (isApkInDebug()) {
+                Log.runtime("WebSettingsActivity.getTabs: " + result);
             }
             return result;
         }
@@ -243,8 +241,8 @@ public class WebSettingsActivity extends BaseActivity {
         @JavascriptInterface
         public String getGroup() {
             String result = JsonUtil.formatJson(groupList, false);
-            if (ViewAppInfo.INSTANCE.isApkInDebug()) {
-                Log.runtime(TAG,"WebSettingsActivity.getGroup: " + result);
+            if (isApkInDebug()) {
+                Log.runtime("WebSettingsActivity.getGroup: " + result);
             }
             return result;
         }
@@ -261,8 +259,8 @@ public class WebSettingsActivity extends BaseActivity {
                 modelDtoList.add(new ModelDto(modelConfig.getCode(), modelConfig.getName(), modelConfig.getIcon(), groupCode, modelFields));
             }
             String result = JsonUtil.formatJson(modelDtoList, false);
-            if (ViewAppInfo.INSTANCE.isApkInDebug()) {
-                Log.runtime(TAG,"WebSettingsActivity.getModelByGroup: " + result);
+            if (isApkInDebug()) {
+                Log.runtime("WebSettingsActivity.getModelByGroup: " + result);
             }
             return result;
         }
@@ -301,8 +299,8 @@ public class WebSettingsActivity extends BaseActivity {
                     list.add(ModelFieldShowDto.toShowDto(modelField));
                 }
                 String result = JsonUtil.formatJson(list, false);
-                if (ViewAppInfo.INSTANCE.isApkInDebug()) {
-                    Log.runtime(TAG,"WebSettingsActivity.getModel: " + result);
+                if (isApkInDebug()) {
+                    Log.runtime("WebSettingsActivity.getModel: " + result);
                 }
                 return result;
             }
@@ -348,8 +346,8 @@ public class WebSettingsActivity extends BaseActivity {
                 ModelField<?> modelField = modelConfig.getModelField(fieldCode);
                 if (modelField != null) {
                     String result = JsonUtil.formatJson(ModelFieldInfoDto.toInfoDto(modelField), false);
-                    if (ViewAppInfo.INSTANCE.isApkInDebug()) {
-                        Log.runtime(TAG,"WebSettingsActivity.getField: " + result);
+                    if (isApkInDebug()) {
+                        Log.runtime("WebSettingsActivity.getField: " + result);
                     }
                     return result;
                 }
@@ -376,7 +374,7 @@ public class WebSettingsActivity extends BaseActivity {
 
         @JavascriptInterface
         public void Log(String log) {
-            Log.record(TAG,"设置：" + log);
+            Log.record("设置：" + log);
         }
     }
 
@@ -450,11 +448,13 @@ public class WebSettingsActivity extends BaseActivity {
                 break;
             case 6:
                 // 在调用 save() 之前，先调用 JS 函数同步 WebView 中的数据到 Java 端
-                Log.runtime(TAG,"WebSettingsActivity.onOptionsItemSelected: Calling handleData() in WebView");
+                Log.runtime("WebSettingsActivity.onOptionsItemSelected: Calling handleData() in WebView");
                 webView.evaluateJavascript("if(typeof handleData === 'function'){ handleData(); } else { console.error('handleData function not found'); }", null);
                 // 使用 Handler 延迟执行 save()，给 JS 一点时间完成异步操作
                 // 200 毫秒是一个经验值，如果仍然有问题可以适当增加
-                new Handler(Looper.getMainLooper()).postDelayed(this::save, 200); // 延迟 200 毫秒
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    save();
+                }, 200); // 延迟 200 毫秒
                 break;
         }
         return super.onOptionsItemSelected(item);

@@ -21,7 +21,7 @@ public class Toast {
      * @param force   是否强制显示
      */
     public static void show(CharSequence message, boolean force) {
-        Context context = ApplicationHook.getAppContext();
+        Context context = ApplicationHook.getContext();
         if (context == null) {
             Log.runtime(TAG, "Context is null, cannot show toast");
             return;

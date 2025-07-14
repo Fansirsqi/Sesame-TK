@@ -81,7 +81,7 @@ public class CustomService implements AnswerAIInterface {
             String json = response.body().string();
             if (!response.isSuccessful()) {
                 Log.other("CustomService请求失败");
-                Log.runtime(TAG,"CustomService接口异常：" + json);
+                Log.runtime("CustomService接口异常：" + json);
                 return "";
             }
             return json;

@@ -1,7 +1,6 @@
 package fansirsqi.xposed.sesame.task.reserve;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.LinkedHashMap;
@@ -15,122 +14,64 @@ import fansirsqi.xposed.sesame.model.ModelGroup;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountModelField;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
-import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.maps.IdMapManager;
-import fansirsqi.xposed.sesame.util.maps.ReserveaMap;
 import fansirsqi.xposed.sesame.util.RandomUtil;
-import fansirsqi.xposed.sesame.util.ResChecker;
+import fansirsqi.xposed.sesame.util.ResUtil;
 import fansirsqi.xposed.sesame.data.Status;
-
+import fansirsqi.xposed.sesame.util.ThreadUtil;
 public class Reserve extends ModelTask {
     private static final String TAG = Reserve.class.getSimpleName();
-
     @Override
     public String getName() {
         return "保护地";
     }
-
     @Override
     public ModelGroup getGroup() {
         return ModelGroup.FOREST;
     }
-
     @Override
     public String getIcon() {
         return "Reserve.png";
     }
-
     private SelectAndCountModelField reserveList;
-
     @Override
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
         modelFields.addField(reserveList = new SelectAndCountModelField("reserveList", "保护地列表", new LinkedHashMap<>(), ReserveEntity::getList));
         return modelFields;
     }
-
     public Boolean check() {
-        if (TaskCommon.IS_ENERGY_TIME) {
-            Log.record(TAG, "⏸ 当前为只收能量时间【" + BaseModel.getEnergyTime().getValue() + "】，停止执行" + getName() + "任务！");
+        if (TaskCommon.IS_ENERGY_TIME){
+            Log.record("⏸ 当前为只收能量时间【"+ BaseModel.getEnergyTime().getValue() +"】，停止执行" + getName() + "任务！");
             return false;
-        } else if (TaskCommon.IS_MODULE_SLEEP_TIME) {
-            Log.record(TAG, "💤 模块休眠时间【" + BaseModel.getModelSleepTime().getValue() + "】停止执行" + getName() + "任务！");
+        }else if (TaskCommon.IS_MODULE_SLEEP_TIME) {
+            Log.record("💤 模块休眠时间【"+ BaseModel.getModelSleepTime().getValue() +"】停止执行" + getName() + "任务！");
             return false;
         } else {
             return true;
         }
     }
-
     public void run() {
         try {
-            Log.record(TAG, "开始保护地任务");
-            initReserve();
+            Log.record("开始保护地任务");
             animalReserve();
         } catch (Throwable t) {
             Log.runtime(TAG, "start.run err:");
             Log.printStackTrace(TAG, t);
         } finally {
-            Log.record(TAG, "保护地任务");
+            Log.record("保护地任务");
         }
     }
-
-    /**
-     * 初始化保护地任务。通过 ReserveRpc 接口查询可兑换的树项目，将符合条件的保护地任务存入 ReserveIdMapUtil。 条件：项目类型为 "RESERVE" 且状态为 "AVAILABLE"。若调用失败则加载备份的 ReserveIdMapUtil。
-     */
-    public static void initReserve() {
-        try {
-            String response = ReserveRpcCall.queryTreeItemsForExchange();
-            JSONObject jsonResponse = new JSONObject(response);
-            if (ResChecker.checkRes(TAG, jsonResponse)) {
-                JSONArray treeItems = jsonResponse.optJSONArray("treeItems");
-                if (treeItems != null) {
-                    for (int i = 0; i < treeItems.length(); i++) {
-                        JSONObject item = treeItems.getJSONObject(i);
-                        // 跳过未定义 projectType 字段的项目
-                        if (!item.has("projectType")) {
-                            continue;
-                        }
-                        // 过滤出 projectType 为 "RESERVE" 且 applyAction 为 "AVAILABLE" 的项目
-                        if ("RESERVE".equals(item.getString("projectType")) && "AVAILABLE".equals(item.getString("applyAction"))) {
-                            // 将符合条件的项目添加到 ReserveIdMapUtil
-                            String itemId = item.getString("itemId");
-                            String itemName = item.getString("itemName");
-                            int energy = item.getInt("energy");
-                            IdMapManager.getInstance(ReserveaMap.class).add(itemId, itemName + "(" + energy + "g)");
-                        }
-                    }
-                    Log.runtime(TAG, "初始化保护地任务成功。");
-                }
-                // 将筛选结果保存到 ReserveIdMapUtil
-                IdMapManager.getInstance(ReserveaMap.class).save();
-            } else {
-                // 若 resultCode 不为 SUCCESS，记录错误描述
-                Log.runtime(jsonResponse.optString("resultDesc", "未知错误"));
-            }
-        } catch (JSONException e) {
-            // 捕获 JSON 解析错误并记录日志
-            Log.runtime(TAG, "JSON 解析错误：" + e.getMessage());
-            Log.printStackTrace(e);
-            IdMapManager.getInstance(ReserveaMap.class).load(); // 若出现异常则加载保存的 ReserveIdMapUtil 备份
-        } catch (Exception e) {
-            // 捕获所有其他异常并记录
-            Log.runtime(TAG, "初始化保护地任务时出错：" + e.getMessage());
-            Log.printStackTrace(e);
-            IdMapManager.getInstance(ReserveaMap.class).load(); // 加载备份的 ReserveIdMapUtil
-        }
-    }
-
     private void animalReserve() {
         try {
-            Log.record(TAG, "开始执行-" + getName());
+            Log.record("开始执行-" + getName());
             String s = ReserveRpcCall.queryTreeItemsForExchange();
             if (s == null) {
-                GlobalThreadPools.sleep(RandomUtil.delay());
+                ThreadUtil.sleep(RandomUtil.delay());
                 s = ReserveRpcCall.queryTreeItemsForExchange();
             }
             JSONObject jo = new JSONObject(s);
-            if (ResChecker.checkRes(TAG,jo)) {
+            if (ResUtil.checkResultCode(jo)) {
                 JSONArray ja = jo.getJSONArray("treeItems");
                 for (int i = 0; i < ja.length(); i++) {
                     jo = ja.getJSONObject(i);
@@ -163,15 +104,14 @@ public class Reserve extends ModelTask {
             Log.runtime(TAG, "animalReserve err:");
             Log.printStackTrace(TAG, t);
         } finally {
-            Log.record(TAG, "结束执行-" + getName());
+            Log.record("结束执行-" + getName());
         }
     }
-
     private boolean queryTreeForExchange(String projectId) {
         try {
             String s = ReserveRpcCall.queryTreeForExchange(projectId);
             JSONObject jo = new JSONObject(s);
-            if (ResChecker.checkRes(TAG,jo)) {
+            if (ResUtil.checkResultCode(jo)) {
                 String applyAction = jo.getString("applyAction");
                 int currentEnergy = jo.getInt("currentEnergy");
                 jo = jo.getJSONObject("exchangeableTree");
@@ -196,7 +136,6 @@ public class Reserve extends ModelTask {
         }
         return false;
     }
-
     private void exchangeTree(String projectId, String itemName, int count) {
         int appliedTimes = 0;
         try {
@@ -208,7 +147,7 @@ public class Reserve extends ModelTask {
             for (int applyCount = 1; applyCount <= count; applyCount++) {
                 s = ReserveRpcCall.exchangeTree(projectId);
                 jo = new JSONObject(s);
-                if (ResChecker.checkRes(TAG,jo)) {
+                if (ResUtil.checkResultCode(jo)) {
                     int vitalityAmount = jo.optInt("vitalityAmount", 0);
                     appliedTimes = Status.getReserveTimes(projectId) + 1;
                     String str = "领保护地🏕️[" + itemName + "]#第" + appliedTimes + "次"
@@ -222,13 +161,13 @@ public class Reserve extends ModelTask {
                     // Statistics.reserveToday(projectId, count);
                     break;
                 }
-                GlobalThreadPools.sleep(300);
+                ThreadUtil.sleep(300);
                 canApply = queryTreeForExchange(projectId);
                 if (!canApply) {
                     // Statistics.reserveToday(projectId, count);
                     break;
                 } else {
-                    GlobalThreadPools.sleep(300);
+                    ThreadUtil.sleep(300);
                 }
                 if (!Status.canReserveToday(projectId, count))
                     break;

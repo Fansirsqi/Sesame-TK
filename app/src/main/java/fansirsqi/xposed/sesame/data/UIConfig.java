@@ -33,7 +33,7 @@ public class UIConfig {
     }
 
     public static Boolean save() {
-        Log.record(TAG,"保存UI配置");
+        Log.record("保存UI配置");
         return Files.setTargetFileofDir(JsonUtil.formatJson(INSTANCE), new File(Files.CONFIG_DIR, "app_config.json"));
     }
 

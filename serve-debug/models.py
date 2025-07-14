@@ -2,15 +2,11 @@
 from typing import Optional
 from sqlalchemy import Column, Integer, String, DateTime, Text
 from sqlalchemy.sql import func
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Optional # Import Optional for type hints
 
 
 from config import Base
-
-def get_local_now():
-    # Assuming UTC+8, adjust as necessary for your specific local timezone
-    return datetime.now(timezone(timedelta(hours=8)))
 
 class HookData(Base):
     __tablename__ = "hookdata"
@@ -20,8 +16,8 @@ class HookData(Base):
     Method = Column(String(50))
     Params = Column(Text)
     Data = Column(Text)
-    created_at = Column(DateTime, default=get_local_now)
-    updated_at = Column(DateTime, default=get_local_now, onupdate=get_local_now)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     # 自动清理策略（每小时触发）
     @classmethod

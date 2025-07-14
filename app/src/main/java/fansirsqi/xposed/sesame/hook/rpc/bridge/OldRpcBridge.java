@@ -94,7 +94,7 @@ public class OldRpcBridge implements RpcBridge {
         String args = rpcEntity.getRequestData(); // 获取请求参数
         for (int count = 0; count < tryCount; count++) {
             try {
-                RpcIntervalLimit.INSTANCE.enterIntervalLimit(method); // 进入 RPC 调用间隔限制
+                RpcIntervalLimit.enterIntervalLimit(method); // 进入 RPC 调用间隔限制
                 Object response = invokeRpcCall(method, args); // 调用 RPC 方法
                 return processResponse(rpcEntity, response, id, method, args, retryInterval); // 处理响应
             } catch (Throwable t) {
@@ -138,12 +138,12 @@ public class OldRpcBridge implements RpcBridge {
         if (resultObject.optString("memo", "").contains("系统繁忙")) {
             ApplicationHook.setOffline(true); // 设置为离线状态
             Notify.updateStatusText("系统繁忙，可能需要滑动验证");
-            Log.record(TAG,"系统繁忙，可能需要滑动验证");
+            Log.record("系统繁忙，可能需要滑动验证");
             return null; // 返回 null
         }
         if (!resultObject.optBoolean("success")) {
             rpcEntity.setError(); // 设置为错误状态
-            Log.error(TAG,"旧 RPC 响应 | id: " + id + " | method: " + method + " args: " + args + " | data: " + rpcEntity.getResponseString());
+            Log.error("旧 RPC 响应 | id: " + id + " | method: " + method + " args: " + args + " | data: " + rpcEntity.getResponseString());
         }
         return rpcEntity; // 返回更新后的 RPC 实体
     }
@@ -158,7 +158,7 @@ public class OldRpcBridge implements RpcBridge {
      */
     private void handleError(RpcEntity rpcEntity, Throwable t, String method, int id, String args) {
         rpcEntity.setError(); // 设置为错误状态
-        Log.error(TAG,"旧 RPC 请求 | id: " + id + " | method: " + method + " err:");
+        Log.error("旧 RPC 请求 | id: " + id + " | method: " + method + " err:");
         Log.printStackTrace(t); // 打印堆栈跟踪
         if (t instanceof InvocationTargetException) {
             handleInvocationException(rpcEntity, (InvocationTargetException) t, method); // 处理调用异常
@@ -204,7 +204,7 @@ public class OldRpcBridge implements RpcBridge {
             ApplicationHook.setOffline(true);
             Notify.updateStatusText("登录超时");
             if (BaseModel.getTimeoutRestart().getValue()) {
-                Log.record(TAG,"尝试重新登录");
+                Log.record("尝试重新登录");
                 ApplicationHook.reLoginByBroadcast();
             }
         }
@@ -217,7 +217,7 @@ public class OldRpcBridge implements RpcBridge {
             long waitTime = System.currentTimeMillis() + BaseModel.getWaitWhenException().getValue();
             RuntimeInfo.getInstance().put(RuntimeInfo.RuntimeInfoKey.ForestPauseTime, waitTime);
             Notify.updateStatusText("异常");
-            Log.record(TAG,"触发异常, 等待至" + TimeUtil.getCommonDate(waitTime));
+            Log.record("触发异常, 等待至" + TimeUtil.getCommonDate(waitTime));
         }
     }
     /**

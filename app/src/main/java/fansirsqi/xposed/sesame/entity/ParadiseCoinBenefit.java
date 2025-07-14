@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import fansirsqi.xposed.sesame.util.maps.IdMapManager;
-import fansirsqi.xposed.sesame.util.maps.ParadiseCoinBenefitIdMap;
+import fansirsqi.xposed.sesame.util.Maps.IdMapManager;
+import fansirsqi.xposed.sesame.util.Maps.ParadiseCoinBenefitIdMap;
 
 public class ParadiseCoinBenefit extends MapperEntity {
 

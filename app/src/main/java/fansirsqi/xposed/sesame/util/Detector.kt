@@ -6,31 +6,29 @@ import fansirsqi.xposed.sesame.BuildConfig
 import java.io.File
 
 object Detector {
-    private const val TAG = "Detector"
 
     fun getLibPath(context: Context): String? {
-        var libSesamePath: String? = null
-        try {
-            val appInfo = context.packageManager.getApplicationInfo(
-                BuildConfig.APPLICATION_ID, 0
-            )
-            libSesamePath =
-                appInfo.nativeLibraryDir + File.separator + System.mapLibraryName("checker")
-            Log.runtime(TAG, "load libSesame success")
-        } catch (e: PackageManager.NameNotFoundException) {
-            ToastUtil.showToast(context, "请不要对应用宝隐藏TK模块")
-            Log.record(TAG, "请不要对应用宝隐藏TK模块")
-            Log.error(TAG, "getLibPath${e.message}")
-        }
-        return libSesamePath
+    var libSesamePath: String? = null
+    try {
+        val appInfo = context.packageManager.getApplicationInfo(
+            BuildConfig.APPLICATION_ID, 0
+        )
+        libSesamePath = appInfo.nativeLibraryDir + File.separator + System.mapLibraryName("checker")
+        Log.runtime("load libSesame success")
+    } catch (e: PackageManager.NameNotFoundException) {
+        ToastUtil.showToast(context, "请不要对应用宝隐藏TK模块")
+        Log.record("请不要对应用宝隐藏TK模块")
+        Log.error("getLibPath", e.message)
     }
+    return libSesamePath
+}
 
     fun loadLibrary(libraryName: String): Boolean {
         try {
             System.loadLibrary(libraryName)
             return true
         } catch (e: UnsatisfiedLinkError) {
-            Log.error(TAG, "loadLibrary${e.message}")
+            Log.error("loadLibrary", e.message)
             return false
         }
     }
@@ -53,10 +51,11 @@ object Detector {
             val hasLSPatch = appInfo.metaData?.containsKey("lspatch") == true
             return appInfo.metaData?.containsKey("lspatch") == true
         } catch (e: Exception) {
-            Log.error(TAG, "检查LSPatch运行环境时出错: ${e.message}")
+            Log.error("检查LSPatch运行环境时出错: ${e.message}")
             return false
         }
     }
+
 
 
     /**
@@ -68,16 +67,17 @@ object Detector {
             return false
         }
         val isEmbedded = isEmbeddedNative(context)
-        Log.runtime(TAG, "isEmbedded: $isEmbedded")
+        Log.runtime("isEmbedded: $isEmbedded")
         return isEmbedded
     }
+
 
 
     fun initDetector(context: Context) {
         try {
             init(context)
         } catch (e: Exception) {
-            Log.error(TAG, "initDetector ${e.message}")
+            Log.error("initDetector", e.message)
         }
     }
 
@@ -85,10 +85,10 @@ object Detector {
         try {
             val pm = context.packageManager
             val appInfo = pm.getApplicationInfo(packageName, 0)
-            Log.runtime(TAG, "appInfo.sourceDir: " + appInfo.sourceDir)
+            Log.runtime("appInfo.sourceDir: " + appInfo.sourceDir)
             return appInfo.sourceDir
         } catch (_: PackageManager.NameNotFoundException) {
-            Log.runtime(TAG, "Package not found: $packageName")
+            Log.runtime("Package not found: $packageName")
             return null
         }
     }

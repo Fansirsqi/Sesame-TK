@@ -1,31 +1,21 @@
 package fansirsqi.xposed.sesame.util;
-
 import androidx.annotation.NonNull;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
-
 /**
  * 源码来自：Apache Commons Collections 4.4
  * 少量定制
  */
-public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue<E>, Serializable {
-    /**
-     * Serialization version.
-     */
-    @Serial
+public class CircularFifoQueue<E> extends AbstractCollection<E>
+        implements Queue<E>, Serializable {
+    /** Serialization version. */
     private static final long serialVersionUID = -8423413834657610406L;
-    /**
-     * Underlying storage array.
-     */
+    /** Underlying storage array. */
     private transient E[] elements;
-    /**
-     * Array index of first (oldest) queue element.
-     */
+    /** Array index of first (oldest) queue element. */
     private transient int start = 0;
     /**
      * Index mod maxElements of the array position following the last queue
@@ -35,20 +25,21 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
      * the queue [a,b,c].
      */
     private transient int end = 0;
-    /**
-     * Flag to indicate if the queue is currently full.
-     */
+    /** Flag to indicate if the queue is currently full. */
     private transient boolean full = false;
-    /**
-     * Capacity of the queue.
-     */
+    /** Capacity of the queue. */
     private final int maxElements;
-
+    /**
+     * Constructor that creates a queue with the default size of 32.
+     */
+    public CircularFifoQueue() {
+        this(32);
+    }
     /**
      * Constructor that creates a queue with the specified size.
      *
-     * @param size the size of the queue (cannot be changed)
-     * @throws IllegalArgumentException if the size is &lt; 1
+     * @param size  the size of the queue (cannot be changed)
+     * @throws IllegalArgumentException  if the size is &lt; 1
      */
     @SuppressWarnings("unchecked")
     public CircularFifoQueue(final int size) {
@@ -58,16 +49,24 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         elements = (E[]) new Object[size];
         maxElements = elements.length;
     }
-
+    /**
+     * Constructor that creates a queue from the specified collection.
+     * The collection size also sets the queue size.
+     *
+     * @param coll  the collection to copy into the queue, may not be null
+     * @throws NullPointerException if the collection is null
+     */
+    public CircularFifoQueue(final Collection<? extends E> coll) {
+        this(coll.size());
+        addAll(coll);
+    }
     //-----------------------------------------------------------------------
-
     /**
      * Write the queue out using a custom routine.
      *
-     * @param out the output stream
+     * @param out  the output stream
      * @throws IOException if an I/O error occurs while writing to the output stream
      */
-    @Serial
     private void writeObject(final ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
         out.writeInt(size());
@@ -75,15 +74,13 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
             out.writeObject(e);
         }
     }
-
     /**
      * Read the queue in using a custom routine.
      *
-     * @param in the input stream
-     * @throws IOException            if an I/O error occurs while writing to the output stream
+     * @param in  the input stream
+     * @throws IOException if an I/O error occurs while writing to the output stream
      * @throws ClassNotFoundException if the class of a serialized object can not be found
      */
-    @Serial
     @SuppressWarnings("unchecked")
     private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
@@ -101,7 +98,6 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         }
     }
     //-----------------------------------------------------------------------
-
     /**
      * Returns the number of elements stored in the queue.
      *
@@ -119,7 +115,6 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         }
         return size;
     }
-
     /**
      * Returns true if this queue is empty; false otherwise.
      *
@@ -129,7 +124,6 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
     public boolean isEmpty() {
         return size() == 0;
     }
-
     /**
      * {@inheritDoc}
      * <p>
@@ -141,7 +135,6 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
     public boolean isFull() {
         return false;
     }
-
     /**
      * Returns {@code true} if the capacity limit of this queue has been reached,
      * i.e. the number of elements stored in the queue equals its maximum size.
@@ -152,7 +145,14 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
     public boolean isAtFullCapacity() {
         return size() == maxElements;
     }
-
+    /**
+     * Gets the maximum size of the collection (the bound).
+     *
+     * @return the maximum number of elements the collection can hold
+     */
+    public int maxSize() {
+        return maxElements;
+    }
     /**
      * Clears this queue.
      */
@@ -163,7 +163,6 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         end = 0;
         Arrays.fill(elements, null);
     }
-
     public E push(final E element) {
         if (null == element) {
             throw new NullPointerException("Attempted to add null object to queue");
@@ -183,14 +182,13 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         }
         return oldElement;
     }
-
     /**
      * Adds the given element to this queue. If the queue is full, the least recently added
      * element is discarded so that a new element can be inserted.
      *
-     * @param element the element to add
+     * @param element  the element to add
      * @return true, always
-     * @throws NullPointerException if the given element is null
+     * @throws NullPointerException  if the given element is null
      */
     @Override
     public boolean add(final E element) {
@@ -209,7 +207,6 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         }
         return true;
     }
-
     /**
      * Returns the element at the specified position in this queue.
      *
@@ -228,20 +225,18 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         return elements[idx];
     }
     //-----------------------------------------------------------------------
-
     /**
      * Adds the given element to this queue. If the queue is full, the least recently added
      * element is discarded so that a new element can be inserted.
      *
-     * @param element the element to add
+     * @param element  the element to add
      * @return true, always
-     * @throws NullPointerException if the given element is null
+     * @throws NullPointerException  if the given element is null
      */
     @Override
     public boolean offer(final E element) {
         return add(element);
     }
-
     @Override
     public E poll() {
         if (isEmpty()) {
@@ -249,7 +244,6 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         }
         return remove();
     }
-
     @Override
     public E element() {
         if (isEmpty()) {
@@ -257,7 +251,6 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         }
         return peek();
     }
-
     @Override
     public E peek() {
         if (isEmpty()) {
@@ -265,7 +258,6 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         }
         return elements[start];
     }
-
     @Override
     public E remove() {
         if (isEmpty()) {
@@ -282,11 +274,10 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         return element;
     }
     //-----------------------------------------------------------------------
-
     /**
      * Increments the internal index.
      *
-     * @param index the index to increment
+     * @param index  the index to increment
      * @return the updated index
      */
     private int increment(int index) {
@@ -296,11 +287,10 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         }
         return index;
     }
-
     /**
      * Decrements the internal index.
      *
-     * @param index the index to decrement
+     * @param index  the index to decrement
      * @return the updated index
      */
     private int decrement(int index) {
@@ -310,7 +300,6 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
         }
         return index;
     }
-
     /**
      * Returns an iterator over this queue's elements.
      *
@@ -319,16 +308,14 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
     @NonNull
     @Override
     public Iterator<E> iterator() {
-        return new Iterator<>() {
+        return new Iterator<E>() {
             private int index = start;
             private int lastReturnedIndex = -1;
             private boolean isFirst = full;
-
             @Override
             public boolean hasNext() {
                 return isFirst || index != end;
             }
-
             @Override
             public E next() {
                 if (!hasNext()) {
@@ -339,7 +326,6 @@ public class CircularFifoQueue<E> extends AbstractCollection<E> implements Queue
                 index = increment(index);
                 return elements[lastReturnedIndex];
             }
-
             @Override
             public void remove() {
                 if (lastReturnedIndex == -1) {

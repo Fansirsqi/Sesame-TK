@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import fansirsqi.xposed.sesame.util.GlobalThreadPools;
-
 import fansirsqi.xposed.sesame.util.Log;
 import lombok.Getter;
 import lombok.Setter;
@@ -54,7 +52,7 @@ public class GeminiAI implements AnswerAIInterface {
      */
     private String buildRequestBody(String text) {
         text = removeControlCharacters(text);
-        return String.format("{" + "\"contents\":[{" + "\"parts\":[{" + "\"text\":\"%s\"" + "}]" + "}]" + "}", PREFIX + text);
+        return String.format("{"+"\"contents\":[{"+"\"parts\":[{"+"\"text\":\"%s\""+"}]"+"}]"+"}", PREFIX + text);
     }
 
     /**
@@ -106,7 +104,7 @@ public class GeminiAI implements AnswerAIInterface {
                 String json = response.body().string();
                 if (!response.isSuccessful()) {
                     Log.other("Gemini请求失败");
-                    Log.runtime(TAG, "Gemini接口异常：" + json);
+                    Log.runtime("Gemini接口异常：" + json);
                     return result;
                 }
                 JSONObject jsonObject = new JSONObject(json);
@@ -134,27 +132,30 @@ public class GeminiAI implements AnswerAIInterface {
                         .append(answerList.get(i)).append("]\n");
             }
 
-            final String question = "问题：" + title + "\n\n" +
-                    "答案列表：\n\n" + answerStr + "\n\n" +
-                    "请只返回答案列表中的序号";
+            final String question = "问题：" + title + "\n\n" + "答案列表：\n\n" + answerStr + "\n\n" + "请只返回答案列表中的序号";
+            AtomicReference<String> answerResult = new AtomicReference<>();
 
-            // 同步调用，主线程等待结果
-            String answerResult = getAnswerStr(question);
-
-            if (answerResult != null && !answerResult.isEmpty()) {
+            Thread thread = new Thread(() -> {
                 try {
-                    int index = Integer.parseInt(answerResult.trim()) - 1;
+                    answerResult.set(getAnswerStr(question));
+                } catch (Exception e) {
+                    Log.printStackTrace(TAG, e);
+                }
+            });
+            thread.start();
+            thread.join(30000); // 等待最多30秒
+
+            if (answerResult.get() != null && !answerResult.get().isEmpty()) {
+                try {
+                    int index = Integer.parseInt(answerResult.get()) - 1;
                     if (index >= 0 && index < answerList.size()) {
                         return index;
                     }
-                } catch (NumberFormatException e) {
-                    // 如果不是纯数字，尝试模糊匹配答案内容
-                    Log.other("AI🧠回答，非序号格式：" + answerResult);
+                } catch (Exception e) {
+                    Log.other("AI🧠回答，返回数据：" + answerResult.get());
                 }
-
-                // 模糊匹配答案内容
                 for (int i = 0; i < answerList.size(); i++) {
-                    if (answerResult.contains(answerList.get(i))) {
+                    if (answerResult.get().contains(answerList.get(i))) {
                         return i;
                     }
                 }

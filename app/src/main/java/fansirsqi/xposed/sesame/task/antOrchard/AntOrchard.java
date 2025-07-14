@@ -16,12 +16,11 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.util.Files;
-import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.maps.UserMap;
+import fansirsqi.xposed.sesame.util.Maps.UserMap;
 import fansirsqi.xposed.sesame.util.RandomUtil;
 import fansirsqi.xposed.sesame.data.Status;
-
+import fansirsqi.xposed.sesame.util.ThreadUtil;
 public class AntOrchard extends ModelTask {
   private static final String TAG = AntOrchard.class.getSimpleName();
   private String userId;
@@ -63,10 +62,10 @@ public class AntOrchard extends ModelTask {
   @Override
   public Boolean check() {
     if (TaskCommon.IS_ENERGY_TIME){
-      Log.record(TAG,"⏸ 当前为只收能量时间【"+ BaseModel.getEnergyTime().getValue() +"】，停止执行" + getName() + "任务！");
+      Log.record("⏸ 当前为只收能量时间【"+ BaseModel.getEnergyTime().getValue() +"】，停止执行" + getName() + "任务！");
       return false;
     }else if (TaskCommon.IS_MODULE_SLEEP_TIME) {
-      Log.record(TAG,"💤 模块休眠时间【"+ BaseModel.getModelSleepTime().getValue() +"】停止执行" + getName() + "任务！");
+      Log.record("💤 模块休眠时间【"+ BaseModel.getModelSleepTime().getValue() +"】停止执行" + getName() + "任务！");
       return false;
     } else {
       return true;
@@ -75,7 +74,7 @@ public class AntOrchard extends ModelTask {
   @Override
   public void run() {
     try {
-      Log.record(TAG,"执行开始-" + getName());
+      Log.record("执行开始-" + getName());
       executeIntervalInt = Math.max(executeInterval.getValue(), 500);
       String s = AntOrchardRpcCall.orchardIndex();
       JSONObject jo = new JSONObject(s);
@@ -119,7 +118,7 @@ public class AntOrchard extends ModelTask {
       Log.runtime(TAG, "start.run err:");
       Log.printStackTrace(TAG, t);
     }finally {
-      Log.record(TAG,"执行结束-" + getName());
+      Log.record("执行结束-" + getName());
     }
   }
   private String getWua() {
@@ -140,7 +139,7 @@ public class AntOrchard extends ModelTask {
     if (stageAfter - stageBefore > 1) {
       return true;
     }
-    Log.record(TAG,"施肥只加0.01%进度今日停止施肥！");
+    Log.record("施肥只加0.01%进度今日停止施肥！");
     return false;
   }
   private void orchardSpreadManure() {
@@ -199,7 +198,7 @@ public class AntOrchard extends ModelTask {
             continue;
           }
         } finally {
-          GlobalThreadPools.sleep(executeIntervalInt);
+          ThreadUtil.sleep(executeIntervalInt);
         }
         break;
       } while (true);
@@ -255,7 +254,7 @@ public class AntOrchard extends ModelTask {
               Log.runtime(jo.getString("resultDesc"), jo.toString());
             }
           } else {
-            Log.record(TAG,"七日礼包已领取");
+            Log.record("七日礼包已领取");
           }
           break;
         }
@@ -312,7 +311,7 @@ public class AntOrchard extends ModelTask {
           Log.runtime(joSign.getString("resultDesc"), joSign.toString());
         }
       } else {
-        Log.record(TAG,"农场今日已签到");
+        Log.record("农场今日已签到");
       }
     } catch (Throwable t) {
       Log.runtime(TAG, "orchardSign err:");
@@ -458,19 +457,19 @@ public class AntOrchard extends ModelTask {
       }
       Set<String> friendSet = assistFriendList.getValue();
       for (String uid : friendSet) {
-        String shareId = Base64.encodeToString((uid + "-" + RandomUtil.getRandomInt(5) + "ANTFARM_ORCHARD_SHARE_P2P").getBytes(), Base64.NO_WRAP);
+        String shareId = Base64.encodeToString((uid + "-" + RandomUtil.getRandom(5) + "ANTFARM_ORCHARD_SHARE_P2P").getBytes(), Base64.NO_WRAP);
         String str = AntOrchardRpcCall.achieveBeShareP2P(shareId);
         JSONObject jsonObject = new JSONObject(str);
-        GlobalThreadPools.sleep(800);
+        ThreadUtil.sleep(800);
         String name = UserMap.getMaskName(uid);
         if (!jsonObject.optBoolean("success")) {
           String code = jsonObject.getString("code");
           if ("600000027".equals(code)) {
-            Log.record(TAG,"农场助力💪今日助力他人次数上限");
+            Log.record("农场助力💪今日助力他人次数上限");
             Status.antOrchardAssistFriendToday();
             return;
           }
-          Log.record(TAG,"农场助力😔失败[" + name + "]" + jsonObject.optString("desc"));
+          Log.record("农场助力😔失败[" + name + "]" + jsonObject.optString("desc"));
           continue;
         }
         Log.farm("农场助力💪[助力:" + name + "]");

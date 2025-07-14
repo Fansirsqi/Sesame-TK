@@ -81,7 +81,7 @@ public class TongyiAI implements AnswerAIInterface {
             String json = response.body().string();
             if (!response.isSuccessful()) {
                 Log.other("Tongyi请求失败");
-                Log.record(TAG,"Tongyi接口异常：" + json);
+                Log.record("Tongyi接口异常：" + json);
                 return result;
             }
             JSONObject jsonObject = new JSONObject(json);
@@ -125,7 +125,7 @@ public class TongyiAI implements AnswerAIInterface {
                     return index;
                 }
             } catch (Exception e) {
-                Log.record(TAG,"AI🧠回答，返回数据：" + answerResult);
+                Log.record("AI🧠回答，返回数据：" + answerResult);
             }
             for (int i = 0; i < size; i++) {
                 if (answerResult.contains(answerList.get(i))) {

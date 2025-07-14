@@ -1,6 +1,6 @@
 package fansirsqi.xposed.sesame.task.greenFinance;
 import fansirsqi.xposed.sesame.hook.RequestManager;
-import fansirsqi.xposed.sesame.util.maps.UserMap;
+import fansirsqi.xposed.sesame.util.Maps.UserMap;
 import org.json.JSONArray;
 /**
  * 绿色经营Rpc请求类

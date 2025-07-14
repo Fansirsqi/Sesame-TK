@@ -100,7 +100,7 @@ public class DeepSeek implements AnswerAIInterface {
             String json = response.body().string();
             if (!response.isSuccessful()) {
                 Log.other("DeepSeek请求失败");
-                Log.runtime(TAG,"DeepSeek接口异常：" + json);
+                Log.runtime("DeepSeek接口异常：" + json);
                 return "";
             }
             return json;

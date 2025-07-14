@@ -1,19 +1,19 @@
 package fansirsqi.xposed.sesame.task.antForest;
 import org.json.JSONObject;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.ResChecker;
+import fansirsqi.xposed.sesame.util.ResUtil;
 public class GreenLife {
     public static final String TAG = GreenLife.class.getSimpleName();
     /** 森林集市 */
     public static void ForestMarket(String sourceType) {
         try {
             JSONObject jo = new JSONObject(AntForestRpcCall.consultForSendEnergyByAction(sourceType));
-            if (ResChecker.checkRes(TAG,jo)) {
+            if (ResUtil.checkSuccess(TAG,jo)) {
                 JSONObject data = jo.getJSONObject("data");
                 if (data.optBoolean("canSendEnergy", false)) {
                     Thread.sleep(300);
                     jo = new JSONObject(AntForestRpcCall.sendEnergyByAction(sourceType));
-                    if (ResChecker.checkRes(TAG,jo)) {
+                    if (ResUtil.checkSuccess(TAG,jo)) {
                         data = jo.getJSONObject("data");
                         if (data.optBoolean("canSendEnergy", false)) {
                             int receivedEnergyAmount = data.getInt("receivedEnergyAmount");

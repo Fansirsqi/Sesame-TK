@@ -3,7 +3,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.maps.UserMap;
+import fansirsqi.xposed.sesame.util.Maps.UserMap;
 import java.util.Objects;
 /**
  * RuntimeInfo 用于存储和管理运行时的配置信息。

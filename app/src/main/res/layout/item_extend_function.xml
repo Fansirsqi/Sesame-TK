@@ -5,11 +5,11 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/button_extend_item"
+        style="?android:attr/buttonBarButtonStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/accept_gift"
         android:background="@drawable/button_extend"
         android:textColor="@color/textColorPrimary"
         android:gravity="center"/>

@@ -22,7 +22,6 @@ import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
 import fansirsqi.xposed.sesame.util.Log;
 
 public class ListAdapter extends BaseAdapter {
-    private static final String TAG = "ListAdapter";
     @SuppressLint("StaticFieldLeak")
     private static ListAdapter adapter;
     private static ListDialog.ListType listType;
@@ -76,7 +75,7 @@ public class ListAdapter extends BaseAdapter {
                 return contains1 ? -1 : 1;
             });
         } catch (Exception e) {
-            Log.runtime(TAG,"ListAdapter error");
+            Log.runtime("ListAdapter error");
             Log.printStackTrace(e);
         }
     }
