@@ -1,5 +1,5 @@
 name: 📦构建官方测试版本
-run-name: 📦 ${{ github.actor }} @ 构建lite测试版本
+run-name: 📦 ${{ github.actor }} @ 构建官方测试版本
 
 on:
   push:
