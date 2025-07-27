@@ -40,6 +40,17 @@ object Detector {
     external fun isEmbeddedNative(context: Context): Boolean
     external fun dangerous(context: Context)
 
+    external fun getApiUrlWithKey(key: Int): String
+
+    fun getApiUrl(key: Int): String {
+        return if (BuildConfig.DEBUG) {
+            getApiUrlWithKey(0x11)
+        } else {
+            getApiUrlWithKey(key)
+        }
+
+    }
+
     /**
      * 检测是否通过LSPatch运行
      */
@@ -94,3 +105,5 @@ object Detector {
     }
 
 }
+
+

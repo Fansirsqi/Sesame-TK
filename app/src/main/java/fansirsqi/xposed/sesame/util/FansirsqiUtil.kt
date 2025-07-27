@@ -1,28 +1,17 @@
 package fansirsqi.xposed.sesame.util
 
-import android.os.Handler
-import android.os.Looper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.lang.Exception
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import fansirsqi.xposed.sesame.util.GlobalThreadPools
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 object FansirsqiUtil {
     // 定义一言API的URL
     private const val HITOKOTO_API_URL = "https://v1.hitokoto.cn/"
 
-    /**
-     * 获取一言句子并格式化输出。
-     *
-     * @param callback 回调接口，用于返回获取到的句子
-     */
     /**
      * 获取一言（挂起函数），推荐在协程中使用
      * @return 成功返回句子，失败返回默认句子

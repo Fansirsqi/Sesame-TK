@@ -183,7 +183,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
         if (General.MODULE_PACKAGE_NAME.equals(loadPackageParam.packageName)) {
             try {
                 Class<?> applicationClass = loadPackageParam.classLoader.loadClass("android.app.Application");
-
                 XposedHelpers.findAndHookMethod(applicationClass, "onCreate", new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
@@ -279,6 +278,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         new XC_MethodHook() {
                             @Override
                             protected void afterHookedMethod(MethodHookParam param) {
+                                mainHandler = new Handler(Looper.getMainLooper());
                                 Service appService = (Service) param.thisObject;
                                 if (!General.CURRENT_USING_SERVICE.equals(appService.getClass().getCanonicalName())) {
                                     return;
@@ -297,8 +297,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                                     Log.runtime(TAG, "hook dexkit successfully");
                                 }
                                 service = appService;
-                                mainHandler = new Handler(Looper.getMainLooper());
-
                                 mainTask = BaseTask.newInstance("MAIN_TASK", () -> {
                                     try {
                                         if (!init) {
