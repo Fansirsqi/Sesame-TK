@@ -1,9 +1,15 @@
 package fansirsqi.xposed.sesame.task.antDodo;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+
+import fansirsqi.xposed.sesame.data.DataCache;
 import fansirsqi.xposed.sesame.entity.AlipayUser;
 import fansirsqi.xposed.sesame.model.BaseModel;
 import fansirsqi.xposed.sesame.model.ModelFields;
@@ -183,66 +189,79 @@ public class AntDodo extends ModelTask {
         }
     }
     /**
-     * 获得任务奖励
+     * 神奇物种任务
      */
     private void receiveTaskAward() {
         try {
-            // 标签用于循环控制，确保在任务完成后可以继续处理
-            th: do {
+            // 获取不能完成的任务列表
+            List<String> taskList = new ArrayList<>(List.of("HELP_FRIEND_COLLECT"));
+            List<String> cachedSet = DataCache.INSTANCE.getData("dodoTaskList", taskList);
+            taskList = new ArrayList<>(new LinkedHashSet<>(cachedSet));
+
+            while (true) {
+                boolean doubleCheck = false;
                 String response = AntDodoRpcCall.taskList(); // 调用任务列表接口
                 JSONObject jsonResponse = new JSONObject(response); // 解析响应为 JSON 对象
                 // 检查响应结果码是否成功
-                if (ResChecker.checkRes(TAG, jsonResponse)) {
-                    // 获取任务组信息列表
-                    JSONArray taskGroupInfoList = jsonResponse.getJSONObject("data").optJSONArray("taskGroupInfoList");
-                    if (taskGroupInfoList == null) return; // 如果任务组为空则返回
-                    // 遍历每个任务组
-                    for (int i = 0; i < taskGroupInfoList.length(); i++) {
-                        JSONObject antDodoTask = taskGroupInfoList.getJSONObject(i);
-                        JSONArray taskInfoList = antDodoTask.getJSONArray("taskInfoList"); // 获取任务信息列表
-                        // 遍历每个任务
-                        for (int j = 0; j < taskInfoList.length(); j++) {
-                            JSONObject taskInfo = taskInfoList.getJSONObject(j);
-                            JSONObject taskBaseInfo = taskInfo.getJSONObject("taskBaseInfo"); // 获取任务基本信息
-                            JSONObject bizInfo = new JSONObject(taskBaseInfo.getString("bizInfo")); // 获取业务信息
-                            String taskType = taskBaseInfo.getString("taskType"); // 获取任务类型
-                            String taskTitle = bizInfo.optString("taskTitle", taskType); // 获取任务标题
-                            String awardCount = bizInfo.optString("awardCount", "1"); // 获取奖励数量
-                            String sceneCode = taskBaseInfo.getString("sceneCode"); // 获取场景代码
-                            String taskStatus = taskBaseInfo.getString("taskStatus"); // 获取任务状态
-                            // 如果任务已完成，领取任务奖励
-                            if (TaskStatus.FINISHED.name().equals(taskStatus)) {
-                                JSONObject joAward = new JSONObject(
-                                        AntDodoRpcCall.receiveTaskAward(sceneCode, taskType)); // 领取奖励请求
-                                if (joAward.optBoolean("success")) {
-                                    Log.forest("任务奖励🎖️[" + taskTitle + "]#" + awardCount + "个");
-                                } else {
-                                    Log.record(TAG,"领取失败，" + response); // 记录领取失败信息
-                                }
-                                Log.runtime(joAward.toString()); // 打印奖励响应
+                if (!ResChecker.checkRes(TAG, jsonResponse)) {
+                    Log.record(TAG, "查询任务列表失败：" + jsonResponse.getString("resultDesc"));
+                    Log.runtime(response);
+                    break;
+                }
+                // 获取任务组信息列表
+                JSONArray taskGroupInfoList = jsonResponse.getJSONObject("data").optJSONArray("taskGroupInfoList");
+                if (taskGroupInfoList == null) return; // 如果任务组为空则返回
+                // 遍历每个任务组
+                for (int i = 0; i < taskGroupInfoList.length(); i++) {
+                    JSONObject antDodoTask = taskGroupInfoList.getJSONObject(i);
+                    JSONArray taskInfoList = antDodoTask.getJSONArray("taskInfoList"); // 获取任务信息列表
+                    // 遍历每个任务
+                    for (int j = 0; j < taskInfoList.length(); j++) {
+                        JSONObject taskInfo = taskInfoList.getJSONObject(j);
+                        JSONObject taskBaseInfo = taskInfo.getJSONObject("taskBaseInfo"); // 获取任务基本信息
+                        JSONObject bizInfo = new JSONObject(taskBaseInfo.getString("bizInfo")); // 获取业务信息
+                        String taskType = taskBaseInfo.getString("taskType"); // 获取任务类型
+                        String taskTitle = bizInfo.optString("taskTitle", taskType); // 获取任务标题
+                        String awardCount = bizInfo.optString("awardCount", "1"); // 获取奖励数量
+                        String sceneCode = taskBaseInfo.getString("sceneCode"); // 获取场景代码
+                        String taskStatus = taskBaseInfo.getString("taskStatus"); // 获取任务状态
+                        // 如果任务已完成，领取任务奖励
+                        if (TaskStatus.FINISHED.name().equals(taskStatus)) {
+                            JSONObject joAward = new JSONObject(
+                                    AntDodoRpcCall.receiveTaskAward(sceneCode, taskType)); // 领取奖励请求
+                            if (joAward.optBoolean("success")) {
+                                doubleCheck = true;
+                                Log.forest("任务奖励🎖️[" + taskTitle + "]#" + awardCount + "个");
+                            } else {
+                                Log.record(TAG,"领取失败，" + response); // 记录领取失败信息
                             }
-                            // 如果任务待完成，处理特定类型的任务
-                            else if (TaskStatus.TODO.name().equals(taskStatus)) {
-                                if ("SEND_FRIEND_CARD".equals(taskType)) {
-                                    // 尝试完成任务
-                                    JSONObject joFinishTask = new JSONObject(
-                                            AntDodoRpcCall.finishTask(sceneCode, taskType)); // 完成任务请求
-                                    if (joFinishTask.optBoolean("success")) {
-                                        Log.forest("物种任务🧾️[" + taskTitle + "]");
-                                        continue th; // 成功完成任务，返回外层循环
-                                    } else {
-                                        Log.record(TAG,"完成任务失败，" + taskTitle); // 记录完成任务失败信息
-                                    }
+                            Log.runtime(joAward.toString()); // 打印奖励响应
+                        }
+                        // 如果任务待完成，处理特定类型的任务
+                        else if (TaskStatus.TODO.name().equals(taskStatus)) {
+                            if (!taskList.contains(taskType)) {
+                                // 尝试完成任务
+                                JSONObject joFinishTask = new JSONObject(
+                                        AntDodoRpcCall.finishTask(sceneCode, taskType)); // 完成任务请求
+                                if (joFinishTask.optBoolean("success")) {
+                                    Log.forest("物种任务🧾️[" + taskTitle + "]");
+                                    doubleCheck = true;
+                                } else {
+                                    Log.record(TAG,"完成任务失败，" + taskTitle); // 记录完成任务失败信息
+                                    taskList.add(taskType);
                                 }
+
                             }
                         }
+                        GlobalThreadPools.sleep(500);
                     }
-                } else {
-                    Log.record(jsonResponse.getString("resultDesc")); // 记录失败描述
-                    Log.runtime(response); // 打印响应内容
                 }
-                break; // 退出循环
-            } while (true);
+                if (!doubleCheck) break;
+                DataCache.INSTANCE.saveData("forestTaskList", taskList);
+            }
+        } catch (JSONException e) {
+            Log.error(TAG, "JSON解析错误: " + e.getMessage());
+            Log.printStackTrace(TAG, e);
         } catch (Throwable t) {
             Log.runtime(TAG, "AntDodo ReceiveTaskAward 错误:");
             Log.printStackTrace(TAG, t); // 打印异常栈
