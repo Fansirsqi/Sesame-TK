@@ -52,6 +52,7 @@ import fansirsqi.xposed.sesame.util.ResChecker;
 import fansirsqi.xposed.sesame.data.Status;
 import fansirsqi.xposed.sesame.util.StringUtil;
 import fansirsqi.xposed.sesame.util.TimeUtil;
+import fansirsqi.xposed.sesame.util.TimeCounter;
 import lombok.ToString;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -281,24 +282,29 @@ public class AntFarm extends ModelTask {
     @Override
     public void run() {
         try {
+            TimeCounter tc = new TimeCounter(TAG);
             String userId = UserMap.getCurrentUid();
-            Log.record(TAG, "执行开始-蚂蚁" + getName());
+            Log.record(TAG, "执行开始-蚂蚁" + getName()+ " 执行次数:" +getRunCnts());
             if (enterFarm() == null) {
                 return;
             }
             listFarmTool();//装载道具信息
+            tc.countDebug("装载道具信息");
 
-            if (rewardFriend.getValue()) {
+            if (rewardFriend.getValue() && (getRunCnts() > 1)) {
                 rewardFriend();
+                tc.countDebug("打赏好友");
             }
-            if (sendBackAnimal.getValue()) {
+            if (sendBackAnimal.getValue() && (getRunCnts() > 1)) {
                 sendBackAnimal();
+                tc.countDebug("遣返");
             }
 
-            if (receiveFarmToolReward.getValue()) {
+            if (receiveFarmToolReward.getValue() && (getRunCnts() > 1)) {
                 receiveToolTaskReward();
+                tc.countDebug("收取道具奖励");
             }
-            if (recordFarmGame.getValue()) {
+            if (recordFarmGame.getValue() && (getRunCnts() > 1)) {
                 for (String time : farmGameTime.getValue()) {
                     if (TimeUtil.checkNowInTimeRange(time)) {
                         recordFarmGame(GameType.starGame);
@@ -308,77 +314,101 @@ public class AntFarm extends ModelTask {
                         break;
                     }
                 }
+                tc.countDebug("游戏改分(星星球、登山赛、飞行赛、揍小鸡)");
             }
-            if (kitchen.getValue()) {
+            if (kitchen.getValue() && (getRunCnts() > 1)) {
                 collectDailyFoodMaterial();
                 collectDailyLimitedFoodMaterial();
                 cook();
+                tc.countDebug("小鸡厨房");
             }
 
-            if (chickenDiary.getValue()) {
+            if (chickenDiary.getValue() && (getRunCnts() > 1)) {
                 doChickenDiary();
+                tc.countDebug("小鸡日记");
             }
 
             if (useNewEggCard.getValue()) {
                 useFarmTool(ownerFarmId, ToolType.NEWEGGTOOL);
                 syncAnimalStatus(ownerFarmId);
+                tc.countDebug("使用新蛋卡");
             }
             if (harvestProduce.getValue() && benevolenceScore >= 1) {
                 Log.record(TAG, "有可收取的爱心鸡蛋");
                 harvestProduce(ownerFarmId);
+                tc.countDebug("收鸡蛋");
             }
             if (donation.getValue() && Status.canDonationEgg(userId) && harvestBenevolenceScore >= 1) {
                 handleDonation(donationCount.getValue());
+                tc.countDebug("每日捐蛋");
             }
-            if (receiveFarmTaskAward.getValue()) {
+            if (receiveFarmTaskAward.getValue() && (getRunCnts() > 1)) {
                 doFarmTasks();
+                tc.countDebug("饲料任务");
                 receiveFarmAwards();
+                tc.countDebug("收取饲料奖励");
             }
 
             recallAnimal();
+            tc.countDebug("召回小鸡");
 
             handleAutoFeedAnimal();
+            tc.countDebug("喂食");
 
             // 到访小鸡送礼
-            visitAnimal();
-            // 送麦子
-            visit();
+            if((getRunCnts() > 1)) {
+                visitAnimal();
+                tc.countDebug("到访小鸡送礼");
+                // 送麦子
+                visit();
+                tc.countDebug("送麦子");
+            }
             // 帮好友喂鸡
             feedFriend();
+            tc.countDebug("帮好友喂鸡");
             // 通知好友赶鸡
-            if (notifyFriend.getValue()) {
+            if (notifyFriend.getValue()  && (getRunCnts() > 1)) {
                 notifyFriend();
+                tc.countDebug("通知好友赶鸡");
             }
 
             // 抽抽乐
-            if (enableChouchoule.getValue()) {
+            if (enableChouchoule.getValue() && (getRunCnts() > 1)) {
                 ChouChouLe ccl = new ChouChouLe();
                 ccl.chouchoule();
+                tc.countDebug("抽抽乐");
             }
 
             // 雇佣小鸡
-            if (hireAnimal.getValue()) {
+            if (hireAnimal.getValue() && (getRunCnts() > 1)) {
                 hireAnimal();
+                tc.countDebug("雇佣小鸡");
             }
-            if (getFeed.getValue()) {
+            if (getFeed.getValue() && (getRunCnts() > 1)) {
                 letsGetChickenFeedTogether();
+                tc.countDebug("一起拿饲料");
             }
             //家庭
             if (family.getValue()) {
 
 //                family();
                 AntFarmFamily.INSTANCE.run(familyOptions, notInviteList);
+                tc.countDebug("家庭任务");
             }
             // 开宝箱
-            if (enableDdrawGameCenterAward.getValue()) {
+            if (enableDdrawGameCenterAward.getValue() && (getRunCnts() > 1)) {
                 drawGameCenterAward();
+                tc.countDebug("开宝箱");
             }
             // 小鸡乐园道具兑换
-            if (paradiseCoinExchangeBenefit.getValue()) {
+            if (paradiseCoinExchangeBenefit.getValue() && (getRunCnts() > 1)) {
                 paradiseCoinExchangeBenefit();
+                tc.countDebug("小鸡乐园道具兑换");
             }
             //小鸡睡觉&起床
             animalSleepAndWake();
+            tc.countDebug("小鸡睡觉&起床");
+            tc.stop();
         } catch (Throwable t) {
             Log.runtime(TAG, "AntFarm.start.run err:");
             Log.printStackTrace(TAG, t);
@@ -1352,11 +1382,12 @@ public class AntFarm extends ModelTask {
                                 }
                             }
                         }
+                        GlobalThreadPools.sleep(1000);
                     }
                     if ("ANSWER".equals(bizKey) && !Status.hasFlagToday(CACHED_FLAG)) {//单独处理答题任务
                         answerQuestion("100"); //答题
+                        GlobalThreadPools.sleep(1000);
                     }
-                    GlobalThreadPools.sleep(1000);
                 }
             }
             DataCache.INSTANCE.saveData("farmCompletedTaskSet", taskList);
@@ -1396,9 +1427,9 @@ public class AntFarm extends ModelTask {
                                 doubleCheck = true;
                                 if (unreceiveTaskAward > 0)
                                     unreceiveTaskAward--;
+                                GlobalThreadPools.sleep(1000);
                             }
                         }
-                        GlobalThreadPools.sleep(1000);
                     }
                 }
             } while (doubleCheck);
@@ -2376,14 +2407,14 @@ public class AntFarm extends ModelTask {
     private void drawGameCenterAward() {
         try {
             JSONObject jo = new JSONObject(AntFarmRpcCall.queryGameList());
-            GlobalThreadPools.sleep(3000);
+            // GlobalThreadPools.sleep(3000);
             if (jo.optBoolean("success")) {
                 JSONObject gameDrawAwardActivity = jo.getJSONObject("gameDrawAwardActivity");
                 int canUseTimes = gameDrawAwardActivity.getInt("canUseTimes");
                 while (canUseTimes > 0) {
                     try {
-                        jo = new JSONObject(AntFarmRpcCall.drawGameCenterAward());
                         GlobalThreadPools.sleep(3000);
+                        jo = new JSONObject(AntFarmRpcCall.drawGameCenterAward());
                         if (jo.optBoolean("success")) {
                             canUseTimes = jo.getInt("drawRightsTimes");
                             JSONArray gameCenterDrawAwardList = jo.getJSONArray("gameCenterDrawAwardList");
@@ -2608,9 +2639,9 @@ public class AntFarm extends ModelTask {
     }
 
     public enum ToolType {
-        STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL;
+        STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL, BIG_EATER_TOOL;
 
-        public static final CharSequence[] nickNames = {"蹭饭卡", "加速卡", "救济卡", "篱笆卡", "新蛋卡", "公仔补签卡", "普通装扮补签卡", "高级装扮补签卡"};
+        public static final CharSequence[] nickNames = {"蹭饭卡", "加速卡", "救济卡", "篱笆卡", "新蛋卡", "公仔补签卡", "普通装扮补签卡", "高级装扮补签卡", "加饭卡"};
 
         public CharSequence nickName() {
             return nickNames[ordinal()];

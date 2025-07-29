@@ -169,8 +169,12 @@ public class AntOcean extends ModelTask {
 
     @Override
     public void run() {
+        if(getRunCnts() <= 1) {
+            Log.record(TAG,"第一轮跳过");
+            return;
+        }        
         try {
-            Log.record(TAG, "执行开始-" + getName());
+            Log.record(TAG, "执行开始-" + getName()+ " 执行次数:" +getRunCnts());
 
             if (!queryOceanStatus()) {
                 return;
@@ -684,6 +688,7 @@ public class AntOcean extends ModelTask {
                         } else {
                             Log.error(TAG, "海洋奖励🌊" + joAward);
                         }
+                        GlobalThreadPools.sleep(500);
                     } else if (TaskStatus.TODO.name().equals(taskStatus)) {
                         if (!taskList.contains(taskType)) {
                             if (taskTitle.contains("答题")) {
@@ -700,8 +705,9 @@ public class AntOcean extends ModelTask {
                             }
 
                         }
+                        GlobalThreadPools.sleep(500);
                     }
-                    GlobalThreadPools.sleep(500);
+
 
                 }
                 if (!done) break;
@@ -732,7 +738,7 @@ public class AntOcean extends ModelTask {
                 JSONArray options = questionJson.getJSONArray("options");
                 String answer = options.getString(0);
                 String submitResponse = AntOceanRpcCall.submitAnswer(answer, questionId);
-                GlobalThreadPools.sleep(500);
+                // GlobalThreadPools.sleep(500);
                 JSONObject submitJson = new JSONObject(submitResponse);
                 if (submitJson.getInt("resultCode") == 200) {
                     Log.forest(TAG, "🌊海洋答题成功");
@@ -757,7 +763,7 @@ public class AntOcean extends ModelTask {
             JSONObject homeJson = new JSONObject(homeResponse);
             if (ResChecker.checkRes(TAG, homeJson)) {
                 String taskListResponse = AntOceanRpcCall.PDLqueryTaskList();
-                GlobalThreadPools.sleep(300);
+                // GlobalThreadPools.sleep(300);
                 JSONObject taskListJson = new JSONObject(taskListResponse);
                 JSONArray antOceanTaskVOList = taskListJson.getJSONArray("antOceanTaskVOList");
                 for (int i = 0; i < antOceanTaskVOList.length(); i++) {
@@ -770,7 +776,7 @@ public class AntOcean extends ModelTask {
                         int awardCount = bizInfo.getInt("awardCount");
                         String taskType = task.getString("taskType");
                         String receiveTaskResponse = AntOceanRpcCall.PDLreceiveTaskAward(taskType);
-                        GlobalThreadPools.sleep(300);
+                        // GlobalThreadPools.sleep(300);
                         JSONObject receiveTaskJson = new JSONObject(receiveTaskResponse);
                         int code = receiveTaskJson.getInt("code");
                         if (code == 100000000) {
@@ -846,11 +852,11 @@ public class AntOcean extends ModelTask {
                     }
                     String str = "保护海洋生态🏖️[" + itemName + "]#第" + appliedTimes + "次" + "-获得奖励" + award;
                     Log.forest(str);
+                    GlobalThreadPools.sleep(300);
                 } else {
                     Log.error("保护海洋生态🏖️[" + itemName + "]#发生未知错误，停止申请");
                     break;
                 }
-                GlobalThreadPools.sleep(300);
                 appliedTimes = queryCultivationDetail(cultivationCode, projectCode, count);
                 if (appliedTimes < 0) {
                     break;

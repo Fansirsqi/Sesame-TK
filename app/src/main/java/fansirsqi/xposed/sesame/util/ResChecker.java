@@ -28,9 +28,19 @@ public class ResChecker {
             }
 
             // 检查 memo 字段
-            if ("SUCCESS".equalsIgnoreCase(jo.optString("memo", ""))) {
+            String memo_info = jo.optString("memo", "");
+            if ("SUCCESS".equalsIgnoreCase(memo_info)) {
                 return true;
             }
+            if ("任务已完成".equalsIgnoreCase(memo_info)) {
+                return true;
+            }
+            if ("饲料槽已满".equalsIgnoreCase(memo_info)) {
+                return true;
+            }
+            if ("我的小鸡在睡觉中，无法操作".equalsIgnoreCase(memo_info)) {
+                return true;
+            }            
 
             Log.error(TAG, "Check failed: " + jo);
             return false;

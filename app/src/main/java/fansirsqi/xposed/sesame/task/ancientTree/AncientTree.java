@@ -55,8 +55,12 @@ public class AncientTree extends ModelTask {
     }
     @Override
     public void run() {
+        if(getRunCnts() <= 1) {
+            Log.record(TAG,"第一轮跳过");
+            return;
+        }
         try {
-            Log.record(TAG,"开始执行"+getName());
+            Log.record(TAG,"开始执行"+getName()+ " 执行次数:" +getRunCnts());
             ancientTree(ancientTreeCityCodeList.getValue());
         } catch (Throwable t) {
             Log.runtime(TAG, "start.run err:");

@@ -30,6 +30,7 @@ import fansirsqi.xposed.sesame.util.RandomUtil;
 import fansirsqi.xposed.sesame.util.ResChecker;
 import fansirsqi.xposed.sesame.data.Status;
 import fansirsqi.xposed.sesame.util.TimeUtil;
+import fansirsqi.xposed.sesame.util.TimeCounter;
 
 public class AntSports extends ModelTask {
     private static final String TAG = AntSports.class.getSimpleName();
@@ -129,9 +130,9 @@ public class AntSports extends ModelTask {
 
     @Override
     public void run() {
-        Log.record(TAG, "执行开始-" + getName());
+        TimeCounter tc = new TimeCounter(TAG);
+        Log.record(TAG, "执行开始-" + getName()+ " 执行次数:" +getRunCnts());
         try {
-
             if (!Status.hasFlagToday("sport::syncStep") && TimeUtil.isNowAfterOrCompareTimeStr("0600")) {
                 addChildTask(new ChildModelTask("syncStep", () -> {
                     int step = tmpStepCount();
@@ -147,34 +148,56 @@ public class AntSports extends ModelTask {
                         Log.printStackTrace(TAG, t);
                     }
                 }));
+                tc.countDebug("同步步数");
             }
-            if (sportsTasks.getValue())
-                sportsTasks();
+            if (sportsTasks.getValue()) {
+                sportsTasks();                
+                tc.countDebug("运动任务");
+            }
+
             ClassLoader loader = ApplicationHook.getClassLoader();
             if (walk.getValue()) {
                 getWalkPathThemeIdOnConfig();
                 walk();
+                tc.countDebug("行走");
             }
-            if (openTreasureBox.getValue() && !walk.getValue())
+            if (openTreasureBox.getValue() && !walk.getValue()) {
                 queryMyHomePage(loader);
-            if (donateCharityCoin.getValue() && Status.canDonateCharityCoin())
+                tc.countDebug("开启宝箱");
+            }
+
+            if (donateCharityCoin.getValue() && Status.canDonateCharityCoin()) {
                 queryProjectList(loader);
-            if (minExchangeCount.getValue() > 0 && Status.canExchangeToday(UserMap.getCurrentUid()))
+                tc.countDebug("捐运动币");
+            }
+                
+            if (minExchangeCount.getValue() > 0 && Status.canExchangeToday(UserMap.getCurrentUid())) {
                 queryWalkStep(loader);
+                tc.countDebug("最小捐步步数");
+            }
+                
             if (tiyubiz.getValue()) {
                 userTaskGroupQuery("SPORTS_DAILY_SIGN_GROUP");
                 userTaskGroupQuery("SPORTS_DAILY_GROUP");
+                tc.countDebug("查询任务");
                 userTaskRightsReceive();
+                tc.countDebug("userTaskRightsReceive");
                 pathFeatureQuery();
+                tc.countDebug("pathFeatureQuery");
                 participate();
+                tc.countDebug("文体中心");
             }
             if (battleForFriends.getValue()) {
                 queryClubHome();
                 queryTrainItem();
                 buyMember();
+                tc.countDebug("抢好友");
             }
-            if (receiveCoinAsset.getValue())
+            if (receiveCoinAsset.getValue()) {
                 receiveCoinAsset();
+                tc.countDebug("收运动币");
+            }
+            tc.stop();
         } catch (Throwable t) {
             Log.runtime(TAG, "start.run err:");
             Log.printStackTrace(TAG, t);
@@ -249,10 +272,9 @@ public class AntSports extends ModelTask {
                             Log.record(TAG, "做任务得运动币👯[完成任务：" + taskName + "，得" + prizeAmount + "💰]");
                             receiveCoinAsset();
                         }
-                        if (limitConfigNum > 1)
+                        if (limitConfigNum > 1) {
                             GlobalThreadPools.sleep(10000);
-                        else
-                            GlobalThreadPools.sleep(1000);
+                        }
                     }
                 }
             }

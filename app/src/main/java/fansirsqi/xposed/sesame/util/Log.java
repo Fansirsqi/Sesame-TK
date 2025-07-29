@@ -50,8 +50,8 @@ public class Log {
     }
 
     public static void runtime(String msg) {
-        system(msg);
-        RUNTIME_LOGGER.info(TAG + "{}", msg);
+//        system(msg);
+//        RUNTIME_LOGGER.info(TAG + "{}", msg);
     }
 
     public static void runtime(String TAG, String msg) {

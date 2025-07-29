@@ -70,8 +70,12 @@ public class AntDodo extends ModelTask {
     }
     @Override
     public void run() {
+        if(getRunCnts() <= 1) {
+            Log.record(TAG,"第一轮跳过");
+            return;
+        }        
         try {
-            Log.record(TAG,"执行开始-" + getName());
+            Log.record(TAG,"执行开始-" + getName()+ " 执行次数:" +getRunCnts());
             receiveTaskAward();
             propList();
             collect();
@@ -270,7 +274,6 @@ public class AntDodo extends ModelTask {
                         String propName = prop.getJSONObject("propConfig").getString("propName");
                         int holdsNum = prop.optInt("holdsNum", 0);
                         jo = new JSONObject(AntDodoRpcCall.consumeProp(propId, propType));
-                        GlobalThreadPools.sleep(300);
                         if (!ResChecker.checkRes(TAG,jo)) {
                             Log.record(jo.getString("resultDesc"));
                             Log.runtime(jo.toString());
@@ -295,6 +298,7 @@ public class AntDodo extends ModelTask {
                         } else {
                             Log.forest("使用道具🎭[" + propName + "]");
                         }
+                        GlobalThreadPools.sleep(300);
                         if (holdsNum > 1) {
                             continue th;
                         }

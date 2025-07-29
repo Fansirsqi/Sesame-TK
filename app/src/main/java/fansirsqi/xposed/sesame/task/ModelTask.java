@@ -24,6 +24,7 @@ public abstract class ModelTask extends Model {
     private static final ThreadPoolExecutor MAIN_THREAD_POOL = new ThreadPoolExecutor(getModelArray().length, Integer.MAX_VALUE, 30L, TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadPoolExecutor.CallerRunsPolicy());
     private final Map<String, ChildModelTask> childTaskMap = new ConcurrentHashMap<>();
     private ChildTaskExecutor childTaskExecutor;
+    private int run_cnts = 0;
     @Getter
     private final Runnable mainRunnable = new Runnable() {
         private final ModelTask task = ModelTask.this;
@@ -47,6 +48,14 @@ public abstract class ModelTask extends Model {
 
     public ModelTask() {
     }
+
+    public void addRunCnts() {
+        run_cnts += 1;
+    }
+
+    public int getRunCnts() {
+        return run_cnts;
+    }    
 
     /**
      * 准备任务执行环境
@@ -101,7 +110,7 @@ public abstract class ModelTask extends Model {
      * @return Boolean值，表示是否为同步任务
      */
     public Boolean isSync() {
-        return false;
+        return true;
     }
 
     /**
@@ -219,8 +228,10 @@ public abstract class ModelTask extends Model {
         try {
             if (isEnable() && check()) {
                 if (isSync()) {
+                    // Log.record("run task sync");
                     mainRunnable.run();
                 } else {
+                    Log.record("add task to thread pool");
                     MAIN_THREAD_POOL.execute(mainRunnable);
                 }
                 return true;
@@ -264,12 +275,15 @@ public abstract class ModelTask extends Model {
      */
     public static void startAllTask(Boolean force) {
         Notify.setStatusTextExec();
-        for (Model model : getModelArray()) {
-            if (model != null) {
-                if (ModelType.TASK == model.getType()) {
-                    if (((ModelTask) model).startTask(force)) {
-                        GlobalThreadPools.sleep(750);
-                        Notify.updateNextExecText(-1);
+        for (int run_cnt=0;run_cnt<2;run_cnt++) {
+            for (Model model : getModelArray()) {
+                if (model != null) {
+                    if (ModelType.TASK == model.getType()) {
+                        ((ModelTask) model).addRunCnts();
+                        if (((ModelTask) model).startTask(force)) {
+                            GlobalThreadPools.sleep(750);
+                            Notify.updateNextExecText(-1);
+                        }
                     }
                 }
             }

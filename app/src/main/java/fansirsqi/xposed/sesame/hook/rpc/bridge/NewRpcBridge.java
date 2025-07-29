@@ -187,8 +187,9 @@ public class NewRpcBridge implements RpcBridge {
                                     Notify.sendErrorNotification(TimeUtil.getTimeStr() + " | 网络异常: " + methodName, response);
                                 }
                                 if (BaseModel.getTimeoutRestart().getValue()) {
-                                    Log.record(TAG, "尝试重新登录");
-                                    ApplicationHook.reLoginByBroadcast();
+                                    Log.record(TAG, "尝试重新登录-延时10s");
+                                    TimeUtil.sleep(10000);
+                                    // ApplicationHook.reLoginByBroadcast();
                                 }
                             }
                             return null;

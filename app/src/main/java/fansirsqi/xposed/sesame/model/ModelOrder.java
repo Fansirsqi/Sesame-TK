@@ -22,6 +22,7 @@ public class ModelOrder {
     private static final Class<Model>[] array = new Class[]{
             BaseModel.class,//基础设置
             AntForest.class,//森林
+            AntSports.class,//运动
             AntFarm.class,//庄园
             AntOrchard.class,//农场
             AntOcean.class,//海洋
@@ -29,7 +30,6 @@ public class ModelOrder {
             AncientTree.class,//古树
             AntCooperate.class,//合种
             Reserve.class,//保护地
-            AntSports.class,//运动
             AntMember.class,//会员
             AntStall.class,//蚂蚁新村
             GreenFinance.class,//绿色经营
