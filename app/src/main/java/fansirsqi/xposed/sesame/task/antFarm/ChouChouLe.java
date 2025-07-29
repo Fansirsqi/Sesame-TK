@@ -176,7 +176,7 @@ public class ChouChouLe {
             int drawTimes = jo.optInt("drawTimes", 0);
             for (int i = 0; i < drawTimes; i++) {
                 drawPrize("IP抽抽乐", AntFarmRpcCall.drawMachine());
-                GlobalThreadPools.sleep(1 * 1000L);
+                GlobalThreadPools.sleep(5 * 1000L);
             }
 
         } catch (Throwable t) {
@@ -209,7 +209,7 @@ public class ChouChouLe {
             for (int i = 0; i < leftDrawTimes; i++) {
                 String call = activityId.equals("null") ? AntFarmRpcCall.DrawPrize() : AntFarmRpcCall.DrawPrize(activityId);
                 drawPrize("抽抽乐", call);
-                GlobalThreadPools.sleep(1 * 1000L);
+                GlobalThreadPools.sleep(5 * 1000L);
             }
 
         } catch (Throwable t) {
