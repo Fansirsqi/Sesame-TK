@@ -136,41 +136,6 @@ jobs:
           echo "$COMMIT_MESSAGE_BODY" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Send Combined Message
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TG_CHAT_ID }}
-          token: ${{ secrets.TG_BOT_TOKEN }}
-          message: |
-            📦 *New Version ${{ steps.extract_info.outputs.version }} Build!*
-
-            - Files: 
-              - Normal: `${{ steps.extract_info.outputs.normal_file }}`
-              - Compatible: `${{ steps.extract_info.outputs.compatible_file }}`
-            - Branch: `${{ github.ref_name }}`
-            - Triggered by: `${{ github.actor }}`
-
-            *下载说明:*
-              * Normal 为正常版本,适用于`Android 8.0`及以上的系统
-              * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`
-
-            ${{ steps.commit_details.outputs.COMMIT_MESSAGE_BODY }}
-          format: markdown
-
-      - name: Send Normal APK
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TG_CHAT_ID }}
-          token: ${{ secrets.TG_BOT_TOKEN }}
-          document: ${{ steps.extract_apks.outputs.signed_normal }}
-
-      - name: Send Compatible APK
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TG_CHAT_ID }}
-          token: ${{ secrets.TG_BOT_TOKEN }}
-          document: ${{ steps.extract_apks.outputs.signed_compatible }}
-
       - name: Create Tag from Version
         if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
         run: |
@@ -178,6 +143,7 @@ jobs:
           echo "Creating tag: $VERSION_TAG"
           git tag "$VERSION_TAG"
           git push origin "$VERSION_TAG"
+
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
         with:
@@ -200,6 +166,7 @@ jobs:
               * Compatible 为兼容版本,适用于`Android 7.0`及以下的系统,最低支持`Android 5.1`
 
             > ~~墙内不再更新~~ 倒卖必死全家
+
       - name: Sync Release to Target Repository
         uses: softprops/action-gh-release@v2
         with:
