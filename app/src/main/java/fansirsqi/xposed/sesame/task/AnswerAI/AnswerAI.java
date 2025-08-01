@@ -87,7 +87,7 @@ public class AnswerAI extends Model {
             Log.runtime(String.format("初始化AI服务：已选择[%s]", AIType.nickNames[selectedType]));
             initializeAIService(selectedType);
         } catch (Exception e) {
-            Log.error("初始化AI服务失败: " + e.getMessage());
+            Log.error(TAG, "初始化AI服务失败: " + e.getMessage());
             Log.printStackTrace(TAG, e);
         }
     }
@@ -119,30 +119,50 @@ public class AnswerAI extends Model {
         }
     }
 
-    public static String getAnswer(String text, List<String> answerList) {
+    private static void selectloger(String flag, String msg) {
+        switch (flag) {
+            case "farm":
+                Log.farm(msg);
+                break;
+            case "forest":
+                Log.forest(msg);
+                break;
+            default:
+                Log.other(msg);
+                break;
+        }
+    }
+
+    /**
+     *  AI 获取答案
+     * @param text 问题
+     * @param answerList 答案列表
+     * @param flag 日志类型
+     * @return 答案
+     */
+    public static String getAnswer(String text, List<String> answerList, String flag) {
         if (text == null || answerList == null) {
-            Log.other("问题或答案列表为空");
+            selectloger(flag, "问题或答案列表为空");
             return "";
         }
-
         String answerStr = "";
         try {
-            Log.other(String.format(QUESTION_LOG_FORMAT, text, answerList));
+            String msg = String.format(QUESTION_LOG_FORMAT, text, answerList);
+            selectloger(flag, msg);
             if (enable && answerAIInterface != null) {
                 Integer answer = answerAIInterface.getAnswer(text, answerList);
                 if (answer != null && answer >= 0 && answer < answerList.size()) {
                     answerStr = answerList.get(answer);
-                    Log.other(String.format(AI_ANSWER_LOG_FORMAT, answerStr, AIType.nickNames[aiType.getValue()], answerAIInterface.getModelName()));
+                    selectloger(flag, String.format(AI_ANSWER_LOG_FORMAT, answerStr, AIType.nickNames[aiType.getValue()], answerAIInterface.getModelName()));
                 } else {
                     Log.error(ERROR_AI_ANSWER);
                 }
             } else if (!answerList.isEmpty()) {
                 answerStr = answerList.get(0);
-                Log.other(String.format(NORMAL_ANSWER_LOG_FORMAT, answerStr));
+                selectloger(flag, String.format(NORMAL_ANSWER_LOG_FORMAT, answerStr));
             }
         } catch (Throwable t) {
-            Log.error("获取答案异常: " + t.getMessage());
-            Log.printStackTrace(TAG, t);
+            Log.printStackTrace(TAG, "AI获取答案异常:", t);
         }
         return answerStr;
     }

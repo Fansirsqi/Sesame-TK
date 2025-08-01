@@ -67,9 +67,9 @@
     <string name="koubei_sign_in">口碑签到</string>
     <string name="more">更多</string>
     <string name="hello_user">你好，旅行者！</string>
-    <string name="forest_log">森林记录</string>
-    <string name="farm_log">庄园记录</string>
-    <string name="all_log">全部记录</string>
+    <string name="forest_log">森林</string>
+    <string name="farm_log">庄园</string>
+    <string name="all_log">全部</string>
     <string name="runtime_log">运行日志</string>
     <string name="unactivated">未激活</string>
     <string name="tips">小贴士</string>
@@ -81,7 +81,7 @@
     <string name="export_the_statistic_file">导出统计</string>
     <string name="import_the_statistic_file">导入统计</string>
     <string name="view_runtim_log_file">查看运行日志</string>
-    <string name="view_capture">抓包记录</string>
+    <string name="view_capture">抓包</string>
     <string name="settings">设  置</string>
     <string name="extend">扩展功能</string>
     <string name="limit_collect">限制收取</string>
@@ -91,7 +91,7 @@
     <string name="sync_step_count">自定义同步步数</string>
     <string name="use_double_card">使用双击卡</string>
     <string name="wait_when_exception">异常等待时间(分钟)</string>
-    <string name="other_log">其他日志</string>
+    <string name="other_log">其他</string>
     <string name="search">搜索</string>
     <string name="last">上一个</string>
     <string name="next">下一个</string>
@@ -128,7 +128,7 @@
     <string name="start_at_0_o_clock">0点整执行</string>
     <string name="start_at_7_o_clock">7点前启动</string>
     <string name="tiyubiz">文体中心</string>
-    <string name="friend_watch">好友统计</string>
+    <string name="friend_watch">好友</string>
     <string name="user_patrol">巡护森林</string>
     <string name="toast_vertical_offset">气泡纵向偏移</string>
     <string name="animal_game_time">小鸡游戏时间</string>
@@ -171,7 +171,7 @@
     <string name="stall_invite_shop_list">新村邀请摆摊列表</string>
     <string name="stall_throw_manure">新村丢肥料</string>
     <string name="green_finance">开启绿色经营</string>
-    <string name="total_cert_count">记录证书总数</string>
+    <string name="total_cert_count">证书总数</string>
     <string name="send_friend_card">送好友卡片(赠送当前图鉴所有卡片)</string>
     <string name="batch_rob_energy">一键收能量</string>
     <string name="select_all">全选</string>

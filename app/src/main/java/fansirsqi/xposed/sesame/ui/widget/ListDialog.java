@@ -31,7 +31,8 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountOneModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectOneModelField;
 import fansirsqi.xposed.sesame.ui.OptionsAdapter;
-import fansirsqi.xposed.sesame.util.Maps.CooperateMap;
+import fansirsqi.xposed.sesame.util.maps.CooperateMap;
+
 public class ListDialog {
     static AlertDialog listDialog;
     @SuppressLint("StaticFieldLeak")
@@ -46,30 +47,39 @@ public class ListDialog {
     static ListType listType;
     @SuppressLint("StaticFieldLeak")
     static RelativeLayout layout_batch_process;
+
     public enum ListType {
         RADIO, CHECK, SHOW
     }
+
     public static void show(Context c, CharSequence title, SelectOneModelField selectModelField, ListType listType) {
         show(c, title, selectModelField.getExpandValue(), selectModelField, false, listType);
     }
+
     public static void show(Context c, CharSequence title, SelectAndCountOneModelField selectModelField, ListType listType) {
         show(c, title, selectModelField.getExpandValue(), selectModelField, false, listType);
     }
+
     public static void show(Context c, CharSequence title, SelectModelField selectModelField) throws JSONException {
         show(c, title, selectModelField, ListDialog.ListType.CHECK);
     }
+
     public static void show(Context c, CharSequence title, SelectAndCountModelField selectModelField) {
         show(c, title, selectModelField, ListDialog.ListType.CHECK);
     }
+
     public static void show(Context c, CharSequence title, SelectModelField selectModelField, ListType listType) throws JSONException {
         show(c, title, selectModelField.getExpandValue(), selectModelField, false, listType);
     }
+
     public static void show(Context c, CharSequence title, SelectAndCountModelField selectModelField, ListType listType) {
         show(c, title, selectModelField.getExpandValue(), selectModelField, true, listType);
     }
+
     public static void show(Context c, CharSequence title, List<? extends MapperEntity> bl, SelectModelFieldFunc selectModelFieldFunc, Boolean hasCount) {
         show(c, title, bl, selectModelFieldFunc, hasCount, ListType.CHECK);
     }
+
     public static void show(Context c, CharSequence title, List<? extends MapperEntity> bl, SelectModelFieldFunc selectModelFieldFunc, Boolean hasCount, ListType listType) {
         ListDialog.selectModelFieldFunc = selectModelFieldFunc;
         ListDialog.hasCount = hasCount;
@@ -79,6 +89,7 @@ public class ListDialog {
         showListDialog(c, title);
         ListDialog.listType = listType;
     }
+
     private static void showListDialog(Context c, CharSequence title) {
         if (listDialog == null || listDialog.getContext() != c)
             listDialog = new AlertDialog.Builder(c)
@@ -99,6 +110,7 @@ public class ListDialog {
             positiveButton.setTextColor(ContextCompat.getColor(c, R.color.selection_color));
         }
     }
+
     private static View getListView(Context c) {
         @SuppressLint("InflateParams") View v = LayoutInflater.from(c).inflate(R.layout.dialog_list, null);
         btn_find_last = v.findViewById(R.id.btn_find_last);
@@ -240,10 +252,12 @@ public class ListDialog {
                                 .setAdapter(
                                         OptionsAdapter.get(c), new OnClickListener() {
                                             Context c;
+
                                             public OnClickListener setContext(Context c) {
                                                 this.c = c;
                                                 return this;
                                             }
+
                                             @Override
                                             public void onClick(DialogInterface p1, int p2) {
                                                 String url = null;

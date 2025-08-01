@@ -1,26 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical">
 
     <include layout="@layout/base_title"/>
 
     <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/background"
+        android:paddingBottom="20dp">
 
         <fansirsqi.xposed.sesame.ui.MyWebView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/mwv_webview" />
+            android:id="@+id/mwv_webview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@id/pgb_webview"
+            android:background="@color/background"
+            android:layout_marginBottom="32dp" />
 
         <ProgressBar
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:id="@+id/pgb_webview" />
+            android:id="@+id/pgb_webview"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true" />
 
     </RelativeLayout>
 </LinearLayout>
-

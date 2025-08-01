@@ -1,18 +1,19 @@
 pluginManagement {
     repositories {
+        mavenCentral()
         gradlePluginPortal()
         google()
-        maven { url = uri("https://maven.aliyun.com/repository/public/") }
     }
     plugins {
-        kotlin("jvm") version "2.2.0-Beta1"  // 使用与libs.versions.toml中kotlin-plugin相同的版本
+        kotlin("jvm") version "2.2.0-Beta2"  // 使用与libs.versions.toml中kotlin-plugin相同的版本
     }
 }
 
 dependencyResolutionManagement {
     repositories {
+        maven("https://maven.aliyun.com/repository/spring")
+        mavenCentral()
         google()
-        maven { url = uri("https://maven.aliyun.com/repository/public/") }
     }
 }
 plugins {

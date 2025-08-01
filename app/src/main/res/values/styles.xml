@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight">
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <!--Appbar背景色-->
         <item name="colorPrimary">@color/colorPrimary</item>
         <!--ToolBar上的Title颜色-->
         <item name="titleTextColor">@color/active_text</item>
         <item name="subtitleTextColor">@color/active_text</item>
-
         <item name="android:navigationBarColor">@color/colorPrimary</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowTranslucentStatus">true</item>
@@ -16,6 +15,7 @@
         <item name="actionOverflowMenuStyle">@style/MenuTheme</item>
     </style>
 
+
     <style name="MenuTheme">
         <item name="android:textColorSecondary">@color/textColorPrimary</item>
         <item name="android:popupBackground">@drawable/menu_background</item>
@@ -23,5 +23,21 @@
         <item name="android:itemBackground">@color/background</item>
         <item name="android:colorBackground">@color/background</item>
     </style>
+
+    <style name="Widget.App.Button.Main" parent="Widget.Material3.Button">
+        <item name="android:textColor">@color/textColorPrimary</item>
+        <item name="backgroundTint">@color/main_button</item>
+        <item name="rippleColor">@color/main_button_pressed</item>
+        <item name="iconTint">@null</item>
+        <item name="iconGravity">top</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="iconPadding">2dp</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="iconSize">48dp</item>
+        <item name="android:layout_width">113dp</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
 
 </resources>

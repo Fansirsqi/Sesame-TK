@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 扩展页面button的样式 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true">
         <shape>
-            <solid android:color="@color/button_pressed"/>
+            <solid android:color="@color/main_button_pressed"/>
             <corners android:radius="10dp"/>
         </shape>
     </item>

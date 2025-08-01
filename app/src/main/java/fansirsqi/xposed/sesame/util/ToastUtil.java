@@ -10,6 +10,7 @@ import android.widget.Toast;
 import fansirsqi.xposed.sesame.R;
 import fansirsqi.xposed.sesame.model.BaseModel;
 public class ToastUtil {
+    private static final String TAG = "ToastUtil";
     private static Context appContext;
     /**
      * 初始化全局 Context。建议在 Application 类中调用。
@@ -47,7 +48,7 @@ public class ToastUtil {
      * @param message 显示的消息
      */
     public static void showToast(Context context, String message) {
-        Log.runtime("showToast: " + message);
+        Log.runtime(TAG,"showToast: " + message);
         Toast toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
         toast.setGravity(toast.getGravity(), toast.getXOffset(), BaseModel.getToastOffsetY().getValue());
         toast.show();

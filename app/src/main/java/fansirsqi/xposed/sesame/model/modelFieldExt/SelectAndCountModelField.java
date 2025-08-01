@@ -54,7 +54,7 @@ public class SelectAndCountModelField extends ModelField<Map<String, Integer>> i
         btn.setText(getName());
         btn.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         btn.setTextColor(ContextCompat.getColor(context, R.color.selection_color));
-        btn.setBackground(ContextCompat.getDrawable(context, R.drawable.button));
+        btn.setBackground(ContextCompat.getDrawable(context, R.drawable.dialog_list_button));
         btn.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         btn.setMinHeight(150);
         btn.setMaxHeight(180);

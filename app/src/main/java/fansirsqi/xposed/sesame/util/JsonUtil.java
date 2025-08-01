@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 public class JsonUtil {
+    private static final String TAG = "JsonUtil";
     private static final ObjectMapper MAPPER = new ObjectMapper(); // JSON对象映射器
     public static final TypeFactory TYPE_FACTORY = TypeFactory.defaultInstance(); // 类型工厂
     public static final JsonFactory JSON_FACTORY = new JsonFactory(); // JSON工厂
@@ -48,12 +49,12 @@ public class JsonUtil {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode rootNode = objectMapper.readTree(inputStream);
             String jsonString = rootNode.toPrettyString();
-            Log.runtime("Config content: " + jsonString);
+            Log.runtime(TAG,"Config content: " + jsonString);
             boolean useManager = rootNode.path("useManager").asBoolean();
-            Log.runtime("useManager: " + useManager);
+            Log.runtime(TAG,"useManager: " + useManager);
             inputStream.close();
         } catch (Exception e) {
-            Log.runtime("Failed to read or parse config file: " + e.getMessage());
+            Log.runtime(TAG,"Failed to read or parse config file: " + e.getMessage());
         }
     }
     // 解析 useManager 字段
@@ -67,7 +68,7 @@ public class JsonUtil {
                 }
             }
         } catch (IOException e) {
-            Log.error("parseUseManager", e.getMessage());
+            Log.error(TAG,"parseUseManager"+e.getMessage());
         }
         return false; // 默认值
     }
@@ -89,7 +90,7 @@ public class JsonUtil {
             }
             return execute(() -> MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(object));
         } catch (Exception e) {
-            Log.runtime("formatJson", "err:");
+            Log.runtime(TAG,"formatJson err:");
             Log.printStackTrace(e);
             return execute(() -> MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(object));
         }
@@ -117,7 +118,7 @@ public class JsonUtil {
                 return execute(() -> MAPPER.writeValueAsString(object));
             }
         } catch (Exception e) {
-            Log.runtime("formatJson", "err:");
+            Log.runtime(TAG,"formatJson err:");
             Log.printStackTrace(e);
             return execute(() -> MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(object));
         }

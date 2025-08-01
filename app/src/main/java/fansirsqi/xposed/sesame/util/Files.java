@@ -304,21 +304,26 @@ public class Files {
      * @param file 要导出的文件
      * @return 导出后的文件
      */
-    public static File exportFile(File file) {
+    public static File exportFile(File file, boolean hasTime) {
         File exportDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), CONFIG_DIR_NAME);
         if (!exportDir.exists() && !exportDir.mkdirs()) {
             Log.error(TAG, "Failed to create export directory: " + exportDir.getAbsolutePath());
             return null;
         }
+
         // 获取文件的原始文件名和扩展名
         String fileNameWithoutExtension = file.getName().substring(0, file.getName().lastIndexOf('.'));
         String fileExtension = file.getName().substring(file.getName().lastIndexOf('.'));
-
-        // 获取当前日期和时间，并格式化为字符串
-        @SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
-        String dateTimeString = simpleDateFormat.format(new Date());
-        // 生成新的文件名，包含日期和时间
-        String newFileName = fileNameWithoutExtension + "_" + dateTimeString + fileExtension;
+        String newFileName;
+        if (hasTime) {
+            // 获取当前日期和时间，并格式化为字符串
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+            String dateTimeString = simpleDateFormat.format(new Date());
+            // 生成新的文件名，包含日期和时间
+            newFileName = fileNameWithoutExtension + "_" + dateTimeString + fileExtension;
+        } else {
+            newFileName = fileNameWithoutExtension + fileExtension;
+        }
         File exportFile = new File(exportDir, newFileName);
         if (exportFile.exists() && exportFile.isDirectory()) {
             if (!exportFile.delete()) {
@@ -326,7 +331,7 @@ public class Files {
                 return null;
             }
         }
-        if (!copyTo(file, exportFile)) {
+        if (!copy(file, exportFile)) {
             Log.error(TAG, "Failed to copy file: " + file.getAbsolutePath() + " to " + exportFile.getAbsolutePath());
             return null;
         }
@@ -523,7 +528,7 @@ public class Files {
      * @param dest   目标文件
      * @return 如果复制成功返回 true，否则返回 false
      */
-    public static boolean copyTo(File source, File dest) {
+    public static boolean copy(File source, File dest) {
         try (FileInputStream fileInputStream = new FileInputStream(source);
              FileOutputStream fileOutputStream = new FileOutputStream(createFile(dest));
              FileChannel inputChannel = fileInputStream.getChannel();

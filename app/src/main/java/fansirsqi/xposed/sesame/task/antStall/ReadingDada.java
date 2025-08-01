@@ -1,20 +1,25 @@
 package fansirsqi.xposed.sesame.task.antStall;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 import fansirsqi.xposed.sesame.model.ModelGroup;
 import fansirsqi.xposed.sesame.task.AnswerAI.AnswerAI;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.StringUtil;
+
 /**
  * @author Constanline
  * @since 2023/08/22
  */
 public class ReadingDada {
     private static final String TAG = ReadingDada.class.getSimpleName();
+
     public ModelGroup getGroup() {
         return ModelGroup.STALL;
     }
+
     public static boolean answerQuestion(JSONObject bizInfo) {
         try {
             String taskJumpUrl = bizInfo.optString("taskJumpUrl");
@@ -33,20 +38,20 @@ public class ReadingDada {
             if ("200".equals(jo.getString("resultCode"))) {
                 JSONArray jsonArray = jo.getJSONArray("options");
                 String question = jo.getString("title");
-                String answer = AnswerAI.getAnswer(question, JsonUtil.jsonArrayToList(jsonArray));
+                String answer = AnswerAI.getAnswer(question, JsonUtil.jsonArrayToList(jsonArray), "other");
                 if (answer == null || answer.isEmpty()) {
                     answer = jsonArray.getString(0);
                 }
                 s = ReadingDadaRpcCall.submitAnswer(activityId, outBizId, jo.getString("questionId"), answer);
                 jo = new JSONObject(s);
                 if ("200".equals(jo.getString("resultCode"))) {
-                    Log.record("答题完成");
+                    Log.record(TAG, "答题完成");
                     return true;
                 } else {
-                    Log.record("答题失败");
+                    Log.record(TAG, "答题失败");
                 }
             } else {
-                Log.record("获取问题失败");
+                Log.record(TAG, "获取问题失败");
             }
         } catch (Throwable e) {
             Log.runtime(TAG, "answerQuestion err:");

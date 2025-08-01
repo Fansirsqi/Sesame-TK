@@ -1,8 +1,11 @@
 package fansirsqi.xposed.sesame.util;
+
 import android.text.TextUtils;
+
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Locale;
+
 /**
  * @author Constanline
  * @since 2023/08/03
@@ -220,17 +223,21 @@ public class HanziToPinyin {
     private static final Collator COLLATOR = Collator.getInstance(Locale.CHINA);
     private static HanziToPinyin sInstance;
     private final boolean mHasChinaCollator;
+
     public static class Token {
         public static final int LATIN = 1;
         public static final int PINYIN = 2;
         public static final int UNKNOWN = 3;
+
         public Token() {
         }
+
         public Token(int type, String source, String target) {
             this.type = type;
             this.source = source;
             this.target = target;
         }
+
         /**
          * Type of this token, ASCII, PINYIN or UNKNOWN.
          */
@@ -246,9 +253,11 @@ public class HanziToPinyin {
          */
         public String target;
     }
+
     protected HanziToPinyin(boolean hasChinaCollator) {
         mHasChinaCollator = hasChinaCollator;
     }
+
     public static HanziToPinyin getInstance() {
         synchronized (HanziToPinyin.class) {
             if (sInstance != null) {
@@ -258,6 +267,7 @@ public class HanziToPinyin {
             return sInstance;
         }
     }
+
     private Token getToken(char character) {
         try {
             Token token = new Token();
@@ -318,10 +328,11 @@ public class HanziToPinyin {
             token.target = pinyin.toString();
             return token;
         } catch (Throwable th) {
-            Log.record("字符'" + character + "'转换失败");
+            Log.record(TAG, "字符'" + character + "'转换失败");
             throw th;
         }
     }
+
     /**
      * Convert the input to a array of tokens. The sequence of ASCII or Unknown
      * characters without
@@ -383,10 +394,11 @@ public class HanziToPinyin {
             }
             return tokens;
         } catch (Throwable th) {
-            Log.record("字符串\"" + input + "\"转换失败");
+            Log.record(TAG, "字符串\"" + input + "\"转换失败");
             throw th;
         }
     }
+
     private void addToken(
             final StringBuilder sb, final ArrayList<Token> tokens, final int tokenType) {
         String str = sb.toString();

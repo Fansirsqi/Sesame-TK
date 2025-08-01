@@ -58,7 +58,7 @@ public class ListModelField extends ModelField<List<String>> {
         btn.setTextColor(ContextCompat.getColor(context, R.color.selection_color));
         // 根据API版本选择合适的方法获取Drawable资源
         Drawable drawable;
-        drawable = context.getResources().getDrawable(R.drawable.button, context.getTheme());
+        drawable = context.getResources().getDrawable(R.drawable.dialog_list_button, context.getTheme());
         btn.setBackground(drawable);
         btn.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
         btn.setMinHeight(150);

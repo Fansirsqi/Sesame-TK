@@ -9,7 +9,7 @@
     <color name="selection_color">#2489FD</color>
 
     <color name="main_button">#BCE1E9</color>
-    <color name="button_pressed">#FFEBCD</color>
+    <color name="main_button_pressed">#2489FD</color>
 
     <color name="orange">#E64000</color>
 

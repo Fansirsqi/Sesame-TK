@@ -5,8 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import fansirsqi.xposed.sesame.util.Maps.IdMapManager;
-import fansirsqi.xposed.sesame.util.Maps.ReserveaMap;
+import fansirsqi.xposed.sesame.util.maps.IdMapManager;
+import fansirsqi.xposed.sesame.util.maps.ReserveaMap;
 /**
  * 表示支付宝保留项的实体类，包含 ID 和名称。
  */

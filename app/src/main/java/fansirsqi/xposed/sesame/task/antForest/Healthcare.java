@@ -3,9 +3,8 @@ package fansirsqi.xposed.sesame.task.antForest;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import fansirsqi.xposed.sesame.data.Statistics;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.ResUtil;
+import fansirsqi.xposed.sesame.util.ResChecker;
 import fansirsqi.xposed.sesame.util.TimeUtil;
 
 /**
@@ -20,7 +19,7 @@ public class Healthcare {
     public static void queryForestEnergy(String scene) {
         try {
             JSONObject jo = new JSONObject(AntForestRpcCall.queryForestEnergy(scene));
-            if (!ResUtil.checkResultCode(TAG, jo)) {
+            if (!ResChecker.checkRes(TAG, jo)) {
                 return;
             }
             jo = jo.getJSONObject("data").getJSONObject("response");
@@ -46,7 +45,7 @@ public class Healthcare {
         JSONArray energyGeneratedList = new JSONArray();
         try {
             JSONObject jo = new JSONObject(AntForestRpcCall.produceForestEnergy(scene));
-            if (ResUtil.checkResultCode(TAG, jo)) {
+            if (ResChecker.checkRes(TAG, jo)) {
                 jo = jo.getJSONObject("data").getJSONObject("response");
                 energyGeneratedList = jo.getJSONArray("energyGeneratedList");
                 if (energyGeneratedList.length() > 0) {
@@ -65,7 +64,7 @@ public class Healthcare {
     private static Boolean harvestForestEnergy(String scene, JSONArray bubbles) {
         try {
             JSONObject jo = new JSONObject(AntForestRpcCall.harvestForestEnergy(scene, bubbles));
-            if (!ResUtil.checkResultCode(TAG, jo)) {
+            if (!ResChecker.checkRes(TAG, jo)) {
                 return false;
             }
             jo = jo.getJSONObject("data").getJSONObject("response");
@@ -73,7 +72,6 @@ public class Healthcare {
             if (collectedEnergy > 0) {
                 String title = scene.equals("FEEDS") ? "绿色医疗" : "电子小票";
                 Log.forest("医疗健康🚑收取[" + title + "]#获得[" + collectedEnergy + "g能量]");
-                Statistics.addData(Statistics.DataType.COLLECTED, collectedEnergy);
                 return true;
             }
         } catch (Throwable th) {

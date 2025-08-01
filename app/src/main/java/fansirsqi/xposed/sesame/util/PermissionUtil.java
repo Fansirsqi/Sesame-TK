@@ -195,7 +195,7 @@ public class PermissionUtil {
       if (!ApplicationHook.isHooked()) {
         return null;
       }
-      return ApplicationHook.getContext();
+      return ApplicationHook.getAppContext();
     } catch (Exception e) {
       return null;
     }

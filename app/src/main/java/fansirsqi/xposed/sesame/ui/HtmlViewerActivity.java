@@ -6,7 +6,6 @@ import android.content.ClipboardManager;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,6 +15,11 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.core.view.OnApplyWindowInsetsListener;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import androidx.core.content.ContextCompat;
 import androidx.webkit.WebSettingsCompat;
@@ -35,46 +39,61 @@ public class HtmlViewerActivity extends BaseActivity {
     ProgressBar progressBar;
     private Uri uri;
     private Boolean canClear;
+    WebSettings settings = null;
 
-    @SuppressLint("ObsoleteSdkInt")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         LanguageUtil.setLocale(this);
         setContentView(R.layout.activity_html_viewer);
-        // 设置标题栏
+
         // 初始化 WebView 和进度条
         mWebView = findViewById(R.id.mwv_webview);
         progressBar = findViewById(R.id.pgb_webview);
-        // 设置 WebView 的客户端
+
         setupWebView();
-        
-        // 安全设置WebView
+        settings = mWebView.getSettings();
+
+        // 安全设置 WebView
         try {
-            // 仅在确保WebView初始化完成后设置
-            if (mWebView != null && mWebView.getSettings() != null) {
-                // 夜间模式设置(可选)
+            if (mWebView != null) {
                 if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
                     try {
-                        WebSettingsCompat.setAlgorithmicDarkeningAllowed(mWebView.getSettings(), true);
+                        WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, true);
                     } catch (Exception e) {
                         Log.error(TAG, "设置夜间模式失败: " + e.getMessage());
                         Log.printStackTrace(TAG, e);
                     }
                 }
-                
-                // 确保基本设置不会导致崩溃
-                mWebView.getSettings().setJavaScriptEnabled(false);
-                mWebView.getSettings().setDomStorageEnabled(false);
+
+                settings.setJavaScriptEnabled(false);
+                settings.setDomStorageEnabled(false);
+                progressBar.setProgressTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.selection_color)));
+                mWebView.setBackgroundColor(ContextCompat.getColor(this, R.color.background));
             }
         } catch (Exception e) {
             Log.error(TAG, "WebView初始化异常: " + e.getMessage());
             Log.printStackTrace(TAG, e);
         }
-        // 设置WebView背景色
-        mWebView.setBackgroundColor(ContextCompat.getColor(this, R.color.background));
-        // 设置进度条颜色
-        progressBar.setProgressTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.selection_color)));
+
+        View contentView = findViewById(android.R.id.content);
+
+        ViewCompat.setOnApplyWindowInsetsListener(contentView, new OnApplyWindowInsetsListener() {
+            @NonNull
+            @Override
+            public WindowInsetsCompat onApplyWindowInsets(@NonNull View v, @NonNull WindowInsetsCompat insets) {
+                int systemBarsBottom = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+
+                mWebView.setPadding(
+                        mWebView.getPaddingLeft(),
+                        mWebView.getPaddingTop(),
+                        mWebView.getPaddingRight(),
+                        systemBarsBottom
+                );
+
+                return insets;
+            }
+        });
     }
 
     /**
@@ -101,55 +120,38 @@ public class HtmlViewerActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // 获取传递过来的 Intent
-        Intent intent = getIntent();
-        WebSettings settings = mWebView.getSettings();
-        settings.setSupportZoom(true); // 支持缩放
-        settings.setBuiltInZoomControls(true); // 启用内置缩放机制
-        settings.setDisplayZoomControls(false); // 不显示缩放控件
-        // 启用触摸缩放
-        mWebView.getSettings().setUseWideViewPort(true);
-        mWebView.getSettings().setLoadWithOverviewMode(true);
-        mWebView.getSettings().setSupportZoom(true);
-        mWebView.getSettings().setBuiltInZoomControls(true);
-        mWebView.getSettings().setDisplayZoomControls(false);
         // 安全设置WebView
         try {
-            if (mWebView != null && mWebView.getSettings() != null) {
-                // 基本WebView设置
-                mWebView.getSettings().setSupportZoom(true);
-                mWebView.getSettings().setBuiltInZoomControls(true);
-                mWebView.getSettings().setDisplayZoomControls(false);
-                mWebView.getSettings().setUseWideViewPort(true);
-                mWebView.getSettings().setLoadWithOverviewMode(true);
-                
-                // 可选夜间模式设置
-                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                    try {
-                        WebSettingsCompat.setAlgorithmicDarkeningAllowed(mWebView.getSettings(), true);
-                    } catch (Exception e) {
-                        Log.error(TAG, "设置夜间模式失败: " + e.getMessage());
-                        Log.printStackTrace(TAG, e);
+            Intent intent = getIntent();// 获取传递过来的 Intent
+            if (intent != null) {
+                if (mWebView != null) {
+                    settings.setSupportZoom(true); // 支持缩放
+                    settings.setBuiltInZoomControls(true); // 启用内置缩放机制
+                    settings.setDisplayZoomControls(false); // 不显示缩放控件
+                    settings.setUseWideViewPort(true);// 启用触摸缩放
+                    settings.setLoadWithOverviewMode(true);//概览模式加载
+                    settings.setTextZoom(85);
+                    // 可选夜间模式设置
+                    if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                        try {
+                            WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, true);
+                        } catch (Exception e) {
+                            Log.error(TAG, "设置夜间模式失败: " + e.getMessage());
+                            Log.printStackTrace(TAG, e);
+                        }
                     }
                 }
+                configureWebViewSettings(intent, settings);
+                uri = intent.getData();
+                if (uri != null) {
+                    mWebView.loadUrl(uri.toString());
+                }
+                canClear = intent.getBooleanExtra("canClear", false);
             }
         } catch (Exception e) {
             Log.error(TAG, "WebView设置异常: " + e.getMessage());
             Log.printStackTrace(TAG, e);
         }
-        // 根据 intent 设置 WebView
-        if (intent != null) {
-            configureWebViewSettings(intent, settings);
-            uri = intent.getData();
-            if (uri != null) {
-                mWebView.loadUrl(uri.toString());
-            }
-            canClear = intent.getBooleanExtra("canClear", false);
-            return;
-        }
-        // 设置默认的 WebView 参数
-        settings.setTextZoom(85);
-        settings.setUseWideViewPort(true);
     }
 
     /**
@@ -222,7 +224,7 @@ public class HtmlViewerActivity extends BaseActivity {
                 String path = uri.getPath();
                 Log.runtime(TAG, "URI path: " + path);
                 if (path != null) {
-                    File exportFile = Files.exportFile(new File(path));
+                    File exportFile = Files.exportFile(new File(path),true);
                     if (exportFile != null && exportFile.exists()) {
                         ToastUtil.showToast(getString(R.string.file_exported) + exportFile.getPath());
                     } else {

@@ -10,7 +10,7 @@
     <color name="selection_color">#F87640</color>
 
     <color name="main_button">#3A3A3A</color>
-    <color name="button_pressed">#4A4A4A</color>
+    <color name="main_button_pressed">#FFEBCD</color>
 
     <color name="orange">#F87640</color>
 

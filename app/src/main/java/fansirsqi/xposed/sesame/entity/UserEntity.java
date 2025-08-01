@@ -74,7 +74,7 @@ public class UserEntity {
         this.maskName = showNameTmp + "|" + maskNameTmp;
         // 设置 fullName，格式为：显示名称 | 真实姓名 (账号)
         this.fullName = showNameTmp + "|" + realName + "(" + account + ")";
-//        Log.runtime("UserEntity " + "created: " + this.fullName);
+//        Log.runtime(TAG,"UserEntity " + "created: " + this.fullName);
     }
 
     /**

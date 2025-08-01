@@ -9,8 +9,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Objects;
 import fansirsqi.xposed.sesame.data.Config;
-import fansirsqi.xposed.sesame.util.Maps.CooperateMap;
-import fansirsqi.xposed.sesame.util.Maps.UserMap;
+import fansirsqi.xposed.sesame.util.maps.CooperateMap;
+import fansirsqi.xposed.sesame.util.maps.UserMap;
 /**
  * Utility class for handling import and export operations.
  */

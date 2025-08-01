@@ -13,8 +13,11 @@ import java.security.MessageDigest
  */
 object AssetUtil {
     private val TAG: String = AssetUtil::class.java.simpleName
+    const val CHEKCE_SO = "libchecker.so"
+    const val DEXKIT_OS = "libdexkit.so"
     private var destDir: String = Files.MAIN_DIR.absolutePath + File.separator + "lib"
-    private var destFile: File = File(destDir, "libchecker.so")
+    var checkerDestFile: File = File(destDir, CHEKCE_SO)
+    var dexkitDestFile: File = File(destDir, DEXKIT_OS)
 
     private fun compareMD5(file1: String, file2: String): Boolean {
         try {
@@ -61,11 +64,11 @@ object AssetUtil {
      * @param soName  so库名称
      * @return 复制是否成功
      */
-    fun copySoFileToStorage(context: Context, soName: String): Boolean {
+    fun copySoFileToStorage(context: Context, destFile: File): Boolean {
         try {
             Files.ensureDir(File(destDir))
             val appInfo = context.applicationInfo
-            val sourceDir = appInfo.nativeLibraryDir + File.separator + soName
+            val sourceDir = appInfo.nativeLibraryDir + File.separator + destFile.name
             if (destFile.exists() && compareMD5(sourceDir, destFile.absolutePath)) {
                 Log.runtime(TAG, "SO file already exists: " + destFile.absolutePath)
                 return true
@@ -78,7 +81,10 @@ object AssetUtil {
                         fos.write(buffer, 0, length)
                     }
                     fos.flush()
-                    Log.runtime(TAG, "Copied " + soName + " from " + sourceDir + " to " + destFile.absolutePath)
+                    Log.runtime(
+                        TAG,
+                        "Copied ${destFile.name} from $sourceDir ${checkerDestFile.absolutePath}"
+                    )
                     setExecutablePermissions(destFile)
                     return true
                 }
@@ -90,20 +96,24 @@ object AssetUtil {
     }
 
     //拷贝上面释放的文件到context 私有lib目录
-    fun copyDtorageSoFileToPrivateDir(context: Context, soName: String): Boolean {
+    fun copyDtorageSoFileToPrivateDir(context: Context, sourceFile: File): Boolean {
         try {
-            if (!destFile.exists()) {
-                Log.error(TAG, "SO file not exists: " + destFile.absolutePath)
+            if (!sourceFile.exists()) {
+                Log.error(TAG, "SO file not exists: " + sourceFile.absolutePath)
                 return false
             }
             val targetDir = context.applicationInfo.dataDir + File.separator + "lib"
             Files.ensureDir(File(targetDir))
-            val targetFile = File(targetDir, soName)
-            if (targetFile.exists() && compareMD5(destFile.absolutePath, targetFile.absolutePath)) {
+            val targetFile = File(targetDir, sourceFile.name)
+            if (targetFile.exists() && compareMD5(
+                    sourceFile.absolutePath,
+                    targetFile.absolutePath
+                )
+            ) {
                 Log.runtime(TAG, "SO file already exists: " + targetFile.absolutePath)
                 return true
             }
-            FileInputStream(destFile).use { fis ->
+            FileInputStream(sourceFile).use { fis ->
                 FileOutputStream(targetFile).use { fos ->
                     val buffer = ByteArray(4096)
                     var length: Int
@@ -111,13 +121,16 @@ object AssetUtil {
                         fos.write(buffer, 0, length)
                     }
                     fos.flush()
-                    Log.runtime(TAG, "Copied " + soName + " from " + destFile.absolutePath + " to " + targetFile.absolutePath)
+                    Log.runtime(
+                        TAG,
+                        "Copied ${sourceFile.name} from ${sourceFile.absolutePath} to ${targetFile.absolutePath}"
+                    )
                     setExecutablePermissions(targetFile)
                     return true
                 }
             }
         } catch (e: Exception) {
-            Log.error(TAG, "Failed to copy SO file of storage: " + e.message)
+            Log.error(TAG, "Failed to copy ${sourceFile.name} of storage: ${e.message}")
             return false
         }
 
@@ -125,7 +138,7 @@ object AssetUtil {
 
 
     /**
-     * 设置so库文件的执行权限
+     * 设置目标文件的执行权限
      *
      * @param file so库文件
      */

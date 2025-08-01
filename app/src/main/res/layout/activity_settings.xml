@@ -28,6 +28,7 @@
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:nestedScrollingEnabled="false"
+            android:layout_marginBottom="48dp"
             android:overScrollMode="never" />
     </LinearLayout>
 </LinearLayout>

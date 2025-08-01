@@ -1,240 +1,119 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:orientation="vertical">
+    android:background="@color/background">
 
-    <include layout="@layout/base_title" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
+    <!-- 标题栏 -->
+    <include
+        layout="@layout/base_title"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/background"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:padding="6dp">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tv_statistics"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:gravity="center"
-            android:lineSpacingMultiplier="1.5"
-            android:text="@string/normal_text"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="14sp" />
 
-        <ImageView
-            android:id="@+id/main_image"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_margin="43dp"
-            android:layout_weight="1"
-            android:contentDescription="@string/the_image_of_main"
-            android:gravity="center"
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/device_info"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="80dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/base_title"
+        app:layout_constraintVertical_bias="0" />
+
+
+    <TextView
+        android:id="@+id/one_word"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="40dp"
+        android:gravity="center"
+        android:onClick="onClick"
+        android:text="@string/text_api"
+        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+        app:layout_constraintBottom_toTopOf="@id/bottom_button_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:ignore="UsingOnClickInXml" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/bottom_button_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="48dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <!-- 第一行三个按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_forest_log"
+            style="@style/Widget.App.Button.Main"
             android:onClick="onClick"
-            android:scaleType="centerInside"
-            app:srcCompat="@drawable/main"
-            tools:ignore="UsingOnClickInXml,ImageContrastCheck,ImageContrastCheck" />
+            android:text="@string/forest_log"
+            app:icon="@drawable/forest"
+            app:layout_constraintEnd_toStartOf="@id/btn_farm_log"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/one_word"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="35sp"
-            android:fontFamily=""
-            android:gravity="center"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_farm_log"
+            style="@style/Widget.App.Button.Main"
             android:onClick="onClick"
-            android:text="@string/text_api"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="12sp"
-            tools:ignore="UsingOnClickInXml,TouchTargetSizeCheck" />
+            android:text="@string/farm_log"
+            app:icon="@drawable/farm2"
+            app:layout_constraintEnd_toStartOf="@id/btn_other_log"
+            app:layout_constraintStart_toEndOf="@id/btn_forest_log"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/bulid_target"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="2sp"
-            android:fontFamily="sans-serif-smallcaps"
-            android:gravity="center"
-            android:text="@string/bulid_target"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textSize="12sp"
-            android:paddingBottom="8dp"
-            android:typeface="normal" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_other_log"
+            style="@style/Widget.App.Button.Main"
+            android:onClick="onClick"
+            android:text="@string/other_log"
+            app:icon="@drawable/all_log"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btn_farm_log"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/bulid_version"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12sp"
-            android:fontFamily="sans-serif-smallcaps"
-            android:lineSpacingExtra="12sp"
-            android:text="@string/build_version_1_0_0"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textSize="12sp"
-            android:typeface="sans"
-            tools:ignore="TextContrastCheck" />
+        <!-- 第二行三个按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_friend_watch"
+            style="@style/Widget.App.Button.Main"
+            android:onClick="onClick"
+            android:text="@string/friend_watch"
+            app:icon="@drawable/friend"
+            app:layout_constraintEnd_toStartOf="@id/btn_github"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btn_forest_log" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_github"
+            style="@style/Widget.App.Button.Main"
+            android:onClick="onClick"
+            android:text="@string/visit_github"
+            app:icon="@drawable/github"
+            app:layout_constraintEnd_toStartOf="@id/btn_settings"
+            app:layout_constraintStart_toEndOf="@id/btn_friend_watch"
+            app:layout_constraintTop_toBottomOf="@id/btn_farm_log" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_settings"
+            style="@style/Widget.App.Button.Main"
+            android:onClick="onClick"
+            android:text="@string/settings"
+            app:icon="@drawable/setting"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btn_github"
+            app:layout_constraintTop_toBottomOf="@id/btn_other_log" />
 
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <LinearLayout
-            android:id="@+id/lyt_bottom1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:baselineAligned="false"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btn_forest_log"
-                style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="6dp"
-                android:layout_weight="1"
-                android:background="@drawable/button_main"
-                android:drawableTop="@drawable/forest"
-                android:drawablePadding="5dp"
-                android:gravity="center"
-                android:onClick="onClick"
-                android:orientation="vertical"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:text="@string/forest_log"
-                android:textAlignment="gravity"
-                android:textColor="@color/textColorPrimary"
-                android:textSize="14sp"
-                tools:ignore="UsingOnClickInXml" />
-
-            <Button
-                android:id="@+id/btn_farm_log"
-                style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="6dp"
-                android:layout_weight="1"
-                android:background="@drawable/button_main"
-                android:drawableTop="@drawable/farm"
-                android:drawablePadding="5dp"
-                android:gravity="center"
-                android:onClick="onClick"
-                android:orientation="vertical"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:text="@string/farm_log"
-                android:textAlignment="gravity"
-                android:textColor="@color/textColorPrimary"
-                android:textSize="14sp"
-                tools:ignore="UsingOnClickInXml" />
-
-            <Button
-                android:id="@+id/btn_other_log"
-                style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="6dp"
-                android:layout_weight="1"
-                android:background="@drawable/button_main"
-                android:drawableTop="@drawable/all_log"
-                android:drawablePadding="5dp"
-                android:gravity="center"
-                android:onClick="onClick"
-                android:orientation="vertical"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:text="@string/other_log"
-                android:textAlignment="gravity"
-                android:textColor="@color/textColorPrimary"
-                android:textSize="14sp"
-                tools:ignore="UsingOnClickInXml" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/lyt_bottom2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginBottom="20dp"
-            android:baselineAligned="false"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btn_friend_watch"
-                style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="6dp"
-                android:layout_weight="1"
-                android:background="@drawable/button_main"
-                android:drawableTop="@drawable/friend"
-                android:drawablePadding="5dp"
-                android:gravity="center"
-                android:onClick="onClick"
-                android:orientation="vertical"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:text="@string/friend_watch"
-                android:textAlignment="gravity"
-                android:textAllCaps="false"
-                android:textColor="@color/textColorPrimary"
-                android:textSize="14sp"
-                tools:ignore="UsingOnClickInXml" />
-
-            <Button
-                android:id="@+id/btn_github"
-                style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="6dp"
-                android:layout_weight="1"
-                android:background="@drawable/button_main"
-                android:drawableTop="@drawable/github"
-                android:drawablePadding="5dp"
-                android:gravity="center"
-                android:onClick="onClick"
-                android:orientation="vertical"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:text="@string/visit_github"
-                android:textAlignment="gravity"
-                android:textAllCaps="false"
-                android:textColor="@color/textColorPrimary"
-                android:textSize="14sp"
-                tools:ignore="UsingOnClickInXml" />
-
-            <Button
-                android:id="@+id/btn_settings"
-                style="@android:style/Widget.DeviceDefault.Button.Borderless"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="6dp"
-                android:layout_weight="1"
-                android:background="@drawable/button_main"
-                android:drawableTop="@drawable/setting"
-                android:drawablePadding="5dp"
-                android:gravity="center"
-                android:onClick="onClick"
-                android:orientation="vertical"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
-                android:text="@string/settings"
-                android:textAlignment="gravity"
-                android:textAllCaps="false"
-                android:textColor="@color/textColorPrimary"
-                android:textSize="14sp"
-                tools:ignore="UsingOnClickInXml" />
-        </LinearLayout>
-
-    </LinearLayout>
-</LinearLayout>
-
+</androidx.constraintlayout.widget.ConstraintLayout>

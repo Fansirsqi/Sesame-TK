@@ -6,10 +6,11 @@ import fansirsqi.xposed.sesame.model.ModelGroup;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.data.RuntimeInfo;
 import fansirsqi.xposed.sesame.task.TaskCommon;
+import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.RandomUtil;
 import fansirsqi.xposed.sesame.util.StringUtil;
-import fansirsqi.xposed.sesame.util.ThreadUtil;
+
 public class AntBookRead extends ModelTask {
     private static final String TAG = AntBookRead.class.getSimpleName();
     @Override
@@ -88,7 +89,7 @@ public class AntBookRead extends ModelTask {
                                 if (energy >= 150) {
                                     break;
                                 } else {
-                                    ThreadUtil.sleep(1500L);
+                                    GlobalThreadPools.sleep(1500L);
                                 }
                             }
                         }
@@ -140,9 +141,9 @@ public class AntBookRead extends ModelTask {
                                 String taskId = taskInfo.getString("taskId");
                                 for (int m = 0; m < 5; m++) {
                                     taskFinish(taskId, taskType);
-                                    ThreadUtil.sleep(1500L);
+                                    GlobalThreadPools.sleep(1500L);
                                     collectTaskPrize(taskId, taskType, title);
-                                    ThreadUtil.sleep(1500L);
+                                    GlobalThreadPools.sleep(1500L);
                                 }
                             } else if ("FOLLOW_UP".equals(taskType) || "JUMP".equals(taskType)) {
                                 String taskId = taskInfo.getString("taskId");

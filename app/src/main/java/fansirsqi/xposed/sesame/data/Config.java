@@ -13,10 +13,11 @@ import fansirsqi.xposed.sesame.model.ModelConfig;
 import fansirsqi.xposed.sesame.model.ModelField;
 import fansirsqi.xposed.sesame.model.ModelFields;
 import fansirsqi.xposed.sesame.task.ModelTask;
+import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.Log;
-import fansirsqi.xposed.sesame.util.Maps.UserMap;
+import fansirsqi.xposed.sesame.util.maps.UserMap;
 import fansirsqi.xposed.sesame.util.StringUtil;
 import lombok.Data;
 
@@ -146,7 +147,7 @@ public class Config {
             }
         } catch (Exception e) {
             Log.printStackTrace(TAG, e);
-            Log.runtime("保存用户配置失败，格式化 JSON 时出错");
+            Log.runtime(TAG, "保存用户配置失败，格式化 JSON 时出错");
             return false;
         }
         boolean success;
@@ -167,10 +168,10 @@ public class Config {
                 UserEntity userEntity = UserMap.get(userId);
                 userName = userEntity != null ? userEntity.getShowName() : "默认";
             }
-            Log.runtime("保存 [" + userName + "] 配置");
+            Log.runtime(TAG, "保存 [" + userName + "] 配置");
         } catch (Exception e) {
             Log.printStackTrace(TAG, e);
-            Log.runtime("保存用户配置失败");
+            Log.runtime(TAG, "保存用户配置失败");
             return false;
         }
         return true;
@@ -238,12 +239,11 @@ public class Config {
                     Files.write2File(toSaveStr(), configV2File);
                 }
             } catch (Exception e) {
-                Log.printStackTrace(TAG, e);
-                throw new RuntimeException("重置配置失败", e);
+                Log.printStackTrace(TAG, "重置配置失败", e);
             }
         }
         INSTANCE.setInit(true);
-        Log.record(TAG, "加载配置结束");
+        TaskCommon.update();
         return INSTANCE;
     }
 
