@@ -103,6 +103,9 @@ jobs:
           echo "compatible_file=$compatible_file" >> $GITHUB_OUTPUT
           echo "version=$version" >> $GITHUB_OUTPUT
 
+      - name: Set SHORT_SHA
+        run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
       - name: Generate APKS Checksum
         run: |
           sha256sum ${{ steps.extract_apks.outputs.signed_normal }} > CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
@@ -137,9 +140,9 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Tag from Version
-        if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
+        if: startsWith(github.ref, 'refs/heads/develop') && github.event_name == 'push'
         run: |
-          VERSION_TAG="v${{ steps.extract_info.outputs.version }}"
+          VERSION_TAG="${{ steps.extract_info.outputs.version }}"
           echo "Creating tag: $VERSION_TAG"
           git tag "$VERSION_TAG"
           git push origin "$VERSION_TAG"
