@@ -147,6 +147,7 @@ jobs:
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }} # 发布的名称。默认为标签名称
           files: |
             ${{ steps.extract_apks.outputs.signed_compatible }}
@@ -173,14 +174,13 @@ jobs:
           repository: Xposed-Modules-Repo/fansirsqi.xposed.sesame # 目标仓库的拥有者和仓库名称
           name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }} # 发布的名称。默认为标签名称
           files: |
-            ${{ steps.sign_normal_apk.outputs.signedFile }}
-            ${{ steps.sign_compatible_apk.outputs.signedFile }}
+            ${{ steps.extract_apks.outputs.signed_normal }}
+            ${{ steps.extract_apks.outputs.signed_compatible }}
             CHECKSUMS-Sesame-Normal-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
             CHECKSUMS-Sesame-Compatible-${{ steps.extract_info.outputs.version }}.${{ env.SHORT_SHA }}-signed.apk.sha256
           token: ${{ secrets.TARGET_REPO_PAT }}
           tag_name: ${{ steps.extract_info.outputs.version }}
           draft: false
-          prerelease: ${{ steps.pre_release.outputs.IS_PRERELEASE }}
           append_body: false
           make_latest: true
           body: |
