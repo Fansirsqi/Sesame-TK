@@ -96,14 +96,13 @@ object AssetUtil {
     }
 
     //拷贝上面释放的文件到context 私有lib目录
-    fun copyDtorageSoFileToPrivateDir(context: Context, sourceFile: File): Boolean {
+    fun copyStorageSoFileToPrivateDir(context: Context, sourceFile: File): File? {
         try {
             if (!sourceFile.exists()) {
                 Log.error(TAG, "SO file not exists: " + sourceFile.absolutePath)
-                return false
+                return null
             }
-            val targetDir = context.applicationInfo.dataDir + File.separator + "lib"
-            Files.ensureDir(File(targetDir))
+            val targetDir = context.getDir("sesame_libs", Context.MODE_PRIVATE)
             val targetFile = File(targetDir, sourceFile.name)
             if (targetFile.exists() && compareMD5(
                     sourceFile.absolutePath,
@@ -111,7 +110,7 @@ object AssetUtil {
                 )
             ) {
                 Log.runtime(TAG, "SO file already exists: " + targetFile.absolutePath)
-                return true
+                return targetFile
             }
             FileInputStream(sourceFile).use { fis ->
                 FileOutputStream(targetFile).use { fos ->
@@ -126,14 +125,13 @@ object AssetUtil {
                         "Copied ${sourceFile.name} from ${sourceFile.absolutePath} to ${targetFile.absolutePath}"
                     )
                     setExecutablePermissions(targetFile)
-                    return true
+                    return targetFile
                 }
             }
         } catch (e: Exception) {
             Log.error(TAG, "Failed to copy ${sourceFile.name} of storage: ${e.message}")
-            return false
+            return null
         }
-
     }
 
 
