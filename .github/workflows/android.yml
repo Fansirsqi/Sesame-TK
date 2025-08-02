@@ -2,11 +2,9 @@ name: Android CI
 
 on:
   push:
-    branches: ["develop"]
+    branches: ["develop", "main"]
   pull_request:
     branches: ["develop"]
-  release:
-    types: [published]
   workflow_dispatch:
 
 jobs:
@@ -145,7 +143,7 @@ jobs:
           git push origin "$VERSION_TAG"
       - name: Upload Assets to Source Release
         uses: softprops/action-gh-release@v2
-        if: (github.event_name == 'release' && github.event.action == 'published') || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/main'))
+        if: startsWith(github.ref, 'refs/heads/main') && github.event_name == 'push'
         with:
           name: ${{ github.event.release.tag_name || steps.extract_info.outputs.version }} # 发布的名称。默认为标签名称
           files: |
