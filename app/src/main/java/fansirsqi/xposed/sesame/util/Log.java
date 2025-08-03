@@ -123,32 +123,32 @@ public class Log {
     }
 
     public static void printStackTrace(Throwable th) {
-        String stackTrace = "error: " + android.util.Log.getStackTraceString(th);
+        String stackTrace = "错误: " + android.util.Log.getStackTraceString(th);
         error(stackTrace);
     }
 
     public static void printStackTrace(String msg, Throwable th) {
-        String stackTrace = "Throwable error: " + android.util.Log.getStackTraceString(th);
+        String stackTrace = "可抛出错误: " + android.util.Log.getStackTraceString(th);
         error(msg, stackTrace);
     }
 
     public static void printStackTrace(String TAG, String msg, Throwable th) {
-        String stackTrace = "[" + TAG + "] Throwable error: " + android.util.Log.getStackTraceString(th);
+        String stackTrace = "[" + TAG + "] 可抛出错误: " + android.util.Log.getStackTraceString(th);
         error(msg, stackTrace);
     }
 
     public static void printStackTrace(Exception e) {
-        String stackTrace = "Exception error: " + android.util.Log.getStackTraceString(e);
+        String stackTrace = "异常错误: " + android.util.Log.getStackTraceString(e);
         error(stackTrace);
     }
 
     public static void printStackTrace(String msg, Exception e) {
-        String stackTrace = "Throwable error: " + android.util.Log.getStackTraceString(e);
+        String stackTrace = "可抛出错误: " + android.util.Log.getStackTraceString(e);
         error(msg, stackTrace);
     }
 
     public static void printStackTrace(String TAG, String msg, Exception e) {
-        String stackTrace = "[" + TAG + "] Throwable error: " + android.util.Log.getStackTraceString(e);
+        String stackTrace = "[" + TAG + "] 可抛出错误: " + android.util.Log.getStackTraceString(e);
         error(msg, stackTrace);
     }
 

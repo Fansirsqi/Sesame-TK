@@ -201,6 +201,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                 XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        mainHandler = new Handler(Looper.getMainLooper());
                         appContext = (Context) param.args[0];
                         PackageInfo pInfo = appContext.getPackageManager().getPackageInfo(appContext.getPackageName(), 0);
                         assert pInfo.versionName != null;
@@ -278,7 +279,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         new XC_MethodHook() {
                             @Override
                             protected void afterHookedMethod(MethodHookParam param) {
-                                mainHandler = new Handler(Looper.getMainLooper());
                                 Service appService = (Service) param.thisObject;
                                 if (!General.CURRENT_USING_SERVICE.equals(appService.getClass().getCanonicalName())) {
                                     return;
@@ -338,7 +338,6 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         }
 
                 );
-                execDelayedHandler(BaseModel.getCheckInterval().getValue());
                 Log.runtime(TAG, "hook service onCreate successfully");
             } catch (Throwable t) {
                 Log.runtime(TAG, "hook service onCreate err");

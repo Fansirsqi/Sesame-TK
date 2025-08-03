@@ -189,7 +189,7 @@ public class Notify {
             return;
         try {
             contentText = "📌 上次执行 " + TimeUtil.getTimeStr(System.currentTimeMillis()) + "\n🌾 " + content;
-            mainHandler.post(() -> sendText(false));
+            mainHandler.post(() -> sendText(true));
         } catch (Exception e) {
             Log.printStackTrace(e);
         }

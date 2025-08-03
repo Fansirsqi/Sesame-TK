@@ -175,9 +175,9 @@ public class AntForest extends ModelTask {
 
     private BooleanModelField forestChouChouLe;//森林抽抽乐
     private static boolean canConsumeAnimalProp;
-    private static final int totalCollected = 0;
-    private static final int totalHelpCollected = 0;
-    private static final int totalWatered = 0;
+    private static int totalCollected = 0;
+    private static int totalHelpCollected = 0;
+    private static int totalWatered = 0;
     @Getter
     private Set<String> dontCollectMap = new HashSet<>();
     ArrayList<String> emojiList = new ArrayList<>(Arrays.asList(
@@ -342,6 +342,9 @@ public class AntForest extends ModelTask {
     @Override
     public void run() {
         try {
+            totalCollected = 0;
+            totalHelpCollected = 0;
+            totalWatered = 0;
             errorWait = false;
             Log.record(TAG, "执行开始-蚂蚁" + getName());
             taskCount.set(0);
@@ -842,9 +845,9 @@ public class AntForest extends ModelTask {
                 if (closeWhackMole.getValue()) {
                     JSONObject propertiesObject = selfHomeObj.optJSONObject("properties");
                     if (propertiesObject != null) {
-                        // 如果用户主页的属性中标记了“whackMole”
+                        // 如果用户主页的属性中标记了"whackMole"
                         if (Objects.equals("Y", propertiesObject.optString("whackMoleEntry"))) {
-                            // 尝试关闭“6秒拼手速”功能
+                            // 尝试关闭"6秒拼手速"功能
                             boolean success = WhackMole.closeWhackMole();
                             Log.record(success ? "6秒拼手速关闭成功" : "6秒拼手速关闭失败");
                         }
@@ -1253,6 +1256,7 @@ public class AntForest extends ModelTask {
                         int fullEnergy = wateringBubble.optInt("fullEnergy", 0);
                         String str = "复活能量🚑[" + UserMap.getMaskName(userId) + "-" + fullEnergy + "g]" + (vitalityAmount > 0 ? "#活力值+" + vitalityAmount : "");
                         Log.forest(str);
+                        totalHelpCollected += fullEnergy;
                         break;
                     } catch (Throwable t) {
                         Log.printStackTrace(t);
@@ -1360,6 +1364,7 @@ public class AntForest extends ModelTask {
                                 collected += bubble.getInt("collectedEnergy");
                             }
                             if (collected > 0) {
+                                totalCollected += collected;
                                 FriendWatch.friendWatch(userId, collected);
                                 int randomIndex = random.nextInt(emojiList.size());
                                 String randomEmoji = emojiList.get(randomIndex);
@@ -1385,6 +1390,7 @@ public class AntForest extends ModelTask {
                             collected += bubble.getInt("collectedEnergy");
                             FriendWatch.friendWatch(userId, collected);
                             if (collected > 0) {
+                                totalCollected += collected;
                                 int randomIndex = random.nextInt(emojiList.size());
                                 String randomEmoji = emojiList.get(randomIndex);
                                 String str = "普通收取" + randomEmoji + collected + "g[" + UserMap.getMaskName(userId) + "]";
@@ -1587,6 +1593,7 @@ public class AntForest extends ModelTask {
                     case "SUCCESS":
                         String currentEnergy = jo.getJSONObject("treeEnergy").getString("currentEnergy");
                         Log.forest("好友浇水🚿[" + UserMap.getMaskName(userId) + "]#" + waterEnergy + "g，剩余能量[" + currentEnergy + "g]");
+                        totalWatered += waterEnergy;
                         wateredTimes++;
                         break;
                     case "WATERING_TIMES_LIMIT":
@@ -1969,7 +1976,7 @@ public class AntForest extends ModelTask {
     }
 
     /**
-     * 持续巡护森林，直到巡护状态不再是“进行中”
+     * 持续巡护森林，直到巡护状态不再是"进行中"
      *
      * @param s         巡护请求的响应字符串，若为null将重新请求
      * @param nodeIndex 当前节点索引
@@ -2011,7 +2018,7 @@ public class AntForest extends ModelTask {
                         }
                     }
                 }
-                // 如果巡护状态不是“进行中”，则退出循环
+                // 如果巡护状态不是"进行中"，则退出循环
                 if (!"GOING".equals(jo.getString("currentStatus"))) {
                     return;
                 }
