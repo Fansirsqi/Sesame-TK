@@ -338,6 +338,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
                         }
 
                 );
+                execDelayedHandler(BaseModel.getCheckInterval().getValue());
                 Log.runtime(TAG, "hook service onCreate successfully");
             } catch (Throwable t) {
                 Log.runtime(TAG, "hook service onCreate err");
