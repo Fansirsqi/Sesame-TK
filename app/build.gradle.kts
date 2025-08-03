@@ -142,6 +142,8 @@ android {
 
     signingConfigs {
         getByName("debug") {
+
+
         }
     }
 
