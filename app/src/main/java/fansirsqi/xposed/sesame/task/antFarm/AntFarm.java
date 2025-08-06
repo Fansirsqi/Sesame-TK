@@ -36,6 +36,7 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.ListModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.StringModelField;
+import fansirsqi.xposed.sesame.task.antFarm.AntFarmFamily;
 import fansirsqi.xposed.sesame.task.AnswerAI.AnswerAI;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
@@ -177,6 +178,7 @@ public class AntFarm extends ModelTask {
      */
     private BooleanModelField receiveFarmTaskAward;
     private BooleanModelField useAccelerateTool;
+	private BooleanModelField useBigEaterTool; // ✅ 新增加饭卡
     private BooleanModelField useAccelerateToolContinue;
     private BooleanModelField useAccelerateToolWhenMaxEmotion;
     /**
@@ -210,8 +212,8 @@ public class AntFarm extends ModelTask {
     @Override
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
-        modelFields.addField(sleepTime = new StringModelField("sleepTime", "小鸡睡觉时间(关闭:-1)", "2001"));
-        modelFields.addField(sleepMinutes = new IntegerModelField("sleepMinutes", "小鸡睡觉时长(分钟)", 10 * 59, 1, 10 * 60));
+        modelFields.addField(sleepTime = new StringModelField("sleepTime", "小鸡睡觉时间(关闭:-1)", "2330"));
+        modelFields.addField(sleepMinutes = new IntegerModelField("sleepMinutes", "小鸡睡觉时长(分钟)", 10 * 36, 1, 10 * 60));
         modelFields.addField(recallAnimalType = new ChoiceModelField("recallAnimalType", "召回小鸡", RecallAnimalType.ALWAYS, RecallAnimalType.nickNames));
         modelFields.addField(rewardFriend = new BooleanModelField("rewardFriend", "打赏好友", false));
         modelFields.addField(feedAnimal = new BooleanModelField("feedAnimal", "自动喂小鸡", false));
@@ -233,7 +235,8 @@ public class AntFarm extends ModelTask {
         modelFields.addField(notifyFriendList = new SelectModelField("notifyFriendList", "通知赶鸡 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(donation = new BooleanModelField("donation", "每日捐蛋 | 开启", false));
         modelFields.addField(donationCount = new ChoiceModelField("donationCount", "每日捐蛋 | 次数", DonationCount.ONE, DonationCount.nickNames));
-        modelFields.addField(useAccelerateTool = new BooleanModelField("useAccelerateTool", "加速卡 | 使用", false));
+        modelFields.addField(useBigEaterTool = new BooleanModelField("useBigEaterTool", "加饭卡 | 使用", false));
+		modelFields.addField(useAccelerateTool = new BooleanModelField("useAccelerateTool", "加速卡 | 使用", false));
         modelFields.addField(useAccelerateToolContinue = new BooleanModelField("useAccelerateToolContinue", "加速卡 | 连续使用", false));
         modelFields.addField(useAccelerateToolWhenMaxEmotion = new BooleanModelField("useAccelerateToolWhenMaxEmotion", "加速卡 | 仅在满状态时使用", false));
         modelFields.addField(useSpecialFood = new BooleanModelField("useSpecialFood", "使用特殊食品", false));
@@ -677,21 +680,35 @@ public class AntFarm extends ModelTask {
                 }
             }
         }
+		
+		// 2. 使用加饭卡（仅当正在吃饭且开启配置）
+        if (useBigEaterTool.getValue() && AnimalFeedStatus.EATING.name().equals(ownerAnimal.animalFeedStatus)) {
+            Log.farm("🍚 小鸡正在吃饭，准备使用「加饭卡」...");
+            // 使用内部枚举调用
+            boolean result = useFarmTool(ownerFarmId, AntFarm.ToolType.BIG_EATER_TOOL);
+            if (result) {
+                Log.farm("✅ 成功使用1张「加饭卡」！");
+                GlobalThreadPools.sleep(1000);
+                needReload = true;
+            } else {
+                Log.farm("⚠️ 使用「加饭卡」失败，可能卡片不足或状态异常~");
+            }
+        }
 
-        // 2. 判断是否需要使用加速道具
+        // 3. 判断是否需要使用加速道具
         if (useAccelerateTool.getValue() && !AnimalFeedStatus.HUNGRY.name().equals(ownerAnimal.animalFeedStatus)) {
             if (useAccelerateTool()) {
                 needReload = true;
             }
         }
 
-        // 3. 如果有操作导致状态变化，则刷新庄园信息
+        // 4. 如果有操作导致状态变化，则刷新庄园信息
         if (needReload) {
             enterFarm();
             syncAnimalStatus(ownerFarmId);
         }
 
-        // 4. 计算并安排下一次自动喂食任务
+        // 5. 计算并安排下一次自动喂食任务
         try {
             Long startEatTime = ownerAnimal.startEatTime;
             double allFoodHaveEatten = 0d;
@@ -718,7 +735,7 @@ public class AntFarm extends ModelTask {
             Log.printStackTrace(e);
         }
 
-        // 5. 其他功能（换装、领取饲料）
+        // 6. 其他功能（换装、领取饲料）
         // 小鸡换装
         if (listOrnaments.getValue() && Status.canOrnamentToday()) {
             listOrnaments();
@@ -3106,7 +3123,7 @@ public class AntFarm extends ModelTask {
             list.add(new AntFarmFamilyOption("familySign", "每日签到"));
             list.add(new AntFarmFamilyOption("eatTogetherConfig", "请吃美食"));
             list.add(new AntFarmFamilyOption("feedFamilyAnimal", "帮喂小鸡"));
-//            list.add(new AntFarmFamilyOption("deliverMsgSend", "道早安"));
+            list.add(new AntFarmFamilyOption("deliverMsgSend", "道早安"));
             list.add(new AntFarmFamilyOption("familyClaimReward", "领取奖励"));
             list.add(new AntFarmFamilyOption("inviteFriendVisitFamily", "好友分享"));
             list.add(new AntFarmFamilyOption("assignRights", "使用顶梁柱特权"));
