@@ -4,6 +4,14 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
 }
 
+repositories {
+    maven { url = uri("https://maven.aliyun.com/repository/public") }
+    maven { url = uri("https://maven.aliyun.com/repository/google") }
+    maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+    mavenCentral()
+    google()
+}
+
 allprojects {
     tasks.withType<JavaCompile>().configureEach {
         options.compilerArgs.addAll(listOf("-Xlint:unchecked", "-Xlint:deprecation"))
