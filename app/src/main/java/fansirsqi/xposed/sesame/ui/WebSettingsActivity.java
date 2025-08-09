@@ -5,6 +5,7 @@ import static fansirsqi.xposed.sesame.data.UIConfig.UI_OPTION_NEW;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -396,6 +397,7 @@ public class WebSettingsActivity extends BaseActivity {
         menu.add(0, 4, 4, "单向好友");
         menu.add(0, 5, 5, "切换UI");
         menu.add(0, 6, 6, "保存");
+        menu.add(0, 7, 7, "复制ID");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -463,6 +465,13 @@ public class WebSettingsActivity extends BaseActivity {
                 // 使用 Handler 延迟执行 save()，给 JS 一点时间完成异步操作
                 // 200 毫秒是一个经验值，如果仍然有问题可以适当增加
                 new Handler(Looper.getMainLooper()).postDelayed(this::save, 200); // 延迟 200 毫秒
+                break;
+            case 7:
+                //复制userId到剪切板
+                android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                ClipData clipData = ClipData.newPlainText("userId", this.userId);
+                cm.setPrimaryClip(clipData);
+                ToastUtil.showToastWithDelay(this, "复制成功！", 100);
                 break;
         }
         return super.onOptionsItemSelected(item);

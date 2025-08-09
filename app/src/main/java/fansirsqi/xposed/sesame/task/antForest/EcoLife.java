@@ -20,6 +20,7 @@ import fansirsqi.xposed.sesame.data.DataCache;
 import java.util.ArrayList;
 import java.util.List;
 
+import fansirsqi.xposed.sesame.newutil.DataStore;
 import fansirsqi.xposed.sesame.util.GlobalThreadPools;
 import fansirsqi.xposed.sesame.util.RandomUtil;
 import fansirsqi.xposed.sesame.data.Status;
@@ -55,7 +56,11 @@ public class EcoLife {
 
 
             // 获取当天的积分和任务列表
-            String dayPoint = data.getString("dayPoint");
+            String dayPoint = data.optString("dayPoint", "0");
+            if (dayPoint.equals("0")) {
+                Log.error(TAG, "不知道什么B原因自己去绿色行动找");
+                return;
+            }
 
             if (ecoLifeOption.getValue().contains("plate")) {
                 photoGuangPan(dayPoint);
@@ -128,7 +133,7 @@ public class EcoLife {
                     if ("photoguangpan".equals(actionId)) continue;
                     GlobalThreadPools.sleep(300);
                     JSONObject jo = new JSONObject(AntForestRpcCall.ecolifeTick(actionId, dayPoint, source));
-                    if (ResChecker.checkRes(TAG,jo)) {
+                    if (ResChecker.checkRes(TAG, jo)) {
                         Log.forest("绿色打卡🍀[" + actionName + "]"); // 成功打卡日志
                     } else {
                         // 记录失败原因
@@ -160,14 +165,15 @@ public class EcoLife {
 
             String source = "renwuGD"; // 任务来源标识
 
-            TypeReference<List<Map<String, String>>> typeRef = new TypeReference<>() {};
-            List<Map<String, String>> allPhotos = DataCache.INSTANCE.getDataWithType("guangPanPhoto", typeRef, new ArrayList<>());
+            TypeReference<List<Map<String, String>>> typeRef = new TypeReference<>() {
+            };
+            List<Map<String, String>> allPhotos = DataStore.INSTANCE.getOrCreate("plate", typeRef);
             Log.runtime(TAG + " [DEBUG] guangPanPhoto 数据内容: " + allPhotos);
             // 查询今日任务状态
             String str = AntForestRpcCall.ecolifeQueryDish(source, dayPoint);
             JSONObject jo = new JSONObject(str);
             // 如果请求失败，则记录错误信息并返回
-            if (!ResChecker.checkRes(TAG,jo)) {
+            if (!ResChecker.checkRes(TAG, jo)) {
                 Log.runtime(TAG + ".photoGuangPan.ecolifeQueryDish", jo.optString("resultDesc"));
                 return;
             }
@@ -188,9 +194,6 @@ public class EcoLife {
                     if (afterMatcher.find()) {
                         photo.put("after", afterMatcher.group(1));
                     }
-                    if (allPhotos == null) {
-                        allPhotos = new ArrayList<>();
-                    }
                     // 避免重复添加相同的照片信息
                     boolean exists = false;
                     for (Map<String, String> p : allPhotos) {
@@ -201,39 +204,45 @@ public class EcoLife {
                     }
                     if (!exists) {
                         allPhotos.add(photo);
-                        DataCache.INSTANCE.saveData("guangPanPhoto", allPhotos);
+                        DataStore.INSTANCE.put("plate", allPhotos);
                     }
                 }
             }
             if ("SUCCESS".equals(JsonUtil.getValueByPath(jo, "data.status"))) {
                 return;
             }
-            if (allPhotos == null || allPhotos.isEmpty()) {
-                Log.forest("光盘行动🍛缓存中没有照片数据");
+            if (allPhotos.isEmpty()) {
+                if (!Status.hasFlagToday("EcoLife::plateNotify0")) {
+                    Log.forest("光盘行动🍛缓存中没有照片数据");
+                    Status.setFlagToday("EcoLife::plateNotify0");
+                }
                 photo = null;
             } else {
                 photo = allPhotos.get(RandomUtil.nextInt(0, allPhotos.size()));
             }
             if (photo == null) {
-                Log.forest("光盘行动🍛请先完成一次光盘打卡");
+                if (!Status.hasFlagToday("EcoLife::plateNotify1")) {
+                    Log.forest("光盘行动🍛请先完成一次光盘打卡");
+                    Status.setFlagToday("EcoLife::plateNotify1");
+                }
                 return;
             }
             str = AntForestRpcCall.ecolifeUploadDishImage("BEFORE_MEALS", photo.get("before"), 0.16571736, 0.07448776, 0.7597949, dayPoint);
             jo = new JSONObject(str);
-            if (!ResChecker.checkRes(TAG,jo)) {
+            if (!ResChecker.checkRes(TAG, jo)) {
                 return;
             }
             GlobalThreadPools.sleep(3000);
             str = AntForestRpcCall.ecolifeUploadDishImage("AFTER_MEALS", photo.get("after"), 0.00040030346, 0.99891376, 0.0006858421, dayPoint);
             jo = new JSONObject(str);
-            if (!ResChecker.checkRes(TAG,jo)) {
+            if (!ResChecker.checkRes(TAG, jo)) {
                 return;
             }
             // 提交任务
             str = AntForestRpcCall.ecolifeTick("photoguangpan", dayPoint, source);
             jo = new JSONObject(str);
             // 如果提交失败，记录错误信息并返回
-            if (!ResChecker.checkRes(TAG,jo)) {
+            if (!ResChecker.checkRes(TAG, jo)) {
                 return;
             }
             // 任务完成，输出完成日志

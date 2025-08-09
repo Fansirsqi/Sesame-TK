@@ -8,11 +8,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.fasterxml.jackson.core.type.TypeReference
 import fansirsqi.xposed.sesame.BuildConfig
 import fansirsqi.xposed.sesame.R
-import fansirsqi.xposed.sesame.data.DataCache
 import fansirsqi.xposed.sesame.entity.ExtendFunctionItem
 import fansirsqi.xposed.sesame.newui.WatermarkView
+import fansirsqi.xposed.sesame.newutil.DataStore
 import fansirsqi.xposed.sesame.ui.widget.ExtendFunctionAdapter
 import fansirsqi.xposed.sesame.util.Detector.getApi
 import fansirsqi.xposed.sesame.util.FansirsqiUtil
@@ -79,15 +80,18 @@ class ExtendActivity : BaseActivity() {
         )
         extendFunctions.add(
             ExtendFunctionItem(getString(R.string.clear_photo)) {
+                // 取出当前条数
+                val currentCount = DataStore
+                    .getOrCreate("guangPanPhoto", object : TypeReference<List<Map<String, String>>>() {})
+                    .size
+
                 AlertDialog.Builder(this)
                     .setTitle(R.string.clear_photo)
-                    .setMessage("确认清空${DataCache.getData<List<Map<String, String>>>("guangPanPhoto")?.size ?: 0}组光盘行动图片？")
+                    .setMessage("确认清空 $currentCount 组光盘行动图片？")
                     .setPositiveButton(R.string.ok) { _, _ ->
-                        if (DataCache.removeData("guangPanPhoto")) {
-                            ToastUtil.showToast(this, "光盘行动图片清空成功")
-                        } else {
-                            ToastUtil.showToast(this, "光盘行动图片清空失败")
-                        }
+                        // 直接从持久化里删掉 key
+                        DataStore.remove("guangPanPhoto")
+                        ToastUtil.showToast(this, "光盘行动图片清空成功")
                     }
                     .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
                     .show()
@@ -101,19 +105,20 @@ class ExtendActivity : BaseActivity() {
                         .setTitle("Test")
                         .setMessage("xxxx")
                         .setPositiveButton(R.string.ok) { _, _ ->
-                            val newPhotoEntry = HashMap<String, String>()
-                            val randomStr = FansirsqiUtil.getRandomString(10)
-                            newPhotoEntry["before"] = "before$randomStr"
-                            newPhotoEntry["after"] = "after$randomStr"
+                            val newPhotoEntry = mapOf(
+                                "before" to "before${FansirsqiUtil.getRandomString(10)}",
+                                "after" to "after${FansirsqiUtil.getRandomString(10)}"
+                            )
 
-                            val existingPhotos = DataCache.getData<MutableList<Map<String, String>>>("guangPanPhoto")?.toMutableList() ?: mutableListOf()
+                            // 取出已有列表（空时返回空 MutableList）
+                            val existingPhotos = DataStore.getOrCreate(
+                                "guangPanPhoto",
+                                object : TypeReference<MutableList<Map<String, String>>>() {})
                             existingPhotos.add(newPhotoEntry)
 
-                            if (DataCache.saveData("guangPanPhoto", existingPhotos)) {
-                                ToastUtil.showToast(this, "写入成功$newPhotoEntry")
-                            } else {
-                                ToastUtil.showToast(this, "写入失败$newPhotoEntry")
-                            }
+                            // 写回持久化
+                            DataStore.put("guangPanPhoto", existingPhotos)
+                            ToastUtil.showToast(this, "写入成功$newPhotoEntry")
                         }
                         .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
                         .show()
@@ -123,15 +128,20 @@ class ExtendActivity : BaseActivity() {
             //我想在这加一个编辑框，里面支持输入文字，下面的展示随机光盘的字段从编辑框里面取
 
             extendFunctions.add(
-                ExtendFunctionItem("获取DataCache字段") {
+                ExtendFunctionItem("获取DataStore字段") {
                     val inputEditText = EditText(this)
                     AlertDialog.Builder(this)
                         .setTitle("输入字段Key")
                         .setView(inputEditText)
                         .setPositiveButton(R.string.ok) { _, _ ->
-                            val inputText = inputEditText.text.toString()
-                            val output = DataCache.getData<Any>(inputText)
-                            ToastUtil.showToast(this, "$output \n输入内容: $inputText")
+                            val key = inputEditText.text.toString()
+                            val value: Any? = try {
+                                // 若不知道类型，可先按 Map 读；失败时再按 String 读
+                                DataStore.getOrCreate(key, object : TypeReference<Map<*, *>>() {})
+                            } catch (e: Exception) {
+                                DataStore.getOrCreate(key, object : TypeReference<String>() {})
+                            }
+                            ToastUtil.showToast(this, "$value \n输入内容: $key")
                         }
                         .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
                         .show()

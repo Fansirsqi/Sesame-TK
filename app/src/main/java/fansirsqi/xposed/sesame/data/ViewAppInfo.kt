@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import fansirsqi.xposed.sesame.BuildConfig
 import fansirsqi.xposed.sesame.R
+import fansirsqi.xposed.sesame.newutil.DataStore
 import fansirsqi.xposed.sesame.newutil.MMKVSettingsManager
+import fansirsqi.xposed.sesame.util.Files
 import fansirsqi.xposed.sesame.util.Log
 import java.util.UUID
 
@@ -57,6 +59,7 @@ object ViewAppInfo {
         if (ViewAppInfo.context == null) {
             ViewAppInfo.context = context
             MMKVSettingsManager.init(context)
+            DataStore.init(Files.CONFIG_DIR)
             verifyId = MMKVSettingsManager.mmkv.decodeString("verify").takeIf { !it.isNullOrEmpty() }
                 ?: UUID.randomUUID().toString().replace("-", "").also {
                     MMKVSettingsManager.mmkv.encode("verify", it)

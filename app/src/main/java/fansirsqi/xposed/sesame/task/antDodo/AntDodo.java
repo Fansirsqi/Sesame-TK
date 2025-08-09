@@ -1,4 +1,6 @@
 package fansirsqi.xposed.sesame.task.antDodo;
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,6 +19,7 @@ import fansirsqi.xposed.sesame.model.ModelGroup;
 import fansirsqi.xposed.sesame.model.modelFieldExt.BooleanModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.ChoiceModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
+import fansirsqi.xposed.sesame.newutil.DataStore;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.task.TaskStatus;
@@ -194,10 +197,13 @@ public class AntDodo extends ModelTask {
     private void receiveTaskAward() {
         try {
             // 获取不能完成的任务列表
-            List<String> taskList = new ArrayList<>(List.of("HELP_FRIEND_COLLECT"));
-            List<String> cachedSet = DataCache.INSTANCE.getData("dodoTaskList", taskList);
-            taskList = new ArrayList<>(new LinkedHashSet<>(cachedSet));
-
+            Set<String> presetBad = new LinkedHashSet<>(List.of("HELP_FRIEND_COLLECT"));
+            TypeReference<Set<String>> typeRef = new TypeReference<>() {};
+            Set<String> badTaskSet = DataStore.INSTANCE.getOrCreate("badDodoTaskList", typeRef);
+            if (badTaskSet.isEmpty()) {
+                badTaskSet.addAll(presetBad);
+                DataStore.INSTANCE.put("badDodoTaskList", badTaskSet);
+            }
             while (true) {
                 boolean doubleCheck = false;
                 String response = AntDodoRpcCall.taskList(); // 调用任务列表接口
@@ -239,7 +245,7 @@ public class AntDodo extends ModelTask {
                         }
                         // 如果任务待完成，处理特定类型的任务
                         else if (TaskStatus.TODO.name().equals(taskStatus)) {
-                            if (!taskList.contains(taskType)) {
+                            if (!badTaskSet.contains(taskType)) {
                                 // 尝试完成任务
                                 JSONObject joFinishTask = new JSONObject(
                                         AntDodoRpcCall.finishTask(sceneCode, taskType)); // 完成任务请求
@@ -248,7 +254,8 @@ public class AntDodo extends ModelTask {
                                     doubleCheck = true;
                                 } else {
                                     Log.record(TAG,"完成任务失败，" + taskTitle); // 记录完成任务失败信息
-                                    taskList.add(taskType);
+                                    badTaskSet.add(taskType);
+                                    DataStore.INSTANCE.put("badDodoTaskList", badTaskSet);
                                 }
 
                             }
@@ -257,7 +264,6 @@ public class AntDodo extends ModelTask {
                     }
                 }
                 if (!doubleCheck) break;
-                DataCache.INSTANCE.saveData("forestTaskList", taskList);
             }
         } catch (JSONException e) {
             Log.error(TAG, "JSON解析错误: " + e.getMessage());

@@ -5,6 +5,8 @@ import static fansirsqi.xposed.sesame.task.antForest.ForestUtil.hasShield;
 
 import androidx.annotation.NonNull;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,6 +50,7 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.ListModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.StringModelField;
+import fansirsqi.xposed.sesame.newutil.DataStore;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.task.TaskStatus;
@@ -1721,15 +1724,21 @@ public class AntForest extends ModelTask {
     private void receiveTaskAward() {
         try {
             // 修复：使用new HashSet包装从缓存获取的数据，兼容List/Set类型
-            List<String> taskList = new ArrayList<>(List.of(
+            Set<String> presetBad = new LinkedHashSet<>(List.of(
                     "ENERGYRAIN", //能量雨
                     "ENERGY_XUANJIAO", //践行绿色行为
                     "FOREST_TOTAL_COLLECT_ENERGY_3",//累积3天收自己能量
                     "TEST_LEAF_TASK",//逛农场得落叶肥料
                     "SHARETASK"//邀请好友助力
             ));
-            List<String> cachedSet = DataCache.INSTANCE.getData("forestTaskList", taskList);
-            taskList = new ArrayList<>(new LinkedHashSet<>(cachedSet)); // ✅ 关键：确保是可变集合
+            /* 3️⃣ 失败任务集合：空文件时自动创建空 HashSet 并立即落盘 */
+            TypeReference<Set<String>> typeRef = new TypeReference<>() {};
+            Set<String> badTaskSet = DataStore.INSTANCE.getOrCreate("badForestTaskSet", typeRef);
+            /* 3️⃣ 首次运行时把预设黑名单合并进去并立即落盘 */
+            if (badTaskSet.isEmpty()) {
+                badTaskSet.addAll(presetBad);
+                DataStore.INSTANCE.put("badForestTaskSet", badTaskSet);   // 持久化
+            }
             while (true) {
                 boolean doubleCheck = false; // 标记是否需要再次检查任务
                 String s = AntForestRpcCall.queryTaskList(); // 查询任务列表
@@ -1775,14 +1784,16 @@ public class AntForest extends ModelTask {
                                 Log.runtime(joAward.toString()); // 打印奖励响应
                             }
                         } else if (TaskStatus.TODO.name().equals(taskStatus)) {
-                            if (!taskList.contains(taskType)) {
+                            if (badTaskSet.contains(taskType)) continue;
+                            if (!badTaskSet.contains(taskType)) {
                                 JSONObject joFinishTask = new JSONObject(AntForestRpcCall.finishTask(sceneCode, taskType)); // 完成任务请求
                                 if (ResChecker.checkRes(TAG, joFinishTask)) {
                                     Log.forest("森林任务🧾️[" + taskTitle + "]");
                                     doubleCheck = true; // 标记需要重新检查任务
                                 } else {
                                     Log.error(TAG, "完成任务失败，" + taskTitle); // 记录完成任务失败信息
-                                    taskList.add(taskType);
+                                    badTaskSet.add(taskType);
+                                    DataStore.INSTANCE.put("badForestTaskSet", badTaskSet);
                                 }
                             }
 
@@ -1791,7 +1802,6 @@ public class AntForest extends ModelTask {
                     }
                 }
                 if (!doubleCheck) break;
-                DataCache.INSTANCE.saveData("forestTaskList", taskList);
             }
         } catch (JSONException e) {
             Log.error(TAG, "JSON解析错误: " + e.getMessage());

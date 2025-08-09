@@ -44,8 +44,9 @@ object DataCache {
 
     @Suppress("UNCHECKED_CAST")
     fun <T> getData(key: String, defaultValue: T? = null): T? {
-//        Log.runtime(TAG, "get data for key '$key'")
-        return dataMap[key] as? T ?: defaultValue
+        val d = dataMap[key] as? T ?: defaultValue
+        Log.runtime(TAG, "getData $d for key '$key'")
+        return d
     }
 
     /**
@@ -54,7 +55,6 @@ object DataCache {
      * @param typeReference 反序列化类型
      */
     fun <T> getDataWithType(key: String, typeReference: TypeReference<T>, defaultValue: T? = null): T? {
-//        Log.runtime(TAG, "get data for key '$key'")
         val value = dataMap[key]
         return try {
             if (value == null) {
@@ -131,11 +131,11 @@ object DataCache {
                             list.distinct()
                         }
                     } else {
-                        emptyList<Any>()
+                        emptyList()
                     }
                 }
 
-                is String -> if (isNotEmpty()) this else null
+                is String -> ifEmpty { null }
                 else -> this
             }
         }

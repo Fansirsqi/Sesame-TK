@@ -3,6 +3,7 @@ package fansirsqi.xposed.sesame.ui;
 import static fansirsqi.xposed.sesame.data.UIConfig.UI_OPTION_WEB;
 
 import android.app.AlertDialog;
+import android.content.ClipData;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -161,6 +162,7 @@ public class SettingActivity extends BaseActivity {
         menu.add(0, 4, 4, "单向好友");
         menu.add(0, 5, 5, "切换WEBUI");
         menu.add(0, 6, 6, "保存");
+        menu.add(0, 7, 7, "复制ID");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -221,6 +223,13 @@ public class SettingActivity extends BaseActivity {
                 break;
             case 6:
                 save();
+                break;
+            case 7:
+                //复制userId到剪切板
+                android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                ClipData clipData = ClipData.newPlainText("userId", this.userId);
+                cm.setPrimaryClip(clipData);
+                ToastUtil.showToastWithDelay(this, "复制成功！", 100);
                 break;
         }
         return super.onOptionsItemSelected(item);
