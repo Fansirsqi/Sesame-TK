@@ -62,7 +62,7 @@
 
 自 **北京时间2025年7月23日开始** 提交的所有代码 ，遵循 [WTFPL](https://www.wtfpl.net/) 协议 **你他妈想干嘛就干嘛**
 
-## 鸣谢 感谢前人的辛苦贡献
+## 鸣谢 感谢前人的辛苦贡献.
 
 <a href="https://github.com/Fansirsqi/Sesame-TK/graphs/contributors">  
   <img src="https://contrib.rocks/image?repo=Fansirsqi/Sesame-TK"  alt="contributors"/>  
