@@ -23,8 +23,8 @@
 
 ## 鸣谢 感谢前人的辛苦贡献
 
-<a href="https://github.com/Fansirsqi/Sesame-TK/graphs/contributors">  
-  <img src="https://contrib.rocks/image?repo=Fansirsqi/Sesame-TK"  alt="contributors"/>  
+<a href="https://github.com/McdullD/Sesame-TK/graphs/contributors">  
+  <img src="https://contrib.rocks/image?repo=McdullD/Sesame-TK"  alt="contributors"/>  
 </a>  
 
 > 贡献名单使用 [contrib.rocks](https://contrib.rocks) 生成
