@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import fansirsqi.xposed.sesame.entity.AlipayUser;
@@ -208,6 +210,10 @@ public class AntFarm extends ModelTask {
     private StringModelField giftFamilyDrawFragment;
     private BooleanModelField paradiseCoinExchangeBenefit;
     private SelectModelField paradiseCoinExchangeBenefitList;
+
+    // 在方法外或类中作为字段缓存当天任务次数（不持久化）
+    private final Map<String, AtomicInteger> farmTaskTryCount = new ConcurrentHashMap<>();
+
 
     @Override
     public ModelFields getFields() {
@@ -1315,12 +1321,14 @@ public class AntFarm extends ModelTask {
      */
     private void doFarmTasks() {
         try {
+            //手动屏蔽以下任务，防止死循环
             Set<String> presetBad = new LinkedHashSet<>(List.of(
                     "HEART_DONATION_ADVANCED_FOOD_V2",//香草芒果冰糕任务
                     "HEART_DONATE",//爱心捐赠
                     "SHANGOU_xiadan",//去买秋天第一杯奶茶
                     "OFFLINE_PAY",//到店付款,线下支付
-                    "ONLINE_PAY"//在线支付
+                    "ONLINE_PAY",//在线支付
+                    "HUABEI_MAP_180"//用花呗完成一笔支付
             ));
             TypeReference<Set<String>> typeRef = new TypeReference<>() {
             };
@@ -1357,13 +1365,17 @@ public class AntFarm extends ModelTask {
                             } else if ("ANSWER".equals(bizKey)) {
                                 answerQuestion("100"); //答题
                             } else {
+                                // 安全计数，避免 NPE 警告
+                                int count = farmTaskTryCount.computeIfAbsent(bizKey, k -> new AtomicInteger(0))
+                                        .incrementAndGet();
                                 JSONObject taskDetailjo = new JSONObject(AntFarmRpcCall.doFarmTask(bizKey));
-                                if (ResChecker.checkRes(TAG, taskDetailjo)) {
-                                    Log.farm("庄园任务🧾[" + title + "]");
-                                } else {
-                                    Log.error("庄园任务失败：" + title + "\n" + taskDetailjo);
-                                    badTaskSet.add(bizKey); // 避免重复失败
+                                if (count > 1) {
+                                    // 超过 1 次视为失败任务
+                                    Log.error("庄园任务(超过1次)标记失败：" + title + "\n" + taskDetailjo);
+                                    badTaskSet.add(bizKey);
                                     DataStore.INSTANCE.put("badFarmTaskSet", badTaskSet);
+                                } else {
+                                    Log.farm("庄园任务🧾[" + title + "]");
                                 }
                             }
                         }

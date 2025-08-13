@@ -29,13 +29,13 @@ import fansirsqi.xposed.sesame.data.ViewAppInfo
 import fansirsqi.xposed.sesame.data.ViewAppInfo.verifyId
 import fansirsqi.xposed.sesame.entity.UserEntity
 import fansirsqi.xposed.sesame.net.SecureApiClient
+import fansirsqi.xposed.sesame.newui.DeviceInfoCard
+import fansirsqi.xposed.sesame.newui.DeviceInfoUtil
 import fansirsqi.xposed.sesame.newui.WatermarkView
 import fansirsqi.xposed.sesame.util.AssetUtil
 import fansirsqi.xposed.sesame.util.Detector
 import fansirsqi.xposed.sesame.util.Detector.getRandomApi
 import fansirsqi.xposed.sesame.util.Detector.getRandomEncryptData
-import fansirsqi.xposed.sesame.util.DeviceInfoCard
-import fansirsqi.xposed.sesame.util.DeviceInfoUtil
 import fansirsqi.xposed.sesame.util.FansirsqiUtil
 import fansirsqi.xposed.sesame.util.Files
 import fansirsqi.xposed.sesame.util.Log

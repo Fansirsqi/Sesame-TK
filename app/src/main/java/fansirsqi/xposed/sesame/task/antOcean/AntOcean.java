@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import fansirsqi.xposed.sesame.data.DataCache;
 import fansirsqi.xposed.sesame.entity.AlipayBeach;
@@ -140,6 +142,8 @@ public class AntOcean extends ModelTask {
 
         String[] nickNames = {"不保护", "保护全部", "仅保护沙滩"};
     }
+
+    private final Map<String, AtomicInteger> oceanTaskTryCount = new ConcurrentHashMap<>();
 
 
     @Override
@@ -658,7 +662,7 @@ public class AntOcean extends ModelTask {
     }
 
 
-    private static void receiveTaskAward() {
+    private void receiveTaskAward() {
         try {
             Set<String> presetBad = new LinkedHashSet<>(List.of("DEMO", "DEMO1"));
 
@@ -699,14 +703,25 @@ public class AntOcean extends ModelTask {
                             if (taskTitle.contains("答题")) {
                                 answerQuestion();
                             } else {
+                                String bizKey = sceneCode + "_" + taskType;
+                                int count = oceanTaskTryCount
+                                        .computeIfAbsent(bizKey, k -> new AtomicInteger(0))
+                                        .incrementAndGet();
+
                                 JSONObject joFinishTask = new JSONObject(AntOceanRpcCall.finishTask(sceneCode, taskType));
-                                if (ResChecker.checkRes(TAG, joFinishTask)) {
-                                    Log.forest("海洋任务🧾️完成[" + taskTitle + "]");
-                                    done = true;
-                                } else {
+                                if (count > 1) {
                                     Log.error(TAG, "完成任务失败，" + taskTitle);
                                     badTaskSet.add(taskType);
                                     DataStore.INSTANCE.put("badOceanTaskSet", badTaskSet);
+                                } else {
+                                    if (ResChecker.checkRes(TAG, joFinishTask)) {
+                                        Log.forest("海洋任务🧾️完成[" + taskTitle + "]");
+                                        done = true;
+                                    } else {
+                                        Log.error(TAG, "海洋任务🧾️完成失败：" + joFinishTask);
+                                        badTaskSet.add(taskType);
+                                        DataStore.INSTANCE.put("badOceanTaskSet", badTaskSet);
+                                    }
                                 }
                             }
 

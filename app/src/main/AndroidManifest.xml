@@ -26,7 +26,7 @@
             android:value="人面不知何处去，桃花依旧笑春风" />
         <meta-data
             android:name="xposedminversion"
-            android:value="82" />
+            android:value="54" />
         <meta-data
             android:name="xposedscope"
             android:resource="@array/xposed_scopes" />
