@@ -478,9 +478,9 @@ public class WebSettingsActivity extends BaseActivity {
     }
 
     private void save() {
-//        if (!ViewAppInfo.INSTANCE.getVeriftag()) {
-//            ToastUtil.showToastWithDelay(this, "非内测用户！", 100);
-//        }
+        if (!ViewAppInfo.INSTANCE.getVeriftag()) {
+            ToastUtil.showToastWithDelay(this, "非内测用户！", 100);
+        }
         if (Config.isModify(userId)) {
             if (Config.save(userId, false)) {
                 Toast.makeText(context, "保存成功！", Toast.LENGTH_SHORT).show();

@@ -139,7 +139,6 @@ class MainActivity : BaseActivity() {
             ViewAppInfo.veriftag = true
         }
         // ====== 结束 ====== //
-
     }
 
     override fun onResume() {

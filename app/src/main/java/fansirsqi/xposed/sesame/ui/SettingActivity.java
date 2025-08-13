@@ -237,9 +237,9 @@ public class SettingActivity extends BaseActivity {
 
     private void save() {
         try {
-//            if (!ViewAppInfo.INSTANCE.getVeriftag()) {
-//                ToastUtil.showToastWithDelay(this, "非内测用户！", 100);
-//            }
+            if (!ViewAppInfo.INSTANCE.getVeriftag()) {
+                ToastUtil.showToastWithDelay(this, "非内测用户！", 100);
+            }
             if (Config.isModify(this.userId) && Config.save(this.userId, false)) {
                 ToastUtil.showToastWithDelay(this, "保存成功！", 100);
                 if (!StringUtil.isEmpty(this.userId)) {
