@@ -1,9 +1,6 @@
 ![Sesame-TK](https://socialify.git.ci/McdullD/Sesame-TK/image?language=1&name=1&owner=1&stargazers=1&theme=Light)
-[![License](https://img.shields.io/github/license/Fansirsqi/Sesame-TK?labelColor=fff&label=License&logo=gnuprivacyguard)](https://raw.githubusercontent.com/Fansirsqi/Sesame-TK/refs/heads/main/LICENSE)  
-[![Latest Release](https://img.shields.io/github/release/Fansirsqi/Sesame-TK?labelColor=fff&label=Releases&logo=gitlfs)](../../releases)  
-[![All Releases Download](https://img.shields.io/github/downloads/Fansirsqi/Sesame-TK/total?labelColor=fff&label=Downloads&logo=codefresh)](../../releases)  
-[![Telegram-Channel](https://img.shields.io/badge/Sesame--TK-nul?&logo=Telegram&label=Telegram-Channel&labelColor=fff&link=https%3A%2F%2Ft.me%2FSesame_TK_Channel)](https://t.me/Sesame_TK_Channel)  
-[![Telegram-Group](https://img.shields.io/badge/Sesame--TK-nul?&logo=Telegram&label=Telegram-Group&labelColor=fff&link=https%3A%2F%2Ft.me%2Ffansirsqi_xposed_sesame)](https://t.me/fansirsqi_xposed_sesame)
+[![License](https://img.shields.io/github/license/McdullD/Sesame-TK?labelColor=fff&label=License&logo=gnuprivacyguard)](https://raw.githubusercontent.com/McdullD/Sesame-TK/refs/heads/main/LICENSE)  
+[![All Releases Download](https://img.shields.io/github/downloads/McdullD/Sesame-TK/total?labelColor=fff&label=Downloads&logo=codefresh)](../../releases)  
 
 > 👉懒真人版本: [Sesame](https://github.com/LazyImmortal/Sesame)
 
