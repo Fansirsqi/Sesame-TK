@@ -13,15 +13,6 @@
 4. 凡以任何方式直接、间接使用APP者，视为自愿接受本声明的约束。
 5. 本APP如无意中侵犯了某个媒体或个人的知识产权，请来信或来电告之，作者将立即删除。
 
-## 授权说明
-
-本项目fork自  
-基于 [constanline版XQuickEnergy](https://github.com/constanline/XQuickEnergy)  
-与 [pansong291版XQuickEnergy](https://github.com/pansong291/XQuickEnergy)  
-开发的项目[Sesame-TK](https://github.com/TKaxv-7S/Sesame-TK)  
-并且在其基础上进行了少量的功能改进与优化。得益于GPT4-o模型的强大能力使得本项目能有这么多提交  
-但是不确定是否是有效修改，请自行斟酌考虑使用。
-所有图片由 ༒激༙྇流༙྇泉༙྇༒ 授权使用
 
 ## 协议说明
 
@@ -29,7 +20,6 @@
 
 自 **北京时间2024年7月15日开始** 提交的所有代码 ，遵循 GPLv3 协议，并禁止用于任何商业用途、禁止二次修改后闭源发布
 
-自 **北京时间2025年7月23日开始** 提交的所有代码 ，遵循 [WTFPL](https://www.wtfpl.net/) 协议 **你他妈想干嘛就干嘛**
 
 ## 鸣谢 感谢前人的辛苦贡献
 
@@ -41,10 +31,10 @@
 
 ## Star History
 
-<a href="https://star-history.com/#Fansirsqi/Sesame-TK&Timeline">  
+<a href="https://star-history.com/#McdullD/Sesame-TK&Timeline">  
  <picture>  
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline&theme=dark" />  
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline" />  
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Fansirsqi/Sesame-TK&type=Timeline" />  
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=McdullD/Sesame-TK&type=Timeline&theme=dark" />  
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=McdullD/Sesame-TK&type=Timeline" />  
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=McdullD/Sesame-TK&type=Timeline" />  
  </picture>  
 </a>
