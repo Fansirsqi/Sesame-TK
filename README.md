@@ -1,4 +1,4 @@
-![Sesame-TK](https://socialify.git.ci/McdullD/Sesame-TK/image?language=1&name=1&stargazers=1&theme=Light)
+[![Sesame-TK](https://socialify.git.ci/McdullD/Sesame-TK/image?language=1&name=1&stargazers=1&theme=Light)](https://socialify.git.ci/McdullD/Sesame-TK/image?language=1&name=1&owner=1&stargazers=1&theme=Light)
 [![License](https://img.shields.io/github/license/Fansirsqi/Sesame-TK?labelColor=fff&label=License&logo=gnuprivacyguard)](https://raw.githubusercontent.com/Fansirsqi/Sesame-TK/refs/heads/main/LICENSE)  
 [![Latest Release](https://img.shields.io/github/release/Fansirsqi/Sesame-TK?labelColor=fff&label=Releases&logo=gitlfs)](../../releases)  
 [![All Releases Download](https://img.shields.io/github/downloads/Fansirsqi/Sesame-TK/total?labelColor=fff&label=Downloads&logo=codefresh)](../../releases)  
