@@ -14,16 +14,6 @@ public class AntMemberRpcCall {
         return String.valueOf(System.currentTimeMillis()) + RandomUtil.nextLong();
     }
 
-    public static Boolean check() {
-        boolean z = true;
-        RpcEntity rpcEntity = RequestManager.requestObject("alipay.antmember.biz.rpc.member.h5.queryPointCert",
-                "[{\"page\":" + 1 + ",\"pageSize\":" + 8 + "}]", 1, 0);
-        if (rpcEntity == null || rpcEntity.getHasError()) {
-            z = false;
-        }
-        return z;
-    }
-
     /* ant member point */
     public static String queryPointCert(int page, int pageSize) {
         String args1 = "[{\"page\":" + page + ",\"pageSize\":" + pageSize + "}]";

@@ -1,5 +1,7 @@
 package fansirsqi.xposed.sesame.task.antOcean;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import fansirsqi.xposed.sesame.data.DataCache;
 import fansirsqi.xposed.sesame.entity.AlipayBeach;
@@ -24,6 +28,7 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.BooleanModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.ChoiceModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
+import fansirsqi.xposed.sesame.newutil.DataStore;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.task.TaskStatus;
@@ -137,6 +142,8 @@ public class AntOcean extends ModelTask {
 
         String[] nickNames = {"不保护", "保护全部", "仅保护沙滩"};
     }
+
+    private final Map<String, AtomicInteger> oceanTaskTryCount = new ConcurrentHashMap<>();
 
 
     @Override
@@ -348,7 +355,7 @@ public class AntOcean extends ModelTask {
                 if ("AVAILABLE".equals(bubble.getString("collectStatus"))) {
                     long bubbleId = bubble.getLong("id");
                     String userId = bubble.getString("userId");
-                    String s = AntForestRpcCall.collectEnergy(null, userId, bubbleId);
+                    String s = AntForestRpcCall.collectEnergy("", userId, bubbleId);
                     JSONObject jo = new JSONObject(s);
                     if (ResChecker.checkRes(TAG,jo)) {
                         JSONArray retBubbles = jo.optJSONArray("bubbles");
@@ -659,16 +666,22 @@ public class AntOcean extends ModelTask {
     }
 
 
-    private static void receiveTaskAward() {
+    private void receiveTaskAward() {
         try {
-            List<String> taskList = new ArrayList<>(List.of("DEMO", "DEMO1"));
-            List<String> cachedSet = DataCache.INSTANCE.getData("oceanTaskList", taskList);
-            taskList = new ArrayList<>(new LinkedHashSet<>(cachedSet)); // ✅ 关键：确保是可变集合
+            Set<String> presetBad = new LinkedHashSet<>(List.of("DEMO", "DEMO1"));
+
+            TypeReference<Set<String>> typeRef = new TypeReference<>() {
+            };
+            Set<String> badTaskSet = DataStore.INSTANCE.getOrCreate("badOceanTaskSet", typeRef);
+            if (badTaskSet.isEmpty()) {
+                badTaskSet.addAll(presetBad);
+                DataStore.INSTANCE.put("badOceanTaskSet", badTaskSet);
+            }
             while (true) {
                 boolean done = false;
                 String s = AntOceanRpcCall.queryTaskList();
                 JSONObject jo = new JSONObject(s);
-                if (!ResChecker.checkRes(TAG,jo)) {
+                if (!ResChecker.checkRes(TAG, jo)) {
                     Log.record(TAG, "查询任务列表失败：" + jo.getString("resultDesc"));
                 }
                 JSONArray jaTaskList = jo.getJSONArray("antOceanTaskVOList");
@@ -688,19 +701,31 @@ public class AntOcean extends ModelTask {
                         } else {
                             Log.error(TAG, "海洋奖励🌊" + joAward);
                         }
-                        GlobalThreadPools.sleep(500);
                     } else if (TaskStatus.TODO.name().equals(taskStatus)) {
-                        if (!taskList.contains(taskType)) {
+                        if (badTaskSet.contains(taskType)) continue;
+                        if (!badTaskSet.contains(taskType)) {
                             if (taskTitle.contains("答题")) {
                                 answerQuestion();
                             } else {
+                                String bizKey = sceneCode + "_" + taskType;
+                                int count = oceanTaskTryCount
+                                        .computeIfAbsent(bizKey, k -> new AtomicInteger(0))
+                                        .incrementAndGet();
+
                                 JSONObject joFinishTask = new JSONObject(AntOceanRpcCall.finishTask(sceneCode, taskType));
-                                if (ResChecker.checkRes(TAG, joFinishTask)) {
-                                    Log.forest("海洋任务🧾️完成[" + taskTitle + "]");
-                                    done = true;
-                                } else {
+                                if (count > 1) {
                                     Log.error(TAG, "完成任务失败，" + taskTitle);
-                                    taskList.add(taskType);
+                                    badTaskSet.add(taskType);
+                                    DataStore.INSTANCE.put("badOceanTaskSet", badTaskSet);
+                                } else {
+                                    if (ResChecker.checkRes(TAG, joFinishTask)) {
+                                        Log.forest("海洋任务�️完成[" + taskTitle + "]");
+                                        done = true;
+                                    } else {
+                                        Log.error(TAG, "海洋任务�️完成失败：" + joFinishTask);
+                                        badTaskSet.add(taskType);
+                                        DataStore.INSTANCE.put("badOceanTaskSet", badTaskSet);
+                                    }
                                 }
                             }
 
@@ -711,8 +736,6 @@ public class AntOcean extends ModelTask {
 
                 }
                 if (!done) break;
-                DataCache.INSTANCE.saveData("oceanTaskList", taskList);
-                Log.runtime("海洋任务列表已保存");
             }
         } catch (JSONException e) {
             Log.runtime(TAG, "JSON解析错误: " + e.getMessage());

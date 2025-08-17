@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/base_title"
     android:layout_width="match_parent"
@@ -13,17 +12,13 @@
         android:background="@color/colorPrimary"
         android:fitsSystemWindows="true">
 
-        <androidx.appcompat.widget.Toolbar
+        <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/x_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?actionBarSize"
             android:minHeight="?attr/actionBarSize"
-            app:layout_scrollFlags="scroll|enterAlways"
-            android:theme="@style/MenuTheme">
-
-            <!-- 这里放置Toolbar的具体内容 -->
-
-        </androidx.appcompat.widget.Toolbar>
+            android:theme="@style/MenuTheme"
+           />
 
     </com.google.android.material.appbar.AppBarLayout>
 

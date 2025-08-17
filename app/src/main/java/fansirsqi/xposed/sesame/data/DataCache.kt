@@ -22,6 +22,8 @@ object DataCache {
     private var init = false
     val dataMap: MutableMap<String, Any> = mutableMapOf()
 
+    private val objectMapper: ObjectMapper = ObjectMapper()
+
     init {
         load()
     }
@@ -42,8 +44,9 @@ object DataCache {
 
     @Suppress("UNCHECKED_CAST")
     fun <T> getData(key: String, defaultValue: T? = null): T? {
-        Log.runtime(TAG, "get data for key '$key'")
-        return dataMap[key] as? T ?: defaultValue
+        val d = dataMap[key] as? T ?: defaultValue
+        Log.runtime(TAG, "getData $d for key '$key'")
+        return d
     }
 
     /**
@@ -52,13 +55,12 @@ object DataCache {
      * @param typeReference 反序列化类型
      */
     fun <T> getDataWithType(key: String, typeReference: TypeReference<T>, defaultValue: T? = null): T? {
-        Log.runtime(TAG, "get data for key '$key'")
         val value = dataMap[key]
         return try {
             if (value == null) {
                 defaultValue
             } else {
-                ObjectMapper().convertValue(value, typeReference)
+                objectMapper.convertValue(value, typeReference)
             }
         } catch (e: Exception) {
             Log.error(TAG, "反序列化缓存失败：${e.message}")
@@ -77,7 +79,6 @@ object DataCache {
 
     @Synchronized
     private fun save(): Boolean {
-        Log.runtime(TAG, "【SAVE】当前 dataMap 内容: $dataMap")
         val targetFile = File(FILE_PATH, FILENAME)
         val tempFile = File(targetFile.parent, "${targetFile.name}.tmp")
         return try {
@@ -130,17 +131,17 @@ object DataCache {
                             list.distinct()
                         }
                     } else {
-                        emptyList<Any>()
+                        emptyList()
                     }
                 }
 
-                is String -> if (isNotEmpty()) this else null
+                is String -> ifEmpty { null }
                 else -> this
             }
         }
 
         for ((key, value) in dataMap.toMap()) {
-            Log.runtime(TAG, "【CLEANUP】处理 key: $key, value type: ${value.javaClass}")
+//            Log.runtime(TAG, "【CLEANUP】处理 key: $key, value type: ${value.javaClass}")
             try {
                 val cleanedValue = value.deepClean()
                 if (cleanedValue == null || (cleanedValue is Collection<*> && cleanedValue.isEmpty())) {
@@ -164,7 +165,7 @@ object DataCache {
         try {
             if (targetFile.exists()) {
                 val json = Files.readFromFile(targetFile)
-                ObjectMapper().readerForUpdating(this).readValue<Any>(json)
+                objectMapper.readerForUpdating(this).readValue<Any>(json)
                 cleanUpDataMap()
                 val formatted = JsonUtil.formatJson(this)
                 if (formatted != null && formatted != json) {
@@ -175,7 +176,7 @@ object DataCache {
             } else if (oldFile.exists()) {
                 if (Files.copy(oldFile, targetFile)) {
                     val json = Files.readFromFile(targetFile)
-                    ObjectMapper().readerForUpdating(this).readValue<Any>(json)
+                    objectMapper.readerForUpdating(this).readValue<Any>(json)
                     cleanUpDataMap()
                     val formatted = JsonUtil.formatJson(this)
                     if (formatted != null && formatted != json) {
@@ -189,7 +190,7 @@ object DataCache {
                 }
             } else {
                 Log.runtime(TAG, "init $TAG config")
-                ObjectMapper().updateValue(this, DataCache)
+                objectMapper.updateValue(this, DataCache)
                 val formatted = JsonUtil.formatJson(this)
                 if (formatted != null) {
                     save()
@@ -199,7 +200,7 @@ object DataCache {
         } catch (e: Exception) {
             Log.error(TAG, "加载缓存数据失败：${e.message}")
             // 尝试恢复默认配置
-            ObjectMapper().updateValue(this, DataCache)
+            objectMapper.updateValue(this, DataCache)
         } finally {
             init = success
         }

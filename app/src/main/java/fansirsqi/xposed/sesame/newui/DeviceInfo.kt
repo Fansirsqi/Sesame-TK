@@ -1,12 +1,9 @@
-package fansirsqi.xposed.sesame.util
+package fansirsqi.xposed.sesame.newui
 
-import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
-import android.provider.Settings
-import android.telephony.TelephonyManager
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -25,11 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fansirsqi.xposed.sesame.BuildConfig
-
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 
 class PreviewDeviceInfoProvider : PreviewParameterProvider<Map<String, String>> {
     override val values: Sequence<Map<String, String>> = sequenceOf(
@@ -59,7 +55,7 @@ fun DeviceInfoCard(info: Map<String, String>) {
         Column(modifier = Modifier.padding(16.dp)) {
             info.forEach { (label, value) ->
                 when (label) {
-                    "Device ID" -> {
+                    "Verify ID" -> {
                         var showFull by remember { mutableStateOf(false) }
                         val displayValue = if (showFull) value else "***********"
                         val context = LocalContext.current
@@ -76,11 +72,12 @@ fun DeviceInfoCard(info: Map<String, String>) {
                                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                         val clip = ClipData.newPlainText("Android ID", value)
                                         clipboard.setPrimaryClip(clip)
-                                        Toast.makeText(context, "Device ID copied", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Verify ID copied", Toast.LENGTH_SHORT).show()
                                     }
                                 )
                         )
                     }
+
                     else -> {
                         Text(text = "$label: $value", fontSize = 14.sp)
                     }
@@ -92,21 +89,24 @@ fun DeviceInfoCard(info: Map<String, String>) {
 }
 
 object DeviceInfoUtil {
-    @SuppressLint("HardwareIds")
-    fun getDeviceInfo(context: Context): Map<String, String> {
+
+    fun showInfo(vid: String): Map<String, String> {
         fun getProp(prop: String): String {
             return try {
                 val p = Runtime.getRuntime().exec("getprop $prop")
                 p.inputStream.bufferedReader().readLine().orEmpty()
-            } catch (e: Exception) {
-                "未知"
+            } catch (_: Exception) {
+                ""
             }
         }
 
         fun getDeviceName(): String {
             val candidates = listOf(
-                "ro.product.odm.model",
-                "ro.product.marketname",
+                "ro.vendor.oplus.market.enname", //oneplus
+                "ro.vendor.oplus.market.name",//realme
+                "ro.product.marketname",//xiaomi
+                "ro.vivo.market.name", //vivo
+                "ro.oppo.market.name", //oppo
                 "ro.product.odm.device",
                 "ro.product.brand"
             )
@@ -117,16 +117,13 @@ object DeviceInfoUtil {
             return "${Build.BRAND} ${Build.MODEL}"
         }
 
-
-        val androidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
-
         return mapOf(
             "Product" to "${Build.MANUFACTURER} ${Build.PRODUCT}",
             "Device" to getDeviceName(),
             "Android Version" to "${Build.VERSION.RELEASE} SDK (${Build.VERSION.SDK_INT})",
             "OS Build" to "${Build.DISPLAY}",
-            "Device ID" to androidId,
-            "Module Version" to "${BuildConfig.VERSION}-${BuildConfig.BUILD_TAG}.${BuildConfig.BUILD_TYPE} 📦",
+            "Verify ID" to vid,
+            "Module Version" to "${BuildConfig.VERSION}.${BuildConfig.BUILD_TYPE} 📦",
             "Module Build" to "${BuildConfig.BUILD_DATE} ${BuildConfig.BUILD_TIME} ⏰"
         )
     }

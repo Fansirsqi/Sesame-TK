@@ -11,6 +11,7 @@ import fansirsqi.xposed.sesame.entity.AlipayVersion;
 import fansirsqi.xposed.sesame.entity.RpcEntity;
 import fansirsqi.xposed.sesame.hook.ApplicationHook;
 import fansirsqi.xposed.sesame.hook.RequestManager;
+import fansirsqi.xposed.sesame.util.Log;
 import fansirsqi.xposed.sesame.util.RandomUtil;
 import fansirsqi.xposed.sesame.util.StringUtil;
 
@@ -31,20 +32,61 @@ public class AntForestRpcCall {
         }
     }
 
-    private static String getUniqueId() {
-        return String.valueOf(System.currentTimeMillis()) + RandomUtil.nextLong();
+    public static String queryFriendsEnergyRanking() {
+        try {
+            JSONObject arg = new JSONObject();
+            arg.put("source", "chInfo_ch_appcenter__chsub_9patch");
+            arg.put("periodType", "total");
+            arg.put("rankType", "energyRank");
+            arg.put("version", VERSION);
+            String param = "[" + arg + "]";
+            JSONObject jorelationLocal = new JSONObject();
+            jorelationLocal.put("pathList", new JSONArray().put("friendRanking").put("myself").put("totalDatas"));
+            String relationLocal = "[" + jorelationLocal + "]";
+            return RequestManager.requestString("alipay.antmember.forest.h5.queryEnergyRanking", param, relationLocal);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
-    public static String queryEnergyRanking() {
-        return RequestManager.requestString(
-                "alipay.antmember.forest.h5.queryEnergyRanking",
-                "[{\"periodType\":\"total\",\"rankType\":\"energyRank\",\"source\":\"chInfo_ch_appcenter__chsub_9patch\",\"version\":\"" + VERSION + "\"}]",
-                "{\"pathList\":[\"friendRanking\",\"myself\",\"totalDatas\"]}");
+    public static String queryTopEnergyChallengeRanking() {
+        try {
+            JSONObject arg = new JSONObject();
+            arg.put("source", "chInfo_ch_appcenter__chsub_9patch");
+            String param = "[" + arg + "]";
+            return RequestManager.requestString("alipay.antforest.forest.h5.queryTopEnergyChallengeRanking", param);
+        } catch (Exception e) {
+            Log.printStackTrace(e);
+            return "";
+        }
     }
 
-    public static String fillUserRobFlag(String userIdList) {
-        return RequestManager.requestString("alipay.antforest.forest.h5.fillUserRobFlag", "[{\"userIdList\":" + userIdList + "}]", "{\"pathList" +
-                "\":[\"friendRanking\"]}");
+    public static String fillUserRobFlag(JSONArray userIdList) {
+        try {
+            JSONObject arg = new JSONObject();
+            arg.put("source", "chInfo_ch_appcenter__chsub_9patch");
+            arg.put("userIdList", userIdList);
+            String param = "[" + arg + "]";
+            JSONObject joRelationLocal = new JSONObject();
+            joRelationLocal.put("pathList", new JSONArray().put("friendRanking"));
+            String relationLocal = "[" + joRelationLocal + "]";
+            return RequestManager.requestString("alipay.antforest.forest.h5.fillUserRobFlag", param, relationLocal);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public static String fillUserRobFlag(JSONArray userIdList, boolean needFillUserInfo) {
+        try {
+            JSONObject arg = new JSONObject();
+            arg.put("source", "chInfo_ch_appcenter__chsub_9patch");
+            arg.put("userIdList", userIdList);
+            arg.put("needFillUserInfo", needFillUserInfo);
+            String param = "[" + arg + "]";
+            return RequestManager.requestString("alipay.antforest.forest.h5.fillUserRobFlag", param);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     public static String queryHomePage() throws JSONException {
@@ -62,72 +104,100 @@ public class AntForestRpcCall {
         );
     }
 
-    public static String queryFriendHomePage(String userId) {
-        return RequestManager.requestString(
-                "alipay.antforest.forest.h5.queryFriendHomePage",
-                "[{\"canRobFlags\":\"F,F,F,F,F\",\"configVersionMap\":{\"redPacketConfig\":0,\"wateringBubbleConfig\":\"10\"}," +
-                        "\"source\":\"chInfo_ch_appcenter__chsub_9patch\",\"userId\":\""
-                        + userId
-                        + "\",\"version\":\""
-                        + VERSION
-                        + "\"}]",
-                3,
-                1000);
+    public static String queryFriendHomePage(String userId, String fromAct) {
+        try {
+            if (fromAct == null) {
+                fromAct = "TAKE_LOOK_FRIEND";
+            }
+            JSONObject arg = new JSONObject();
+            JSONObject arg1 = new JSONObject();
+            arg1.put("wateringBubbleConfig", "0");
+            arg.put("canRobFlags", "T,F,F,F,F");
+            arg.put("configVersionMap", arg1);
+            arg.put("source", "chInfo_ch_appid-60000002");
+            arg.put("userId", userId);
+            arg.put("fromAct", fromAct);
+            arg.put("version", VERSION);
+            String param = "[" + arg + "]";
+            return RequestManager.requestString("alipay.antforest.forest.h5.queryFriendHomePage", param, 3, 1000);
+        } catch (Exception e) {
+            Log.printStackTrace(e);
+            return "";
+        }
     }
 
-    public static RpcEntity getCollectEnergyRpcEntity(String bizType, String userId, long bubbleId) {
-        String args1;
-        if (StringUtil.isEmpty(bizType)) {
-            args1 =
-                    "[{\"bizType\":\"\",\"bubbleIds\":[" + bubbleId + "],\"source\":\"chInfo_ch_appcenter__chsub_9patch\",\"userId\":\"" + userId + "\"," +
-                            "\"version\":\"" + VERSION + "\"}]";
-        } else {
-            args1 = "[{\"bizType\":\"" + bizType + "\",\"bubbleIds\":[" + bubbleId + "],\"source\":\"chInfo_ch_appcenter__chsub_9patch\",\"userId\":\"" + userId + "\"}]";
+    public static RpcEntity energyRpcEntity(String bizType, String userId, long bubbleId) {
+        try {
+            JSONObject args = new JSONObject();
+            JSONArray bubbleIds = new JSONArray();
+            bubbleIds.put(bubbleId);
+            args.put("bizType", bizType);
+            args.put("bubbleIds", bubbleIds);
+            args.put("source", "chInfo_ch_appcenter__chsub_9patch");
+            args.put("userId", userId);
+            args.put("version", VERSION);
+            String param = "[" + args + "]";
+            return new RpcEntity("alipay.antmember.forest.h5.collectEnergy", param, null);
+        } catch (Exception e) {
+            Log.printStackTrace(e);
+            return null;
         }
-        return new RpcEntity("alipay.antmember.forest.h5.collectEnergy", args1, null);
     }
 
     public static String collectEnergy(String bizType, String userId, Long bubbleId) {
-        return RequestManager.requestString(getCollectEnergyRpcEntity(bizType, userId, bubbleId));
+        RpcEntity r = energyRpcEntity(bizType, userId, bubbleId);
+        if (r == null) {
+            return "";
+        }
+        return RequestManager.requestString(r);
     }
 
-    public static RpcEntity getCollectBatchEnergyRpcEntity(String userId, List<Long> bubbleIdList) {
-        return getCollectBatchEnergyRpcEntity(userId, StringUtil.collectionJoinString(",", bubbleIdList));
+    public static RpcEntity batchEnergyRpcEntity(String bizType, String userId, List<Long> bubbleIds) throws JSONException {
+        JSONObject arg = new JSONObject();
+        arg.put("bizType", bizType);
+        arg.put("bubbleIds", new JSONArray(bubbleIds));
+        arg.put("fromAct", "BATCH_ROB_ENERGY");
+        arg.put("source", "chInfo_ch_appcenter__chsub_9patch");
+        arg.put("userId", userId);
+        arg.put("version", VERSION);
+        String param = "[" + arg + "]";
+        return new RpcEntity("alipay.antmember.forest.h5.collectEnergy", param);
     }
 
-    public static RpcEntity getCollectBatchEnergyRpcEntity(String userId, String bubbleIds) {
-        return new RpcEntity(
-                "alipay.antmember.forest.h5.collectEnergy",
-                "[{\"bizType\":\"\",\"bubbleIds\":["
-                        + bubbleIds
-                        + "],\"fromAct\":\"BATCH_ROB_ENERGY\",\"source\":\"chInfo_ch_appcenter__chsub_9patch\",\"userId\":\""
-                        + userId
-                        + "\",\"version\":\""
-                        + VERSION
-                        + "\"}]");
-    }
-
-    public static String collectBatchEnergy(String userId, List<Long> bubbleId) {
-        return RequestManager.requestString(getCollectBatchEnergyRpcEntity(userId, bubbleId));
-    }
-
+    /**
+     * 收取复活能量
+     *
+     * @return 收取结果
+     */
     public static String collectRebornEnergy() {
-        return RequestManager.requestString("alipay.antforest.forest.h5.collectRebornEnergy", "[{\"source\":\"chInfo_ch_appcenter__chsub_9patch\"}]");
+        try {
+            JSONObject arg = new JSONObject();
+            arg.put("source", "chInfo_ch_appcenter__chsub_9patch");
+            String param = "[" + arg + "]";
+            return RequestManager.requestString("alipay.antforest.forest.h5.collectRebornEnergy", param);
+        } catch (Exception e) {
+            Log.printStackTrace(e);
+            return "";
+        }
     }
 
     public static String transferEnergy(String targetUser, String bizNo, int energyId) {
-        return RequestManager.requestString(
-                "alipay.antmember.forest.h5.transferEnergy",
-                "[{\"bizNo\":\""
-                        + bizNo
-                        + UUID.randomUUID().toString()
-                        + "\",\"energyId\":"
-                        + energyId
-                        + ",\"extInfo\":{\"sendChat\":\"N\"},\"from\":\"friendIndex\",\"source\":\"chInfo_ch_appcenter__chsub_9patch\",\"targetUser\":\""
-                        + targetUser
-                        + "\",\"transferType\":\"WATERING\",\"version\":\""
-                        + VERSION
-                        + "\"}]");
+        try {
+            JSONObject arg = new JSONObject();
+            arg.put("bizNo", bizNo + UUID.randomUUID().toString());
+            arg.put("energyId", energyId);
+            arg.put("extInfo", new JSONObject().put("sendChat", "N"));
+            arg.put("from", "friendIndex");
+            arg.put("source", "chInfo_ch_appcenter__chsub_9patch");
+            arg.put("targetUser", targetUser);
+            arg.put("transferType", "WATERING");
+            arg.put("version", VERSION);
+            String param = "[" + arg + "]";
+            return RequestManager.requestString("alipay.antmember.forest.h5.transferEnergy", param);
+        } catch (Exception e) {
+            Log.printStackTrace(e);
+            return "";
+        }
     }
 
     public static String forFriendCollectEnergy(String targetUserId, long bubbleId) {
@@ -173,7 +243,7 @@ public class AntForestRpcCall {
         return RequestManager.requestString("alipay.antforest.forest.h5.queryTaskList", new JSONArray().put(jo).toString());
     }
 
-    /*青春特权道具任务状态查询🔍*/
+    /*青春特权道具任务状态查询�*/
     public static String queryTaskListV2(String firstTaskType) throws JSONException {
         JSONObject jo = new JSONObject();
         JSONObject extend = new JSONObject();

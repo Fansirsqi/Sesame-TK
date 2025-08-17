@@ -42,9 +42,9 @@ public class AntBookRead extends ModelTask {
         if(getRunCnts() <= 1) {
             Log.record(TAG,"第一轮跳过");
             return;
-        }        
+        }
         try {
-            Log.other("执行开始-" + getName()+ " 执行次数:" +getRunCnts());
+            Log.record("执行开始-" + getName()+ " 执行次数:" +getRunCnts());
             RuntimeInfo.getInstance().put("consumeGold", System.currentTimeMillis());
             queryTaskCenterPage();
             queryTask();
@@ -53,7 +53,7 @@ public class AntBookRead extends ModelTask {
             Log.runtime(TAG, "start.run err:");
             Log.printStackTrace(TAG, t);
         }finally {
-            Log.other("执行结束-" + getName());
+            Log.record("执行结束-" + getName());
         }
     }
     private static void queryTaskCenterPage() {

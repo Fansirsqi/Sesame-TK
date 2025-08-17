@@ -28,6 +28,7 @@ import androidx.webkit.WebViewFeature;
 import java.io.File;
 
 import fansirsqi.xposed.sesame.R;
+import fansirsqi.xposed.sesame.newui.WatermarkView;
 import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.LanguageUtil;
 import fansirsqi.xposed.sesame.util.Log;
@@ -46,7 +47,7 @@ public class HtmlViewerActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         LanguageUtil.setLocale(this);
         setContentView(R.layout.activity_html_viewer);
-
+        WatermarkView.Companion.install(this);
         // 初始化 WebView 和进度条
         mWebView = findViewById(R.id.mwv_webview);
         progressBar = findViewById(R.id.pgb_webview);
@@ -117,6 +118,42 @@ public class HtmlViewerActivity extends BaseActivity {
                 });
     }
 
+    private static String toJsString(String s) {
+        if (s == null) return "''";
+        StringBuilder sb = new StringBuilder(s.length() + 16);
+        sb.append('\'');
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '\'': sb.append("\\'"); break;
+                case '\\': sb.append("\\\\"); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                case '\f': sb.append("\\f"); break;
+                case '\b': sb.append("\\b"); break;
+                default:
+                    if (c < 0x20) {
+                        sb.append(String.format("\\u%04x", (int)c));
+                    } else {
+                        sb.append(c);
+                    }
+            }
+        }
+        sb.append('\'');
+        return sb.toString();
+    }
+
+    private static String readAllTextSafe(String path) {
+        try {
+            java.nio.charset.Charset cs = java.nio.charset.StandardCharsets.UTF_8;
+            byte[] data = java.nio.file.Files.readAllBytes(new File(path).toPath());
+            return new String(data, cs);
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -144,7 +181,47 @@ public class HtmlViewerActivity extends BaseActivity {
                 configureWebViewSettings(intent, settings);
                 uri = intent.getData();
                 if (uri != null) {
-                    mWebView.loadUrl(uri.toString());
+//                    mWebView.loadUrl(uri.toString());
+// 1) 允许 JS（仅在你要显示日志时启用）
+                    settings.setJavaScriptEnabled(true);
+                    settings.setDomStorageEnabled(true); // 可选
+
+// 2) 先加载模板页面
+                    mWebView.loadUrl("file:///android_asset/log_viewer.html");
+
+// 3) 等模板加载完成后，读入文件内容 -> setFullText()
+//    然后启动你的增量监听（RandomAccessFile + FileObserver/Poll），新增内容用 appendLog()
+//    这里演示用一个最简单的“页面加载完成回调 + 首次读全量”的写法：
+                    mWebView.setWebChromeClient(new WebChromeClient() {
+                        @Override
+                        public void onProgressChanged(WebView view, int progress) {
+                            progressBar.setProgress(progress);
+                            if (progress < 100) {
+                                setBaseSubtitle("Loading...");
+                                progressBar.setVisibility(View.VISIBLE);
+                            } else {
+                                setBaseSubtitle(mWebView.getTitle());
+                                progressBar.setVisibility(View.GONE);
+
+                                // ★★ 页面已就绪：把现有文件一次性灌入 ★★
+                                if (uri != null && "file".equalsIgnoreCase(uri.getScheme())) {
+                                    String path = uri.getPath();
+                                    if (path != null && path.endsWith(".log")) {
+                                        String all = readAllTextSafe(path); // 你实现的文件读取
+                                        String jsArg = toJsString(all);     // 下面给了帮助方法
+                                        mWebView.evaluateJavascript("setFullText(" + jsArg + ")", null);
+
+                                        // 然后启动增量监听（你在 MyWebView 里实现的）
+                                        if (mWebView instanceof MyWebView) {
+                                            ((MyWebView) mWebView).startWatchingIncremental(path);
+                                            // 或者 ((MyWebView) mWebView).startWatchingWithObserver(path);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+
                 }
                 canClear = intent.getBooleanExtra("canClear", false);
             }

@@ -132,7 +132,7 @@ public class OmegakoiTown extends ModelTask {
             return;
         }        
         try {
-            Log.other("开始执行-" + getName()+ " 执行次数:" +getRunCnts());
+            Log.record("开始执行-" + getName()+ " 执行次数:" +getRunCnts());
             RuntimeInfo.getInstance().put("omegakoiTown", System.currentTimeMillis());
             getUserTasks();
             getSignInStatus();
@@ -141,7 +141,7 @@ public class OmegakoiTown extends ModelTask {
             Log.runtime(TAG, "start.run err:");
             Log.printStackTrace(TAG, t);
         } finally {
-            Log.other("结束执行-" + getName());
+            Log.record("结束执行-" + getName());
         }
     }
     private void getUserTasks() {

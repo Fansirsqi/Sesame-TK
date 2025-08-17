@@ -19,7 +19,7 @@ public abstract class Model {
     private static final Map<String, ModelConfig> readOnlyModelConfigMap = Collections.unmodifiableMap(modelConfigMap);
     private static final Map<ModelGroup, Map<String, ModelConfig>> groupModelConfigMap = new LinkedHashMap<>();
     private static final Map<Class<? extends Model>, Model> modelMap = new ConcurrentHashMap<>();
-    private static final List<Class<? extends Model>> modelClazzList = ModelOrder.getClazzList();
+    private static final List<Class<? extends Model>> modelClazzList = ModelOrder.INSTANCE.getAllConfig();
     @Getter
     private static final Model[] modelArray = new Model[modelClazzList.size()];
     private final BooleanModelField enableField;

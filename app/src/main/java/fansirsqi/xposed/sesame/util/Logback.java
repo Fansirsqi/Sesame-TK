@@ -15,11 +15,13 @@ import ch.qos.logback.core.util.FileSize;
 public class Logback {
     private static String LOG_DIR;
 
+
     public static List<String> logNames = List.of(
             "runtime", "system", "record", "debug", "forest",
             "farm", "other", "error", "capture");
 
     public static void configureLogbackDirectly() {
+        new File(LOG_DIR + "bak").mkdirs();
         // 延迟初始化 LOG_DIR
         if (LOG_DIR == null) {
             assert Files.LOG_DIR != null;

@@ -768,7 +768,7 @@ public class AntStall extends ModelTask {
                     continue;
                 }
                 Log.farm("新村助力🎉成功[" + name + "]");
-                GlobalThreadPools.sleep(1000);
+                GlobalThreadPools.sleep(5000);
             }
             //暂时一天只做一次
             Status.antStallAssistFriendToday();

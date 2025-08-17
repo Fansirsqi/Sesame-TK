@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +18,7 @@ import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.Log;
 import lombok.Getter;
+
 /**
  * 用于管理和操作用户数据的映射关系，
  * 通常在应用程序中用于处理用户信息，
@@ -37,6 +37,7 @@ public class UserMap {
      */
     @Getter
     public static String currentUid = null;
+
     /**
      * 获取只读的用户信息映射
      *
@@ -45,6 +46,7 @@ public class UserMap {
     public static Map<String, UserEntity> getUserMap() {
         return readOnlyUserMap;
     }
+
     /**
      * 获取所有用户ID的集合
      *
@@ -53,21 +55,14 @@ public class UserMap {
     public static Set<String> getUserIdSet() {
         return userMap.keySet();
     }
-    /**
-     * 获取所有用户实体的集合
-     *
-     * @return 用户实体集合
-     */
-    public static Collection<UserEntity> getUserEntityCollection() {
-        return userMap.values();
-    }
+
     /**
      * 初始化用户数据
      *
      * @param currentUserId 当前用户ID
      */
     public static synchronized void initUser(String currentUserId) {
-        Log.runtime(TAG ,"初始化用户数据: " + currentUserId);
+        Log.runtime(TAG, "初始化用户数据: " + currentUserId);
         // 设置当前用户ID
         setCurrentUserId(currentUserId);
         // 在主线程中执行初始化逻辑
@@ -77,7 +72,7 @@ public class UserMap {
                 // 获取类加载器
                 loader = ApplicationHook.getClassLoader();
             } catch (Exception e) {
-                Log.runtime(TAG,"Error getting classloader");
+                Log.runtime(TAG, "Error getting classloader");
                 return;
             }
             try {
@@ -116,7 +111,7 @@ public class UserMap {
                             }
                             UserMap.add(userEntity);
                         } catch (Throwable t) {
-                            Log.runtime(TAG,"addUserObject err:");
+                            Log.runtime(TAG, "addUserObject err:");
                             Log.printStackTrace(t);
                         }
                     }
@@ -125,11 +120,12 @@ public class UserMap {
                 }
                 UserMap.save(selfId);
             } catch (Throwable t) {
-                Log.runtime(TAG,"checkUnknownId.run err:");
+                Log.runtime(TAG, "checkUnknownId.run err:");
                 Log.printStackTrace(t);
             }
         });
     }
+
     /**
      * 设置当前用户ID
      *
@@ -138,6 +134,7 @@ public class UserMap {
     public static synchronized void setCurrentUserId(String userId) {
         currentUid = (userId == null || userId.isEmpty()) ? null : userId;
     }
+
     /**
      * 获取当前用户的掩码名称
      *
@@ -146,6 +143,7 @@ public class UserMap {
     public static String getCurrentMaskName() {
         return getMaskName(currentUid);
     }
+
     /**
      * 获取指定用户的掩码名称
      *
@@ -156,16 +154,7 @@ public class UserMap {
         UserEntity userEntity = userMap.get(userId);
         return userEntity == null ? null : userEntity.getMaskName();
     }
-    /**
-     * 获取指定用户的完整名称
-     *
-     * @param userId 用户ID
-     * @return 完整名称
-     */
-    public static String getFullName(String userId) {
-        UserEntity userEntity = userMap.get(userId);
-        return userEntity == null ? null : userEntity.getFullName();
-    }
+
     /**
      * 获取指定用户实体
      *
@@ -175,6 +164,7 @@ public class UserMap {
     public static UserEntity get(String userId) {
         return userMap.get(userId);
     }
+
     /**
      * 添加用户到映射
      *
@@ -185,6 +175,7 @@ public class UserMap {
             userMap.put(userEntity.getUserId(), userEntity);
         }
     }
+
     /**
      * 从映射中移除指定用户
      *
@@ -193,6 +184,7 @@ public class UserMap {
     public static synchronized void remove(String userId) {
         userMap.remove(userId);
     }
+
     /**
      * 加载用户数据
      *
@@ -222,12 +214,14 @@ public class UserMap {
             Log.printStackTrace(e);
         }
     }
+
     /**
      * 卸载用户数据
      */
     public static synchronized void unload() {
         userMap.clear();
     }
+
     /**
      * 保存用户数据到文件
      *
@@ -237,6 +231,7 @@ public class UserMap {
     public static synchronized boolean save(String userId) {
         return Files.write2File(JsonUtil.formatJson(userMap), Files.getFriendIdMapFile(userId));
     }
+
     /**
      * 加载当前用户的数据
      *
@@ -255,6 +250,7 @@ public class UserMap {
             Log.printStackTrace(e);
         }
     }
+
     /**
      * 保存当前用户数据到文件
      *

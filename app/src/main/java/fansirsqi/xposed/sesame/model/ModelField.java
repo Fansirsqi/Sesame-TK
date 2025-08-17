@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.android.material.button.MaterialButton;
 
 import org.json.JSONException;
 
@@ -40,12 +41,14 @@ public class ModelField<T> implements Serializable {
     @Setter
     @Getter
     public volatile T value; // 当前值
+
     /**
      * 默认构造函数，初始化字段值类型
      */
     public ModelField() {
         valueType = TypeUtil.getTypeArgument(this.getClass().getGenericSuperclass(), 0);
     }
+
     /**
      * 构造函数，接受初始值
      *
@@ -54,6 +57,7 @@ public class ModelField<T> implements Serializable {
     public ModelField(T value) {
         this(null, null, value);
     }
+
     /**
      * 构造函数，接受字段代码、名称和初始值
      *
@@ -69,6 +73,7 @@ public class ModelField<T> implements Serializable {
         this.desc = null;
         setObjectValue(value); // 设置当前值
     }
+
     public ModelField(String code, String name, T value, String desc) {
         this();
         this.code = code;
@@ -77,6 +82,7 @@ public class ModelField<T> implements Serializable {
         this.desc = desc;
         setObjectValue(value);
     }
+
     /**
      * 设置当前值
      *
@@ -89,6 +95,7 @@ public class ModelField<T> implements Serializable {
         }
         value = JsonUtil.parseObject(objectValue, valueType); // 解析并设置当前值
     }
+
     /**
      * 获取字段类型
      *
@@ -98,6 +105,7 @@ public class ModelField<T> implements Serializable {
     public String getType() {
         return "DEFAULT"; // 默认返回类型
     }
+
     /**
      * 获取扩展键
      *
@@ -107,6 +115,7 @@ public class ModelField<T> implements Serializable {
     public Object getExpandKey() {
         return null; // 默认返回 null
     }
+
     /**
      * 获取扩展值
      *
@@ -116,6 +125,7 @@ public class ModelField<T> implements Serializable {
     public Object getExpandValue() throws JSONException {
         return null; // 默认返回 null
     }
+
     /**
      * 将当前值转换为配置值
      *
@@ -125,6 +135,7 @@ public class ModelField<T> implements Serializable {
     public Object toConfigValue(T value) {
         return value; // 默认返回当前值
     }
+
     /**
      * 从配置值转换为对象值
      *
@@ -134,6 +145,7 @@ public class ModelField<T> implements Serializable {
     public Object fromConfigValue(String value) {
         return value; // 默认返回配置值
     }
+
     /**
      * 获取当前值的配置字符串表示
      *
@@ -143,6 +155,7 @@ public class ModelField<T> implements Serializable {
     public String getConfigValue() {
         return JsonUtil.formatJson(toConfigValue(value)); // 转换为 JSON 字符串
     }
+
     /**
      * 设置配置值
      *
@@ -169,6 +182,7 @@ public class ModelField<T> implements Serializable {
     public void reset() {
         value = defaultValue; // 设置当前值为默认值
     }
+
     /**
      * 获取字段的视图
      *
@@ -177,18 +191,23 @@ public class ModelField<T> implements Serializable {
      */
     @JsonIgnore
     public View getView(Context context) {
-        TextView btn = new TextView(context); // 创建 TextView 控件
-        btn.setText(getName()); // 设置文本为字段名称
-        btn.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)); // 设置布局参数
-        btn.setTextColor(ContextCompat.getColor(context, R.color.selection_color)); // 设置文本颜色
-        btn.setBackground(ContextCompat.getDrawable(context, R.drawable.dialog_list_button));
-        btn.setGravity(Gravity.START | Gravity.CENTER_VERTICAL); // 设置文本对齐方式
-        btn.setMinHeight(150); // 设置最小高度
-        btn.setMaxHeight(180); // 设置最大高度
-        btn.setPaddingRelative(40, 0, 40, 0); // 设置左右内边距
-        btn.setAllCaps(false); // 设置不全大写
-        // 设置点击事件，显示无配置项的提示
-        btn.setOnClickListener(v -> Toast.makeText(context, "无配置项", Toast.LENGTH_SHORT).show());
-        return btn; // 返回生成的视图
+        MaterialButton button = new MaterialButton(context, null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
+        button.setText(getName());
+        button.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+        button.setCornerRadius(28); // M3 推荐圆角
+        button.setInsetTop(24); // 上下 padding
+        button.setInsetBottom(24);
+        button.setPaddingRelative(40, 0, 40, 0); // 左右 padding
+        button.setIconPadding(16);
+        button.setIconGravity(MaterialButton.ICON_GRAVITY_TEXT_START);
+        button.setRippleColorResource(R.color.selection_color); // 可自定义 ripple
+        button.setTextColor(ContextCompat.getColor(context, R.color.selection_color)); // 使用 M3 色彩
+        button.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+        // 点击提示
+        button.setOnClickListener(v -> Toast.makeText(context, "无配置项", Toast.LENGTH_SHORT).show());
+        return button;
     }
 }

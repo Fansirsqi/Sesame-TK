@@ -78,12 +78,12 @@ public class ChouChouLe {
                 List<TaskInfo> tasks = parseTasks(farmTaskList);
                 for (TaskInfo task : tasks) {
                     if (TaskStatus.FINISHED.name().equals(task.taskStatus)) {
-                        GlobalThreadPools.sleep(500L);
                         if (receiveTaskAward(drawType, task.taskId)) {//领取奖励
+                            GlobalThreadPools.sleep(5 * 1000L);
                             doubleCheck = true;
                         }
                     } else if (TaskStatus.TODO.name().equals(task.taskStatus)) {
-                        if (task.getRemainingTimes() > 0) {
+                        if (task.getRemainingTimes() > 0 && !"DONATION".equals(task.innerAction))  {
                             if (doChouTask(drawType, task)) {
                                 doubleCheck = true;
                             }

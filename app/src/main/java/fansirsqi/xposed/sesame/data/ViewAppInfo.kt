@@ -2,13 +2,14 @@ package fansirsqi.xposed.sesame.data
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
-import android.content.pm.ApplicationInfo
-import android.os.Bundle
+import android.util.Log
 import fansirsqi.xposed.sesame.BuildConfig
 import fansirsqi.xposed.sesame.R
-import fansirsqi.xposed.sesame.util.Log
-import androidx.core.net.toUri
+import fansirsqi.xposed.sesame.newutil.DataStore
+import fansirsqi.xposed.sesame.newutil.MMKVSettingsManager
+import fansirsqi.xposed.sesame.util.Files
+import java.util.UUID
+
 
 @SuppressLint("StaticFieldLeak")
 object ViewAppInfo {
@@ -18,16 +19,21 @@ object ViewAppInfo {
     var appVersion: String = ""
     var appBuildTarget: String = ""
     var appBuildNumber: String = ""
+    var verifyId: String = ""
+    var veriftag: Boolean = false
+
+    @SuppressLint("HardwareIds")
+
     val emojiList =
         listOf(
-            "🍅", "🍓", "🥓", "🍂", "🍚", "🌰", "🟢", "🌴",
-            "🥗", "🧀", "🥩", "🍍", "🌶️", "🍲", "🍆", "🥕",
-            "✨", "🍑", "🍘", "🍀", "🥞", "🍈", "🥝", "🧅",
-            "🌵", "🌾", "🥜", "🍇", "🌭", "🥑", "🥐", "🥖",
-            "🍊", "🌽", "🍉", "🍖", "🍄", "🥚", "🥙", "🥦",
-            "🍌", "🍱", "🍏", "🍎", "🌲", "🌿", "🍁", "🍒",
-            "🥔", "🌯", "🌱", "🍐", "🍞", "🍳", "🍙", "🍋",
-            "🍗", "🌮", "🍃", "🥘", "🥒", "🧄", "🍠", "🥥", "📦"
+            "�", "�", "�", "�", "�", "�", "�", "�",
+            "�", "�", "�", "�", "�️", "�", "�", "�",
+            "✨", "�", "�", "�", "�", "�", "�", "�",
+            "�", "�", "�", "�", "�", "�", "�", "�",
+            "�", "�", "�", "�", "�", "�", "�", "�",
+            "�", "�", "�", "�", "�", "�", "�", "�",
+            "�", "�", "�", "�", "�", "�", "�", "�",
+            "�", "�", "�", "�", "�", "�", "�", "�", "�"
         )
 
     //    var runType: RunType? = RunType.DISABLE
@@ -48,19 +54,25 @@ object ViewAppInfo {
      *
      * @param context 上下文对象，用于获取应用的资源信息
      */
+    @SuppressLint("HardwareIds")
     fun init(context: Context) {
+        Log.d(TAG, "app data init")
         if (ViewAppInfo.context == null) {
             ViewAppInfo.context = context
+            MMKVSettingsManager.init(context)
+            DataStore.init(Files.CONFIG_DIR)
+            verifyId = MMKVSettingsManager.mmkv.decodeString("verify").takeIf { !it.isNullOrEmpty() }
+                ?: UUID.randomUUID().toString().replace("-", "").also {
+                    MMKVSettingsManager.mmkv.encode("verify", it)
+                }
             appBuildNumber = BuildConfig.VERSION_CODE.toString()
-            appTitle = context.getString(R.string.app_name) //+ BuildConfig.VERSION_NAME
+            appTitle = context.getString(R.string.app_name)
             appBuildTarget = BuildConfig.BUILD_DATE + " " + BuildConfig.BUILD_TIME + " ⏰"
             try {
                 appVersion = "${BuildConfig.VERSION_NAME} " + emojiList.random()
             } catch (e: Exception) {
-                Log.printStackTrace(e)
+                Log.e(TAG, "init: ", e)
             }
         }
     }
-
-
 }

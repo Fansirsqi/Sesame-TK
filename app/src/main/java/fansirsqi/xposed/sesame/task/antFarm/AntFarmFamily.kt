@@ -6,7 +6,6 @@ import fansirsqi.xposed.sesame.extensions.JSONExtensions.toJSONArray
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField
 import fansirsqi.xposed.sesame.task.antFarm.AntFarm.AnimalFeedStatus
 import fansirsqi.xposed.sesame.task.antFarm.AntFarm.AnimalInteractStatus
-import fansirsqi.xposed.sesame.util.GlobalThreadPools
 import fansirsqi.xposed.sesame.util.Log
 import fansirsqi.xposed.sesame.util.RandomUtil
 import fansirsqi.xposed.sesame.util.ResChecker
@@ -65,13 +64,17 @@ data object AntFarmFamily {
      */
     fun enterFamily(familyOptions: SelectModelField, notInviteList: SelectModelField) {
         try {
-            var enterRes = JSONObject(AntFarmRpcCall.enterFamily());
+            val enterRes = JSONObject(AntFarmRpcCall.enterFamily());
             if (ResChecker.checkRes(TAG, enterRes)) {
+                if (!enterRes.has("groupId")) {
+                    Log.farm("请先开通小鸡家庭");
+                    return;
+                }
                 groupId = enterRes.getString("groupId")
                 groupName = enterRes.getString("groupName")
-                var familyAwardNum: Int = enterRes.optInt("familyAwardNum", 0)//奖励数量
-                var familySignTips: Boolean = enterRes.optBoolean("familySignTips", false)//签到
-                var assignFamilyMemberInfo: JSONObject? = enterRes.optJSONObject("assignFamilyMemberInfo")//分配成员信息-顶梁柱
+                val familyAwardNum: Int = enterRes.optInt("familyAwardNum", 0)//奖励数量
+                val familySignTips: Boolean = enterRes.optBoolean("familySignTips", false)//签到
+                val assignFamilyMemberInfo: JSONObject? = enterRes.optJSONObject("assignFamilyMemberInfo")//分配成员信息-顶梁柱
                 familyAnimals = enterRes.getJSONArray("animals")//家庭动物列表
                 familyUserIds = (0..<familyAnimals.length())
                     .map { familyAnimals.getJSONObject(it).getString("userId") }
@@ -157,7 +160,7 @@ data object AntFarmFamily {
                     val rightId = jo.getString("rightId")
                     val awardName = jo.getString("awardName")
                     val count = jo.optInt("count", 1)
-                    var receveRes = JSONObject(AntFarmRpcCall.receiveFamilyAward(rightId))
+                    val receveRes = JSONObject(AntFarmRpcCall.receiveFamilyAward(rightId))
                     if (ResChecker.checkRes(TAG, receveRes)) {
                         Log.farm("家庭奖励🏆: $awardName x $count")
                     }
@@ -182,7 +185,7 @@ data object AntFarmFamily {
             //随机获取一个任务类型
             val assignConfigList = jsonObject.getJSONArray("assignConfigList")
             val assignConfig = assignConfigList.getJSONObject(RandomUtil.nextInt(0, assignConfigList.length() - 1))
-            var jo = JSONObject(AntFarmRpcCall.assignFamilyMember(assignConfig.getString("assignAction"), beAssignUser))
+            val jo = JSONObject(AntFarmRpcCall.assignFamilyMember(assignConfig.getString("assignAction"), beAssignUser))
             if (ResChecker.checkRes(TAG, jo)) {
                 Log.farm("家庭任务🏡[使用顶梁柱特权] ${assignConfig.getString("assignDesc")}")
 //                val sendRes = JSONObject(AntFarmRpcCall.sendChat(assignConfig.getString("chatCardType"), beAssignUser))
@@ -356,18 +359,33 @@ data object AntFarmFamily {
             for (userId in familyUserIds) {
                 userIds.put(userId)
             }
+            val resp0 = JSONObject(AntFarmRpcCall.OpenAIPrivatePolicy())
+            if (!ResChecker.checkRes(TAG, resp0)) {
+                Log.error(TAG, "OpenAIPrivatePolicy failed")
+                return
+            }
             val resp1 = JSONObject(AntFarmRpcCall.deliverSubjectRecommend(userIds))
             if (ResChecker.checkRes(TAG, resp1)) {
                 val ariverRpcTraceId = resp1.getString("ariverRpcTraceId")
-                val resp2 = JSONObject(AntFarmRpcCall.deliverContentExpand(userIds, ariverRpcTraceId))
+                val eventId = resp1.getString("eventId")
+                val eventName = resp1.getString("eventName")
+                val memo = resp1.getString("memo")
+                val resultCode = resp1.getString("resultCode")
+                val sceneId = resp1.getString("sceneId")
+                val sceneName = resp1.getString("sceneName")
+                val success = resp1.getBoolean("success")
+
+                val resp2 = JSONObject(AntFarmRpcCall.deliverContentExpand(ariverRpcTraceId, eventId, eventName, memo, resultCode, sceneId, sceneName, success, userIds))
                 if (ResChecker.checkRes(TAG, resp2)) {
-                    GlobalThreadPools.sleep(500)
-                    val content = resp1.getString("content")
-                    val deliverId = resp1.getString("deliverId")
-                    val resp3 = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
+                    val deliverId = resp2.getString("deliverId")
+                    val resp3 = JSONObject(AntFarmRpcCall.QueryExpandContent(deliverId))
                     if (ResChecker.checkRes(TAG, resp3)) {
-                        Log.farm("家庭任务🏠道早安: $content 🌈")
-                        Status.setFlagToday("antFarm::deliverMsgSend")
+                        val content = resp3.getString("content")
+                        val resp4 = JSONObject(AntFarmRpcCall.deliverMsgSend(groupId, userIds, content, deliverId))
+                        if (ResChecker.checkRes(TAG, resp4)) {
+                            Log.farm("家庭任务�道早安: $content �")
+                            Status.setFlagToday("antFarm::deliverMsgSend")
+                        }
                     }
                 }
             }

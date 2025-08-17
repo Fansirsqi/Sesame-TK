@@ -2,18 +2,20 @@
 <resources>
 
     <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
-        <!--Appbar背景色-->
+        <!-- AppBar 背景色 -->
         <item name="colorPrimary">@color/colorPrimary</item>
-        <!--ToolBar上的Title颜色-->
+        <!-- Toolbar 文字颜色 -->
         <item name="titleTextColor">@color/active_text</item>
         <item name="subtitleTextColor">@color/active_text</item>
-        <item name="android:navigationBarColor">@color/colorPrimary</item>
+        <!-- 状态栏透明 -->
         <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowTranslucentStatus">true</item>
+        <!-- 导航栏颜色 -->
+        <item name="android:navigationBarColor">@color/colorPrimary</item>
         <item name="windowNoTitle">true</item>
-        <!-- 设置actionOverflowMenuStyle以自定义菜单的背景 -->
+        <!-- 菜单样式 -->
         <item name="actionOverflowMenuStyle">@style/MenuTheme</item>
     </style>
+
 
 
     <style name="MenuTheme">

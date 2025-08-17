@@ -3,6 +3,7 @@ package fansirsqi.xposed.sesame.ui;
 import static fansirsqi.xposed.sesame.data.UIConfig.UI_OPTION_WEB;
 
 import android.app.AlertDialog;
+import android.content.ClipData;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
@@ -24,10 +25,12 @@ import java.util.Map;
 import fansirsqi.xposed.sesame.R;
 import fansirsqi.xposed.sesame.data.Config;
 import fansirsqi.xposed.sesame.data.UIConfig;
+import fansirsqi.xposed.sesame.data.ViewAppInfo;
 import fansirsqi.xposed.sesame.entity.AlipayUser;
 import fansirsqi.xposed.sesame.model.Model;
 import fansirsqi.xposed.sesame.model.ModelConfig;
 import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
+import fansirsqi.xposed.sesame.newui.WatermarkView;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.ui.widget.ContentPagerAdapter;
 import fansirsqi.xposed.sesame.ui.widget.ListDialog;
@@ -64,8 +67,8 @@ public class SettingActivity extends BaseActivity {
         if (intent != null) {
             this.userId = intent.getStringExtra("userId");
             this.userName = intent.getStringExtra("userName");
-
         }
+
         // 初始化各种配置数据
         Model.initAllModel();
         UserMap.setCurrentUserId(this.userId);
@@ -111,6 +114,12 @@ public class SettingActivity extends BaseActivity {
             setBaseSubtitle(getString(R.string.settings) + ": " + this.userName);
         }
         initializeTabs();
+        WatermarkView watermarkView = WatermarkView.Companion.install(this);
+        String tag = "用户: " + userName + "\n ID: " + userId;
+        if (userName.equals("默认") || userId == null) {
+            tag = "用户: " + "未登录" + "\n ID: " + "*************";
+        }
+        watermarkView.setWatermarkText(tag);
     }
 
     private void initializeTabs() {
@@ -153,6 +162,7 @@ public class SettingActivity extends BaseActivity {
         menu.add(0, 4, 4, "单向好友");
         menu.add(0, 5, 5, "切换WEBUI");
         menu.add(0, 6, 6, "保存");
+        menu.add(0, 7, 7, "复制ID");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -214,12 +224,22 @@ public class SettingActivity extends BaseActivity {
             case 6:
                 save();
                 break;
+            case 7:
+                //复制userId到剪切板
+                android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                ClipData clipData = ClipData.newPlainText("userId", this.userId);
+                cm.setPrimaryClip(clipData);
+                ToastUtil.showToastWithDelay(this, "复制成功！", 100);
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
 
     private void save() {
         try {
+            if (!ViewAppInfo.INSTANCE.getVeriftag()) {
+                ToastUtil.showToastWithDelay(this, "非内测用户！", 100);
+            }
             if (Config.isModify(this.userId) && Config.save(this.userId, false)) {
                 ToastUtil.showToastWithDelay(this, "保存成功！", 100);
                 if (!StringUtil.isEmpty(this.userId)) {

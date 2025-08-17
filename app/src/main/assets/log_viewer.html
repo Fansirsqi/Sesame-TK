@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>Log Viewer</title>
+    <style>
+        :root {
+          --bg: #0b0b0c;
+          --fg: #e6e6e6;
+          --muted: #9aa0a6;
+        }
+        @media (prefers-color-scheme: light) {
+          :root {
+            --bg: #ffffff;
+            --fg: #1f1f1f;
+            --muted: #666;
+          }
+        }
+        html, body {
+          margin: 0;
+          padding: 0;
+          background: var(--bg);
+          color: var(--fg);
+          font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+          line-height: 1.4;
+          -webkit-text-size-adjust: 100%;
+        }
+        #toolbar {
+          position: sticky;
+          top: 0;
+          padding: 8px 12px;
+          background: rgba(0,0,0,0.08);
+          backdrop-filter: blur(4px);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          z-index: 10;
+        }
+        #log {
+          white-space: pre-wrap;      /* 自动换行，保留换行符 */
+          word-break: break-word;
+          padding: 10px 12px 12px 12px;
+          font-size: 12px;
+        }
+        button, label {
+          color: var(--fg);
+          background: transparent;
+          border: 1px solid rgba(255,255,255,0.15);
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 12px;
+        }
+        button:hover { border-color: rgba(255,255,255,0.3); }
+        .muted { color: var(--muted); font-size: 12px; margin-left: auto; }
+        input[type="checkbox"] { vertical-align: middle; }
+    </style>
+</head>
+<body>
+<div id="toolbar">
+    <label><input type="checkbox" id="autoScroll" checked /> 自动滚动到底部</label>
+    <button onclick="clearLog()">清空显示</button>
+    <span class="muted" id="status">就绪</span>
+</div>
+
+<div id="log"></div>
+
+<script>
+    const logEl = document.getElementById('log');
+    const autoScrollEl = document.getElementById('autoScroll');
+    const statusEl = document.getElementById('status');
+
+    function _scrollToBottom() {
+      if (!autoScrollEl.checked) return;
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    // 供原生调用：全量替换
+    function setFullText(text) {
+      logEl.textContent = text || '';
+      statusEl.textContent = '已加载 ' + (text ? text.length : 0) + ' 字节';
+      _scrollToBottom();
+    }
+
+    // 供原生调用：增量追加
+    function appendLog(chunk) {
+      if (!chunk) return;
+      logEl.textContent += chunk;
+      statusEl.textContent = '追加 ' + chunk.length + ' 字节';
+      _scrollToBottom();
+    }
+
+    // 清空显示（不影响原文件，仅清 UI）
+    function clearLog() {
+      logEl.textContent = '';
+      statusEl.textContent = '已清空显示';
+    }
+
+    // 为防止一次性注入超大文本导致掉帧，可用以下节流版（可选）：
+    // window.appendLogBatched = (function() {
+    //   let buffer = '';
+    //   let scheduled = false;
+    //   return function(chunk) {
+    //     buffer += chunk || '';
+    //     if (!scheduled) {
+    //       scheduled = true;
+    //       requestAnimationFrame(() => {
+    //         logEl.textContent += buffer;
+    //         buffer = '';
+    //         scheduled = false;
+    //         _scrollToBottom();
+    //       });
+    //     }
+    //   }
+    // })();
+</script>
+</body>
+</html>

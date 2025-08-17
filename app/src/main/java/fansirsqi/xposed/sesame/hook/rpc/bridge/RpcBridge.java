@@ -4,7 +4,10 @@ public interface RpcBridge {
     RpcVersion getVersion();
     void load() throws Exception;
     void unload();
+
     String requestString(RpcEntity rpcEntity, int tryCount, int retryInterval);
+    RpcEntity requestObject(RpcEntity rpcEntity, int tryCount, int retryInterval);
+
     default String requestString(RpcEntity rpcEntity) {
         return requestString(rpcEntity, 3, -1);
     }
@@ -23,7 +26,7 @@ public interface RpcBridge {
     default String requestString(String method, String data, String relation, int tryCount, int retryInterval) {
         return requestString(new RpcEntity(method, data, relation), tryCount, retryInterval);
     }
-    RpcEntity requestObject(RpcEntity rpcEntity, int tryCount, int retryInterval);
+
 
     default RpcEntity requestObject(String method, String data, String relation) {
         return requestObject(method, data, relation, 3, -1);

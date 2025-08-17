@@ -10,7 +10,7 @@ public class ResChecker {
 
     private static boolean core(String TAG, JSONObject jo) {
         try {
-            Log.runtime(TAG, "Checking JSON success: " + jo);
+//            Log.runtime(TAG, "Checking JSON success: " + jo);
             // 检查 success 或 isSuccess 字段为 true
             if (jo.optBoolean("success") || jo.optBoolean("isSuccess")) {
                 return true;
@@ -28,19 +28,9 @@ public class ResChecker {
             }
 
             // 检查 memo 字段
-            String memo_info = jo.optString("memo", "");
-            if ("SUCCESS".equalsIgnoreCase(memo_info)) {
+            if ("SUCCESS".equalsIgnoreCase(jo.optString("memo", ""))) {
                 return true;
             }
-            if ("任务已完成".equalsIgnoreCase(memo_info)) {
-                return true;
-            }
-            if ("饲料槽已满".equalsIgnoreCase(memo_info)) {
-                return true;
-            }
-            if ("我的小鸡在睡觉中，无法操作".equalsIgnoreCase(memo_info)) {
-                return true;
-            }            
 
             Log.error(TAG, "Check failed: " + jo);
             return false;

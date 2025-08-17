@@ -35,7 +35,7 @@ public class EnergyRain {
                     Toast.show(s);
                     Log.forest(s);
                 }
-                // GlobalThreadPools.sleep(300);
+                GlobalThreadPools.sleep(300);
             }
         } catch (Throwable th) {
             Log.runtime(TAG, "执行能量雨出错:");
@@ -70,7 +70,8 @@ public class EnergyRain {
                                 granted = true;
                                 if (ResChecker.checkRes(TAG, rainJsonObj)) {
                                     Log.forest("赠送能量雨机会给🌧️[" + UserMap.getMaskName(uid) + "]#" + UserMap.getMaskName(UserMap.getCurrentUid()));
-                                    startEnergyRain();
+                                    Thread.sleep(300);
+									startEnergyRain();
                                 } else {
                                     Log.record(TAG,"送能量雨失败");
                                     Log.runtime(rainJsonObj.toString());

@@ -452,35 +452,35 @@ public class Status {
      *
      * @return 状态对象
      */
-    public static synchronized Status load() {
-        String currentUid = UserMap.getCurrentUid();
+    public static synchronized Status load(String currentUid) {
+//        String currentUid = UserMap.getCurrentUid();
         if (StringUtil.isEmpty(currentUid)) {
-            Log.runtime(getTAG(), "用户为空，状态加载失败");
+            Log.runtime(TAG, "用户为空，状态加载失败");
             throw new RuntimeException("用户为空，状态加载失败");
         }
         try {
             java.io.File statusFile = Files.getStatusFile(currentUid);
             if (statusFile.exists()) {
-                Log.runtime(getTAG(), "加载 status.json");
+                Log.runtime(TAG, "加载 status.json");
                 String json = Files.readFromFile(statusFile);
                 if (!json.trim().isEmpty()) {
                     JsonUtil.copyMapper().readerForUpdating(getINSTANCE()).readValue(json);
                     String formatted = JsonUtil.formatJson(getINSTANCE());
                     if (formatted != null && !formatted.equals(json)) {
-                        Log.runtime(getTAG(), "重新格式化 status.json");
+                        Log.runtime(TAG, "重新格式化 status.json");
                         Files.write2File(formatted, statusFile);
                     }
                 } else {
-                    Log.runtime(getTAG(), "配置文件为空，初始化默认配置");
+                    Log.runtime(TAG, "配置文件为空，初始化默认配置");
                     initializeDefaultConfig(statusFile);
                 }
             } else {
-                Log.runtime(getTAG(), "配置文件不存在，初始化默认配置");
+                Log.runtime(TAG, "配置文件不存在，初始化默认配置");
                 initializeDefaultConfig(statusFile);
             }
         } catch (Throwable t) {
-            Log.printStackTrace(getTAG(), t);
-            Log.runtime(getTAG(), "状态文件格式有误，已重置");
+            Log.printStackTrace(TAG, t);
+            Log.runtime(TAG, "状态文件格式有误，已重置");
             resetAndSaveConfig();
         }
         if (getINSTANCE().saveTime == null) {
@@ -497,10 +497,10 @@ public class Status {
     private static void initializeDefaultConfig(java.io.File statusFile) {
         try {
             JsonUtil.copyMapper().updateValue(getINSTANCE(), new Status());
-            Log.runtime(getTAG(), "初始化 status.json");
+            Log.runtime(TAG, "初始化 status.json");
             Files.write2File(JsonUtil.formatJson(getINSTANCE()), statusFile);
         } catch (JsonMappingException e) {
-            Log.printStackTrace(getTAG(), e);
+            Log.printStackTrace(TAG, e);
             throw new RuntimeException("初始化配置失败", e);
         }
     }
@@ -513,7 +513,7 @@ public class Status {
             JsonUtil.copyMapper().updateValue(getINSTANCE(), new Status());
             Files.write2File(JsonUtil.formatJson(getINSTANCE()), Files.getStatusFile(UserMap.getCurrentUid()));
         } catch (JsonMappingException e) {
-            Log.printStackTrace(getTAG(), e);
+            Log.printStackTrace(TAG, e);
             throw new RuntimeException("重置配置失败", e);
         }
     }
@@ -522,7 +522,7 @@ public class Status {
         try {
             JsonUtil.copyMapper().updateValue(getINSTANCE(), new Status());
         } catch (JsonMappingException e) {
-            Log.printStackTrace(getTAG(), e);
+            Log.printStackTrace(TAG, e);
         }
     }
 
@@ -533,13 +533,13 @@ public class Status {
     public static synchronized void save(Calendar nowCalendar) {
         String currentUid = UserMap.getCurrentUid();
         if (StringUtil.isEmpty(currentUid)) {
-            Log.record(getTAG(), "用户为空，状态保存失败");
+            Log.record(TAG, "用户为空，状态保存失败");
             throw new RuntimeException("用户为空，状态保存失败");
         }
         if (updateDay(nowCalendar)) {
-            Log.runtime(getTAG(), "重置 statistics.json");
+            Log.runtime(TAG, "重置 statistics.json");
         } else {
-            Log.runtime(getTAG(), "保存 status.json");
+            Log.runtime(TAG, "保存 status.json");
         }
         long lastSaveTime = getINSTANCE().saveTime;
         try {
@@ -614,11 +614,7 @@ public class Status {
     public static boolean canParadiseCoinExchangeBenefitToday(String spuId) {
         return !hasFlagToday("farm::paradiseCoinExchangeLimit::" + spuId);
     }
-
-    public static String getTAG() {
-        return TAG;
-    }
-
+    
     public static Status getINSTANCE() {
         return INSTANCE;
     }

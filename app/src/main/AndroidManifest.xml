@@ -6,9 +6,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission
-        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -41,6 +39,7 @@
                 <category android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
             </intent-filter>
         </activity>
+
         <activity-alias
             android:name=".ui.MainActivityAlias"
             android:enabled="true"
@@ -51,6 +50,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
+        <!-- ✅ 新增 MMKV 测试页面 -->
+        <activity
+            android:name="fansirsqi.xposed.sesame.newui.SettingDemo"
+            android:exported="true"
+            android:label="MMKV测试页面" />
 
         <activity android:name="fansirsqi.xposed.sesame.ui.ExtendActivity" />
         <activity android:name="fansirsqi.xposed.sesame.ui.WebSettingsActivity" />

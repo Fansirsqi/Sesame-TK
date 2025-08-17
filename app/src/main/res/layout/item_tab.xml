@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@null">
+    android:gravity="center"
+    android:background="?attr/selectableItemBackground"
+    android:minWidth="172dp"
+    android:paddingVertical="8dp"
+    android:paddingHorizontal="16dp">
 
     <TextView
         android:id="@+id/tab_text"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:gravity="center_horizontal"
-        android:textSize="16sp"
-        android:background="@null"
+        android:textAppearance="?attr/textAppearanceLabelLarge"
+        android:textColor="?android:attr/textColorPrimary"
+        android:gravity="center"
         android:textAllCaps="false" />
 
     <View
         android:id="@+id/indicator_bar"
         android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:layout_marginHorizontal="10dp"
-        android:layout_marginTop="2dp" />
-
+        android:layout_height="3dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginHorizontal="12dp"
+        android:background="@android:color/transparent" />
 </LinearLayout>

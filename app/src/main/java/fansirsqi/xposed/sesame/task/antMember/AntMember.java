@@ -549,7 +549,7 @@ public class AntMember extends ModelTask {
           Log.runtime(jo.toString());
         }
         // Log.record("延时500ms 1");
-        GlobalThreadPools.sleep(200);
+        GlobalThreadPools.sleep(500);
       }
     } catch (Throwable t) {
       Log.runtime(TAG, "kmdkSignUp err:");
@@ -761,7 +761,7 @@ public class AntMember extends ModelTask {
     // Log.record("task name:"+name);
     if((name.equals("逛15秒赚积分"))) { ///做不成功
       return;
-    }    
+    }
     long id = taskConfigInfo.getLong("id");
     String awardParamPoint = taskConfigInfo.getJSONObject("awardParam").getString("awardParamPoint");
     String targetBusiness = taskConfigInfo.getJSONArray("targetBusiness").getString(0);
@@ -773,7 +773,6 @@ public class AntMember extends ModelTask {
     String bizType = targetBusinessArray[0];
     String bizSubType = targetBusinessArray[1];
     String bizParam = targetBusinessArray[2];
-
     GlobalThreadPools.sleep(16000);
     String str = AntMemberRpcCall.executeTask(bizParam, bizSubType, bizType, id);
     JSONObject jo = new JSONObject(str);

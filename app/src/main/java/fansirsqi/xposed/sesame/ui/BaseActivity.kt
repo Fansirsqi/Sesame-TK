@@ -1,83 +1,96 @@
 package fansirsqi.xposed.sesame.ui
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.graphics.Color
 import android.os.Bundle
-import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
+import com.google.android.material.appbar.MaterialToolbar
 import fansirsqi.xposed.sesame.R
 import fansirsqi.xposed.sesame.data.ViewAppInfo
+import fansirsqi.xposed.sesame.util.PermissionUtil
 
 open class BaseActivity : AppCompatActivity() {
-    private lateinit var toolbar: Toolbar
-
-    /**
-     * 在创建活动时调用，初始化基础设置。
-     *
-     * @param savedInstanceState 之前保存的实例状态
-     */
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        ViewAppInfo.init(applicationContext)
-        
-        // 使用WindowInsetsControllerCompat处理状态栏
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        @Suppress("DEPRECATION")
-        window.statusBarColor = Color.TRANSPARENT
-        WindowInsetsControllerCompat(window, window.decorView).let { controller ->
-            controller.isAppearanceLightStatusBars = true
-        }
+    companion object {
+        private const val REQUEST_EXTERNAL_STORAGE = 1
     }
+    // Toolbar 懒加载
+    protected val toolbar: MaterialToolbar by lazy { findViewById(R.id.x_toolbar) }
 
-    /**
-     * 当活动的内容视图发生变化时调用。
-     * 设置工具栏并初始化标题和副标题。
-     */
-    override fun onContentChanged() {
-        super.onContentChanged()
-        // 查找并设置工具栏
-        toolbar = findViewById(R.id.x_toolbar)
-        toolbar.setTitle(baseTitle)
-        toolbar.setSubtitle(baseSubtitle)
-        // 设置工具栏为支持操作栏
-        setSupportActionBar(toolbar)
-    }
-
-    var baseTitle: String?
+    // 基础标题
+    open var baseTitle: String?
         get() = ViewAppInfo.appTitle
-        set(title) {
-            toolbar.title = title
+        set(value) {
+            toolbar.title = value
         }
+
+    // 基础副标题
     open var baseSubtitle: String?
         get() = null
-        set(subTitle) {
-            toolbar.subtitle = subTitle
+        set(value) {
+            toolbar.subtitle = value
         }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (PermissionUtil.checkFilePermissions(this)) {
+            initialize()
+        } else {
+            PermissionUtil.checkOrRequestFilePermissions(this)
+            ViewAppInfo.init(applicationContext)
+        }
+    }
+
+    private fun initialize() {
+        ViewAppInfo.init(applicationContext)
+        // Edge-to-Edge 支持
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        // 控制状态栏文字颜色
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = true
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_EXTERNAL_STORAGE) {
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                initialize()
+            } else {
+                Toast.makeText(this, "未获取文件读写权限", Toast.LENGTH_LONG).show()
+                finish()
+            }
+        }
+    }
+
+    override fun onContentChanged() {
+        super.onContentChanged()
+        setSupportActionBar(toolbar)
+
+        // 文字居中显示，MaterialToolbar 会自动处理状态栏高度
+        toolbar.setContentInsetsAbsolute(0, 0)
+        toolbar.title = baseTitle
+        toolbar.subtitle = baseSubtitle
+    }
 
     fun setBaseTitleTextColor(color: Int) {
         toolbar.setTitleTextColor(color)
     }
 
-    fun setBaseSubtitleTextColor(color: Int) {
-        toolbar.setSubtitleTextColor(color)
-    }
-
     override fun attachBaseContext(newBase: Context) {
-        val configuration = newBase.resources.configuration
-        // 创建新的Configuration对象
-        val configurationNew = Configuration(configuration)
-        // 创建新的Context配置
+        val configurationNew = Configuration(newBase.resources.configuration)
         val context = newBase.createConfigurationContext(configurationNew)
         super.attachBaseContext(context)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        // 当UI模式（日夜模式）发生变化时，重建Activity以应用新主题
+        // 夜间模式变化时刷新 Activity
         if ((newConfig.diff(resources.configuration) and Configuration.UI_MODE_NIGHT_MASK) != 0) {
             recreate()
         } else {

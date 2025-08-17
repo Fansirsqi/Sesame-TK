@@ -3,13 +3,13 @@ package fansirsqi.xposed.sesame.hook.server.handlers
 import com.fasterxml.jackson.databind.JsonNode
 import fansirsqi.xposed.sesame.hook.RequestManager
 import fi.iki.elonen.NanoHTTPD
-import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.IHTTPSession
+import fi.iki.elonen.NanoHTTPD.Response
 
 class DebugHandler(secretToken: String) : BaseHandler(secretToken) {
 
     override fun onGet(session: IHTTPSession): Response {
-        return ok(mapOf("status" to "success", "method" to "GET"))
+        return ok(mapOf("status" to "success", "method" to "GET", "message" to "Not implemented"))
     }
 
     override fun onPost(session: IHTTPSession, body: String?): Response {

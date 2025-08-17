@@ -22,7 +22,7 @@ public class GreenLife {
                     }
                 }
             } else {
-                Log.record(TAG, jo.getJSONObject("data").getString("resultCode"));
+                Log.runtime(TAG, jo.getJSONObject("data").getString("resultCode"));
                 Thread.sleep(300);
             }
         } catch (Throwable t) {

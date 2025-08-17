@@ -5,6 +5,7 @@ import static fansirsqi.xposed.sesame.data.UIConfig.UI_OPTION_NEW;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -47,6 +48,7 @@ import fansirsqi.xposed.sesame.model.ModelField;
 import fansirsqi.xposed.sesame.model.ModelFields;
 import fansirsqi.xposed.sesame.model.ModelGroup;
 import fansirsqi.xposed.sesame.model.SelectModelFieldFunc;
+import fansirsqi.xposed.sesame.newui.WatermarkView;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.ui.dto.ModelDto;
 import fansirsqi.xposed.sesame.ui.dto.ModelFieldInfoDto;
@@ -57,6 +59,7 @@ import fansirsqi.xposed.sesame.util.Files;
 import fansirsqi.xposed.sesame.util.JsonUtil;
 import fansirsqi.xposed.sesame.util.LanguageUtil;
 import fansirsqi.xposed.sesame.util.Log;
+import fansirsqi.xposed.sesame.util.ToastUtil;
 import fansirsqi.xposed.sesame.util.maps.BeachMap;
 import fansirsqi.xposed.sesame.util.maps.CooperateMap;
 import fansirsqi.xposed.sesame.util.maps.IdMapManager;
@@ -116,10 +119,10 @@ public class WebSettingsActivity extends BaseActivity {
             @Override
             public void handleOnBackPressed() {
                 if (webView.canGoBack()) {
-                    Log.runtime(TAG,"WebSettingsActivity.handleOnBackPressed: go back");
+                    Log.runtime(TAG, "WebSettingsActivity.handleOnBackPressed: go back");
                     webView.goBack();
                 } else {
-                    Log.runtime(TAG,"WebSettingsActivity.handleOnBackPressed: save");
+                    Log.runtime(TAG, "WebSettingsActivity.handleOnBackPressed: save");
                     save();
                     finish();
                 }
@@ -202,6 +205,12 @@ public class WebSettingsActivity extends BaseActivity {
         for (ModelGroup modelGroup : ModelGroup.values()) {
             groupList.add(new ModelGroupDto(modelGroup.getCode(), modelGroup.getName(), modelGroup.getIcon()));
         }
+        WatermarkView watermarkView = WatermarkView.Companion.install(this);
+        String tag = "用户: " + userName + "\n ID: " + userId;
+        if (userName.equals("默认") || userId == null) {
+            tag = "用户: " + "未登录" + "\n ID: " + "*************";
+        }
+        watermarkView.setWatermarkText(tag);
     }
 
 
@@ -212,7 +221,7 @@ public class WebSettingsActivity extends BaseActivity {
                 if (webView.canGoBack()) {
                     webView.goBack();
                 } else {
-                    Log.runtime(TAG,"WebAppInterface onBackPressed: save");
+                    Log.runtime(TAG, "WebAppInterface onBackPressed: save");
                     save();
                     WebSettingsActivity.this.finish();
                 }
@@ -230,7 +239,7 @@ public class WebSettingsActivity extends BaseActivity {
         public String getTabs() {
             String result = JsonUtil.formatJson(tabList, false);
             if (BuildConfig.DEBUG) {
-                Log.runtime(TAG,"WebSettingsActivity.getTabs: " + result);
+                Log.runtime(TAG, "WebSettingsActivity.getTabs: " + result);
             }
             return result;
         }
@@ -244,7 +253,7 @@ public class WebSettingsActivity extends BaseActivity {
         public String getGroup() {
             String result = JsonUtil.formatJson(groupList, false);
             if (BuildConfig.DEBUG) {
-                Log.runtime(TAG,"WebSettingsActivity.getGroup: " + result);
+                Log.runtime(TAG, "WebSettingsActivity.getGroup: " + result);
             }
             return result;
         }
@@ -262,7 +271,7 @@ public class WebSettingsActivity extends BaseActivity {
             }
             String result = JsonUtil.formatJson(modelDtoList, false);
             if (BuildConfig.DEBUG) {
-                Log.runtime(TAG,"WebSettingsActivity.getModelByGroup: " + result);
+                Log.runtime(TAG, "WebSettingsActivity.getModelByGroup: " + result);
             }
             return result;
         }
@@ -302,7 +311,7 @@ public class WebSettingsActivity extends BaseActivity {
                 }
                 String result = JsonUtil.formatJson(list, false);
                 if (BuildConfig.DEBUG) {
-                    Log.runtime(TAG,"WebSettingsActivity.getModel: " + result);
+                    Log.runtime(TAG, "WebSettingsActivity.getModel: " + result);
                 }
                 return result;
             }
@@ -349,7 +358,7 @@ public class WebSettingsActivity extends BaseActivity {
                 if (modelField != null) {
                     String result = JsonUtil.formatJson(ModelFieldInfoDto.toInfoDto(modelField), false);
                     if (BuildConfig.DEBUG) {
-                        Log.runtime(TAG,"WebSettingsActivity.getField: " + result);
+                        Log.runtime(TAG, "WebSettingsActivity.getField: " + result);
                     }
                     return result;
                 }
@@ -376,7 +385,7 @@ public class WebSettingsActivity extends BaseActivity {
 
         @JavascriptInterface
         public void Log(String log) {
-            Log.record(TAG,"设置：" + log);
+            Log.record(TAG, "设置：" + log);
         }
     }
 
@@ -388,6 +397,7 @@ public class WebSettingsActivity extends BaseActivity {
         menu.add(0, 4, 4, "单向好友");
         menu.add(0, 5, 5, "切换UI");
         menu.add(0, 6, 6, "保存");
+        menu.add(0, 7, 7, "复制ID");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -450,17 +460,27 @@ public class WebSettingsActivity extends BaseActivity {
                 break;
             case 6:
                 // 在调用 save() 之前，先调用 JS 函数同步 WebView 中的数据到 Java 端
-                Log.runtime(TAG,"WebSettingsActivity.onOptionsItemSelected: Calling handleData() in WebView");
+                Log.runtime(TAG, "WebSettingsActivity.onOptionsItemSelected: Calling handleData() in WebView");
                 webView.evaluateJavascript("if(typeof handleData === 'function'){ handleData(); } else { console.error('handleData function not found'); }", null);
                 // 使用 Handler 延迟执行 save()，给 JS 一点时间完成异步操作
                 // 200 毫秒是一个经验值，如果仍然有问题可以适当增加
                 new Handler(Looper.getMainLooper()).postDelayed(this::save, 200); // 延迟 200 毫秒
+                break;
+            case 7:
+                //复制userId到剪切板
+                android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                ClipData clipData = ClipData.newPlainText("userId", this.userId);
+                cm.setPrimaryClip(clipData);
+                ToastUtil.showToastWithDelay(this, "复制成功！", 100);
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
 
     private void save() {
+        if (!ViewAppInfo.INSTANCE.getVeriftag()) {
+            ToastUtil.showToastWithDelay(this, "非内测用户！", 100);
+        }
         if (Config.isModify(userId)) {
             if (Config.save(userId, false)) {
                 Toast.makeText(context, "保存成功！", Toast.LENGTH_SHORT).show();
@@ -473,7 +493,7 @@ public class WebSettingsActivity extends BaseActivity {
                         Log.printStackTrace(th);
                     }
                 }
-            }else{
+            } else {
                 Toast.makeText(context, "保存失败！", Toast.LENGTH_SHORT).show();
             }
         } else {

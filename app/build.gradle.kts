@@ -1,33 +1,47 @@
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
+var isCIBuild: Boolean = System.getenv("CI").toBoolean()
+
+//isCIBuild = true // 没有c++源码时开启CI构建, push前关闭
 
 android {
     namespace = "fansirsqi.xposed.sesame"
     compileSdk = 36
-
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+    val gitCommitCount: Int = runCatching {
+        val process = ProcessBuilder("git", "rev-list", "--count", "HEAD")
+            .redirectErrorStream(true)
+            .start()
+        val output = process.inputStream.bufferedReader().use { it.readText().trim() }
+        output.toInt()
+    }.getOrElse {
+        println("获取 git 提交数失败: ${it.message}")
+        1
+    }
     defaultConfig {
         vectorDrawables.useSupportLibrary = true
         applicationId = "fansirsqi.xposed.sesame"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 36
 
-        if (!System.getenv("CI").toBoolean()) {
+        if (!isCIBuild) {
             ndk {
                 abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
             }
         }
 
-        // 版本配置
-        val major = 0
-        val minor = 2
-        val patch = 6
-        val buildTag = "alpha"
 
         val buildDate = SimpleDateFormat("yyyy-MM-dd", Locale.CHINA).apply {
             timeZone = TimeZone.getTimeZone("GMT+8")
@@ -43,34 +57,15 @@ android {
             "0000"
         }
 
-        val gitCommitCount = try {
-            val process = Runtime.getRuntime().exec(arrayOf("git", "rev-list", "--count", "HEAD"))
-            val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
-            process.waitFor()
-            if (process.exitValue() == 0) {
-                output.toInt()
-            } else {
-                val error = process.errorStream.bufferedReader().use { it.readText() }
-                println("Git error: $error")
-                "1".toInt()
-            }
-        } catch (_: Exception) {
-            "1".toInt()
-        }
-
-
         versionCode = gitCommitCount
-        versionName = if (buildTag.contains("alpha") || buildTag.contains("beta")) {
-            "v$major.$minor.$patch-$buildTag.$buildTargetCode"
-        } else {
-            "v$major.$minor.$patch-$buildTag"
-        }
+        val buildTag = "beta"
+        versionName = "v0.2.7.rc$gitCommitCount-$buildTag"
 
         buildConfigField("String", "BUILD_DATE", "\"$buildDate\"")
         buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
         buildConfigField("String", "BUILD_NUMBER", "\"$buildTargetCode\"")
         buildConfigField("String", "BUILD_TAG", "\"$buildTag\"")
-        buildConfigField("String", "VERSION", "\"v$major.$minor.$patch\"")
+        buildConfigField("String", "VERSION", "\"$versionName\"")
 
         ndk {
             abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
@@ -169,7 +164,7 @@ android {
         }
     }
     val cmakeFile = file("src/main/cpp/CMakeLists.txt")
-    if (!System.getenv("CI").toBoolean() && cmakeFile.exists()) {
+    if (!isCIBuild && cmakeFile.exists()) {
         externalNativeBuild {
             cmake {
                 path = cmakeFile
@@ -221,11 +216,19 @@ dependencies {
     implementation(libs.viewpager2)
     implementation(libs.material)
     implementation(libs.webkit)
-    compileOnly(libs.xposed.api)
+//    compileOnly(libs.xposed.api)
+//    compileOnly(libs.libxposed.api)
+    compileOnly(files("libs/api-100.aar"))
+    compileOnly(files("libs/api-82.jar"))
+//    implementation(libs.libxposed.service)
+//    implementation(files("libs/framework.jar"))
+
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
     implementation(libs.okhttp)
     implementation(libs.dexkit)
+    implementation(libs.jackson.kotlin)
+    implementation("com.tencent:mmkv:2.2.2")
 
     coreLibraryDesugaring(libs.desugar)
 

@@ -3,19 +3,21 @@ activity-compose = "1.10.1"
 
 android-plugin = "8.9.3"
 constraintlayout = "2.1.4"
+
 kotlin-plugin = "2.2.0-Beta2"
 kotlin-stdlib = "2.1.20"
-lifecycle-viewmodel-compose = "2.9.0"
 slf4j = "2.1.0-alpha1"
 logback-android = "3.0.0"
 appcompat = "1.7.0"
 recyclerview = "1.4.0"
 viewpager2 = "1.1.0"
 material = "1.13.0-alpha13"
-xposed-api = "82"
 lombok = "1.18.38"
 okhttp = "5.0.0-alpha.14"
-jackson = "2.19.0"
+jackson = "2.19.2"
+
+xposed-api = "100"
+xposed-service = "100-1.0.0"
 
 #noinspection GradleDependency
 jackson-compatible = "2.13.5"
@@ -27,6 +29,7 @@ desugar = "2.1.5"
 [libraries]
 
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
+jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin-stdlib" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
@@ -34,13 +37,11 @@ logback-android = { module = "com.github.tony19:logback-android", version.ref = 
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 
-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager2" }
 webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
-xposed-api = { module = "de.robv.android.xposed:api", version.ref = "xposed-api" }
+#xposed-api = { module = "de.robv.android.xposed:api", version.ref = "xposed-api" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 #noinspection SimilarGradleDependency
@@ -56,12 +57,18 @@ jackson-databind-compatible = { module = "com.fasterxml.jackson.core:jackson-dat
 #noinspection SimilarGradleDependency
 jackson-annotations-compatible = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson-compatible" }
 
+#noinspection Aligned16KB
 dexkit = { module = "org.luckypray:dexkit", version.ref = "dexkit" }
 desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar" }
 ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "ui-tooling-preview-android" }
+
+libxposed-api = { group = "io.github.libxposed", name = "api", version.ref = "xposed-api" }
+libxposed-service = { group = "io.github.libxposed", name = "service", version.ref = "xposed-service" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "android-plugin" }
 android-library = { id = "com.android.library", version.ref = "android-plugin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin-plugin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version = "2.0.0" }
+
