@@ -74,12 +74,8 @@ public class AntOrchard extends ModelTask {
   }
   @Override
   public void run() {
-    if(getRunCnts() <= 1) {
-        Log.record(TAG,"第一轮跳过");
-        return;
-    }
     try {
-      Log.record(TAG,"执行开始-" + getName()+ " 执行次数:" +getRunCnts());
+      Log.record(TAG,"执行开始-" + getName());
       executeIntervalInt = Math.max(executeInterval.getValue(), 500);
       String s = AntOrchardRpcCall.orchardIndex();
       JSONObject jo = new JSONObject(s);
@@ -113,7 +109,7 @@ public class AntOrchard extends ModelTask {
             Log.runtime(jo.toString());
           }
         } else {
-          getEnableField().setValue(false);
+          getEnableField().setValue(0);
           Log.other("请先开启芭芭农场！");
         }
       } else {

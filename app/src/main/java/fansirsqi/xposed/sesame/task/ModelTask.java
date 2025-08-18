@@ -56,7 +56,7 @@ public abstract class ModelTask extends Model {
 
     public int getRunCnts() {
         return run_cnts;
-    }    
+    }
 
     /**
      * 准备任务执行环境
@@ -276,17 +276,24 @@ public abstract class ModelTask extends Model {
      */
     public static void startAllTask(Boolean force) {
         Notify.setStatusTextExec();
-        for (int run_cnt=0;run_cnt<2;run_cnt++) {
+        for (int run_cnt=1;run_cnt<=2;run_cnt++) {
+            Log.record("第"+run_cnt+"轮开始");
             for (Model model : getModelArray()) {
                 if (model != null) {
                     if (ModelType.TASK == model.getType()) {
                         ((ModelTask) model).addRunCnts();
+                        int model_priority = ((ModelTask) model).getPriority();
+                        if (run_cnt < model_priority) {
+                            Log.record("模块["+((ModelTask) model).getName()+"]优先级:"+model_priority+" 第"+run_cnt+"轮跳过");
+                            continue;
+                        }
                         if (((ModelTask) model).startTask(force)) {
                         	GlobalThreadPools.sleep(10);
                         }
                     }
                 }
             }
+            Log.record("第"+run_cnt+"轮结束");
         }
     }
 

@@ -71,6 +71,11 @@ public class AntSports extends ModelTask {
     }
 
     @Override
+    public int getPriority() {
+        return 1;
+    }
+
+    @Override
     public ModelFields getFields() {
         ModelFields modelFields = new ModelFields();
         modelFields.addField(walk = new BooleanModelField("walk", "行走路线 | 开启", false));
@@ -131,7 +136,7 @@ public class AntSports extends ModelTask {
     @Override
     public void run() {
         TimeCounter tc = new TimeCounter(TAG);
-        Log.record(TAG, "执行开始-" + getName()+ " 执行次数:" +getRunCnts());
+        Log.record(TAG, "执行开始-" + getName());
         try {
             if (!Status.hasFlagToday("sport::syncStep") && TimeUtil.isNowAfterOrCompareTimeStr("0600")) {
                 addChildTask(new ChildModelTask("syncStep", () -> {

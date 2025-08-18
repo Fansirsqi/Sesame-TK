@@ -66,12 +66,8 @@ public class ConsumeGold extends ModelTask {
 
     }
     public void run() {
-        if(getRunCnts() <= 1) {
-            Log.record(TAG,"第一轮跳过");
-            return;
-        }        
         try {
-            Log.record(TAG,"执行开始-" + getName()+ " 执行次数:" +getRunCnts());
+            Log.record(TAG,"执行开始-" + getName());
             RuntimeInfo.getInstance().put("consumeGold", System.currentTimeMillis());
             if (consumeGoldSign.getValue()) {
                 consumeGoldSign();

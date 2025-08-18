@@ -36,6 +36,7 @@ import fansirsqi.xposed.sesame.model.modelFieldExt.ListModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectAndCountModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.SelectModelField;
 import fansirsqi.xposed.sesame.model.modelFieldExt.StringModelField;
+import fansirsqi.xposed.sesame.model.modelFieldExt.PriorityModelField;
 import fansirsqi.xposed.sesame.task.AnswerAI.AnswerAI;
 import fansirsqi.xposed.sesame.task.ModelTask;
 import fansirsqi.xposed.sesame.task.TaskCommon;
@@ -109,6 +110,11 @@ public class AntFarm extends ModelTask {
         return "AntFarm.png";
     }
 
+    @Override
+    public int getPriority() {
+        return 1;
+    }
+
     private static final String FARM_ANSWER_CACHE_KEY = "farmAnswerQuestionCache";
     private static final String ANSWERED_FLAG = "farmQuestion::answered"; // 今日是否已答题
     private static final String CACHED_FLAG = "farmQuestion::cache";     // 是否已缓存明日答案
@@ -128,11 +134,11 @@ public class AntFarm extends ModelTask {
     /**
      * 打赏好友
      */
-    private BooleanModelField rewardFriend;
+    private PriorityModelField rewardFriend;
     /**
      * 遣返小鸡
      */
-    private BooleanModelField sendBackAnimal;
+    private PriorityModelField sendBackAnimal;
     /**
      * 遣返方式
      */
@@ -152,11 +158,11 @@ public class AntFarm extends ModelTask {
     /**
      * s收取道具奖励
      */
-    private BooleanModelField receiveFarmToolReward;
+    private PriorityModelField receiveFarmToolReward;
     /**
      * 游戏改分
      */
-    private BooleanModelField recordFarmGame;
+    private PriorityModelField recordFarmGame;
     /**
      * 小鸡游戏时间
      */
@@ -164,7 +170,7 @@ public class AntFarm extends ModelTask {
     /**
      * 小鸡厨房
      */
-    private BooleanModelField kitchen;
+    private PriorityModelField kitchen;
     /**
      * 使用特殊食品
      */
@@ -176,7 +182,7 @@ public class AntFarm extends ModelTask {
     /**
      * 收取饲料奖励
      */
-    private BooleanModelField receiveFarmTaskAward;
+    private PriorityModelField receiveFarmTaskAward;
     private BooleanModelField useAccelerateTool;
     private BooleanModelField useBigEaterTool; // ✅ 新增加饭卡
     private BooleanModelField useAccelerateToolContinue;
@@ -185,29 +191,31 @@ public class AntFarm extends ModelTask {
      * 喂鸡列表
      */
     private SelectAndCountModelField feedFriendAnimalList;
-    private BooleanModelField notifyFriend;
+    private PriorityModelField notifyFriend;
     private ChoiceModelField notifyFriendType;
     private SelectModelField notifyFriendList;
     private BooleanModelField acceptGift;
     private SelectAndCountModelField visitFriendList;
-    private BooleanModelField chickenDiary;
+    private PriorityModelField chickenDiary;
     private BooleanModelField diaryTietie;
     private ChoiceModelField collectChickenDiary;
-    private BooleanModelField enableChouchoule;
+    private PriorityModelField enableChouchoule;
     private BooleanModelField listOrnaments;
-    private BooleanModelField hireAnimal;
+    private PriorityModelField hireAnimal;
     private ChoiceModelField hireAnimalType;
     private SelectModelField hireAnimalList;
-    private BooleanModelField enableDdrawGameCenterAward;
-    private BooleanModelField getFeed;
+    private PriorityModelField enableDdrawGameCenterAward;
+    private PriorityModelField getFeed;
     private SelectModelField getFeedlList;
     private ChoiceModelField getFeedType;
     private BooleanModelField family;
     private SelectModelField familyOptions;
     private SelectModelField notInviteList;
     private StringModelField giftFamilyDrawFragment;
-    private BooleanModelField paradiseCoinExchangeBenefit;
+    private PriorityModelField paradiseCoinExchangeBenefit;
     private SelectModelField paradiseCoinExchangeBenefitList;
+
+    private PriorityModelField visitAnimal;
 
     @Override
     public ModelFields getFields() {
@@ -215,22 +223,22 @@ public class AntFarm extends ModelTask {
         modelFields.addField(sleepTime = new StringModelField("sleepTime", "小鸡睡觉时间(关闭:-1)", "2001"));
         modelFields.addField(sleepMinutes = new IntegerModelField("sleepMinutes", "小鸡睡觉时长(分钟)", 10 * 36, 1, 10 * 60));
         modelFields.addField(recallAnimalType = new ChoiceModelField("recallAnimalType", "召回小鸡", RecallAnimalType.ALWAYS, RecallAnimalType.nickNames));
-        modelFields.addField(rewardFriend = new BooleanModelField("rewardFriend", "打赏好友", false));
+        modelFields.addField(rewardFriend = new PriorityModelField("rewardFriend", "打赏好友", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(feedAnimal = new BooleanModelField("feedAnimal", "自动喂小鸡", false));
         modelFields.addField(feedFriendAnimalList = new SelectAndCountModelField("feedFriendAnimalList", "喂小鸡好友列表", new LinkedHashMap<>(), AlipayUser::getList));
-        modelFields.addField(getFeed = new BooleanModelField("getFeed", "一起拿饲料", false));
+        modelFields.addField(getFeed = new PriorityModelField("getFeed", "一起拿饲料", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(getFeedType = new ChoiceModelField("getFeedType", "一起拿饲料 | 动作", GetFeedType.GIVE, GetFeedType.nickNames));
         modelFields.addField(getFeedlList = new SelectModelField("getFeedlList", "一起拿饲料 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(acceptGift = new BooleanModelField("acceptGift", "收麦子", false));
         modelFields.addField(visitFriendList = new SelectAndCountModelField("visitFriendList", "送麦子好友列表", new LinkedHashMap<>(), AlipayUser::getList));
-        modelFields.addField(hireAnimal = new BooleanModelField("hireAnimal", "雇佣小鸡 | 开启", false));
+        modelFields.addField(hireAnimal = new PriorityModelField("hireAnimal", "雇佣小鸡 | 开启", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(hireAnimalType = new ChoiceModelField("hireAnimalType", "雇佣小鸡 | 动作", HireAnimalType.DONT_HIRE, HireAnimalType.nickNames));
         modelFields.addField(hireAnimalList = new SelectModelField("hireAnimalList", "雇佣小鸡 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
-        modelFields.addField(sendBackAnimal = new BooleanModelField("sendBackAnimal", "遣返 | 开启", false));
+        modelFields.addField(sendBackAnimal = new PriorityModelField("sendBackAnimal", "遣返 | 开启", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(sendBackAnimalWay = new ChoiceModelField("sendBackAnimalWay", "遣返 | 方式", SendBackAnimalWay.NORMAL, SendBackAnimalWay.nickNames));
         modelFields.addField(sendBackAnimalType = new ChoiceModelField("sendBackAnimalType", "遣返 | 动作", SendBackAnimalType.NOT_BACK, SendBackAnimalType.nickNames));
         modelFields.addField(sendBackAnimalList = new SelectModelField("dontSendFriendList", "遣返 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
-        modelFields.addField(notifyFriend = new BooleanModelField("notifyFriend", "通知赶鸡 | 开启", false));
+        modelFields.addField(notifyFriend = new PriorityModelField("notifyFriend", "通知赶鸡 | 开启", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(notifyFriendType = new ChoiceModelField("notifyFriendType", "通知赶鸡 | 动作", NotifyFriendType.NOTIFY, NotifyFriendType.nickNames));
         modelFields.addField(notifyFriendList = new SelectModelField("notifyFriendList", "通知赶鸡 | 好友列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(donation = new BooleanModelField("donation", "每日捐蛋 | 开启", false));
@@ -241,24 +249,25 @@ public class AntFarm extends ModelTask {
         modelFields.addField(useAccelerateToolWhenMaxEmotion = new BooleanModelField("useAccelerateToolWhenMaxEmotion", "加速卡 | 仅在满状态时使用", false));
         modelFields.addField(useSpecialFood = new BooleanModelField("useSpecialFood", "使用特殊食品", false));
         modelFields.addField(useNewEggCard = new BooleanModelField("useNewEggCard", "使用新蛋卡", false));
-        modelFields.addField(receiveFarmTaskAward = new BooleanModelField("receiveFarmTaskAward", "收取饲料奖励", false));
-        modelFields.addField(receiveFarmToolReward = new BooleanModelField("receiveFarmToolReward", "收取道具奖励", false));
+        modelFields.addField(receiveFarmTaskAward = new PriorityModelField("receiveFarmTaskAward", "收取饲料奖励", priorityType.PRIORITY_2, priorityType.nickNames));
+        modelFields.addField(receiveFarmToolReward = new PriorityModelField("receiveFarmToolReward", "收取道具奖励", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(harvestProduce = new BooleanModelField("harvestProduce", "收获爱心鸡蛋", false));
-        modelFields.addField(kitchen = new BooleanModelField("kitchen", "小鸡厨房", false));
-        modelFields.addField(chickenDiary = new BooleanModelField("chickenDiary", "小鸡日记", false));
+        modelFields.addField(kitchen = new PriorityModelField("kitchen", "小鸡厨房", priorityType.PRIORITY_2, priorityType.nickNames));
+        modelFields.addField(chickenDiary = new PriorityModelField("chickenDiary", "小鸡日记", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(diaryTietie = new BooleanModelField("diaryTietie", "小鸡日记 | 贴贴", false));
         modelFields.addField(collectChickenDiary = new ChoiceModelField("collectChickenDiary", "小鸡日记 | 点赞", collectChickenDiaryType.ONCE, collectChickenDiaryType.nickNames));
-        modelFields.addField(enableChouchoule = new BooleanModelField("enableChouchoule", "开启小鸡抽抽乐", false));
+        modelFields.addField(enableChouchoule = new PriorityModelField("enableChouchoule", "开启小鸡抽抽乐", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(listOrnaments = new BooleanModelField("listOrnaments", "小鸡每日换装", false));
-        modelFields.addField(enableDdrawGameCenterAward = new BooleanModelField("enableDdrawGameCenterAward", "开宝箱", false));
-        modelFields.addField(recordFarmGame = new BooleanModelField("recordFarmGame", "游戏改分(星星球、登山赛、飞行赛、揍小鸡)", false));
+        modelFields.addField(enableDdrawGameCenterAward = new PriorityModelField("enableDdrawGameCenterAward", "开宝箱", priorityType.PRIORITY_2, priorityType.nickNames));
+        modelFields.addField(recordFarmGame = new PriorityModelField("recordFarmGame", "游戏改分(星星球、登山赛、飞行赛、揍小鸡)", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(farmGameTime = new ListModelField.ListJoinCommaToStringModelField("farmGameTime", "小鸡游戏时间(范围)", ListUtil.newArrayList("2200-2400")));
         modelFields.addField(family = new BooleanModelField("family", "家庭 | 开启", false));
         modelFields.addField(familyOptions = new SelectModelField("familyOptions", "家庭 | 选项", new LinkedHashSet<>(), OtherEntityProvider.farmFamilyOption()));
         modelFields.addField(notInviteList = new SelectModelField("notInviteList", "家庭 | 好友分享排除列表", new LinkedHashSet<>(), AlipayUser::getList));
 //        modelFields.addField(giftFamilyDrawFragment = new StringModelField("giftFamilyDrawFragment", "家庭 | 扭蛋碎片赠送用户ID(配置目录查看)", ""));
-        modelFields.addField(paradiseCoinExchangeBenefit = new BooleanModelField("paradiseCoinExchangeBenefit", "小鸡乐园 | 兑换权益", false));
+        modelFields.addField(paradiseCoinExchangeBenefit = new PriorityModelField("paradiseCoinExchangeBenefit", "小鸡乐园 | 兑换权益", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(paradiseCoinExchangeBenefitList = new SelectModelField("paradiseCoinExchangeBenefitList", "小鸡乐园 | 权益列表", new LinkedHashSet<>(), ParadiseCoinBenefit::getList));
+        modelFields.addField(visitAnimal = new PriorityModelField("visitAnimal", "到访小鸡送礼", priorityType.PRIORITY_2, priorityType.nickNames));
         return modelFields;
     }
 
@@ -286,27 +295,27 @@ public class AntFarm extends ModelTask {
         try {
             TimeCounter tc = new TimeCounter(TAG);
             String userId = UserMap.getCurrentUid();
-            Log.record(TAG, "执行开始-蚂蚁" + getName()+ " 执行次数:" +getRunCnts());
+            Log.record(TAG, "执行开始-蚂蚁" + getName());
             if (enterFarm() == null) {
                 return;
             }
             listFarmTool();//装载道具信息
             tc.countDebug("装载道具信息");
 
-            if (rewardFriend.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= rewardFriend.getValue()) {
                 rewardFriend();
                 tc.countDebug("打赏好友");
             }
-            if (sendBackAnimal.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= sendBackAnimal.getValue()) {
                 sendBackAnimal();
                 tc.countDebug("遣返");
             }
 
-            if (receiveFarmToolReward.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= receiveFarmToolReward.getValue()) {
                 receiveToolTaskReward();
                 tc.countDebug("收取道具奖励");
             }
-            if (recordFarmGame.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= recordFarmGame.getValue()) {
                 for (String time : farmGameTime.getValue()) {
                     if (TimeUtil.checkNowInTimeRange(time)) {
                         recordFarmGame(GameType.starGame);
@@ -318,14 +327,14 @@ public class AntFarm extends ModelTask {
                 }
                 tc.countDebug("游戏改分(星星球、登山赛、飞行赛、揍小鸡)");
             }
-            if (kitchen.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= kitchen.getValue()) {
                 collectDailyFoodMaterial();
                 collectDailyLimitedFoodMaterial();
                 cook();
                 tc.countDebug("小鸡厨房");
             }
 
-            if (chickenDiary.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= chickenDiary.getValue()) {
                 doChickenDiary();
                 tc.countDebug("小鸡日记");
             }
@@ -344,7 +353,7 @@ public class AntFarm extends ModelTask {
                 handleDonation(donationCount.getValue());
                 tc.countDebug("每日捐蛋");
             }
-            if (receiveFarmTaskAward.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= receiveFarmTaskAward.getValue()) {
                 doFarmTasks();
                 tc.countDebug("饲料任务");
                 receiveFarmAwards();
@@ -358,7 +367,7 @@ public class AntFarm extends ModelTask {
             tc.countDebug("喂食");
 
             // 到访小鸡送礼
-            if((getRunCnts() > 1)) {
+            if (getRunCnts() >= visitAnimal.getValue()) {
                 visitAnimal();
                 tc.countDebug("到访小鸡送礼");
                 // 送麦子
@@ -369,24 +378,24 @@ public class AntFarm extends ModelTask {
             feedFriend();
             tc.countDebug("帮好友喂鸡");
             // 通知好友赶鸡
-            if (notifyFriend.getValue()  && (getRunCnts() > 1)) {
+            if (getRunCnts() >= notifyFriend.getValue()) {
                 notifyFriend();
                 tc.countDebug("通知好友赶鸡");
             }
 
             // 抽抽乐
-            if (enableChouchoule.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= enableChouchoule.getValue()) {
                 ChouChouLe ccl = new ChouChouLe();
                 ccl.chouchoule();
                 tc.countDebug("抽抽乐");
             }
 
             // 雇佣小鸡
-            if (hireAnimal.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= hireAnimal.getValue()) {
                 hireAnimal();
                 tc.countDebug("雇佣小鸡");
             }
-            if (getFeed.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= getFeed.getValue()) {
                 letsGetChickenFeedTogether();
                 tc.countDebug("一起拿饲料");
             }
@@ -398,12 +407,12 @@ public class AntFarm extends ModelTask {
                 tc.countDebug("家庭任务");
             }
             // 开宝箱
-            if (enableDdrawGameCenterAward.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= enableDdrawGameCenterAward.getValue()) {
                 drawGameCenterAward();
                 tc.countDebug("开宝箱");
             }
             // 小鸡乐园道具兑换
-            if (paradiseCoinExchangeBenefit.getValue() && (getRunCnts() > 1)) {
+            if (getRunCnts() >= paradiseCoinExchangeBenefit.getValue()) {
                 paradiseCoinExchangeBenefit();
                 tc.countDebug("小鸡乐园道具兑换");
             }
@@ -1371,6 +1380,7 @@ public class AntFarm extends ModelTask {
                                     String contentId = videoUrl.substring(videoUrl.indexOf("&contentId=") + 11, videoUrl.indexOf("&refer"));
                                     JSONObject videoDetailjo = new JSONObject(AntFarmRpcCall.videoDeliverModule(contentId));
                                     if (ResChecker.checkRes(TAG, videoDetailjo)) {
+                                        Log.record("视频任务:延时15S");
                                         GlobalThreadPools.sleep(15 * 1000L);
                                         JSONObject resultVideojo = new JSONObject(AntFarmRpcCall.videoTrigger(contentId));
                                         if (ResChecker.checkRes(TAG, resultVideojo)) {
@@ -1390,6 +1400,7 @@ public class AntFarm extends ModelTask {
                                 }
                             }
                         }
+//                        Log.record(bizKey+":延时1S");
                         GlobalThreadPools.sleep(1000);
                     }
                     if ("ANSWER".equals(bizKey) && !Status.hasFlagToday(CACHED_FLAG)) {//单独处理答题任务
@@ -1700,7 +1711,7 @@ public class AntFarm extends ModelTask {
                                 jo = jo.getJSONObject("farmVO").getJSONObject("subFarmVO");
                                 String friendFarmId = jo.getString("farmId");
                                 JSONArray jaAnimals = jo.getJSONArray("animals");
-                                boolean notified = !notifyFriend.getValue();
+                                boolean notified = (0 == notifyFriend.getValue());
                                 for (int j = 0; j < jaAnimals.length(); j++) {
                                     jo = jaAnimals.getJSONObject(j);
                                     String animalId = jo.getString("animalId");
@@ -2282,16 +2293,12 @@ public class AntFarm extends ModelTask {
                     long beHiredEndTime = joo.getLong("beHiredEndTime");
                     if (!hasChildTask(taskId)) {
                         addChildTask(new ChildModelTask(taskId, "HIRE", () -> {
-                            if (hireAnimal.getValue()) {
-                                hireAnimal();
-                            }
+                            hireAnimal();
                         }, beHiredEndTime));
                         Log.record(TAG, "添加蹲点雇佣👷在[" + TimeUtil.getCommonDate(beHiredEndTime) + "]执行");
                     } else {
                         addChildTask(new ChildModelTask(taskId, "HIRE", () -> {
-                            if (hireAnimal.getValue()) {
-                                hireAnimal();
-                            }
+                            hireAnimal();
                         }, beHiredEndTime));
                     }
                 }
@@ -2373,9 +2380,7 @@ public class AntFarm extends ModelTask {
                                 if (Objects.equals(joo.getString("animalId"), animalId)) {
                                     long beHiredEndTime = joo.getLong("beHiredEndTime");
                                     addChildTask(new ChildModelTask("HIRE|" + animalId, "HIRE", () -> {
-                                        if (hireAnimal.getValue()) {
-                                            hireAnimal();
-                                        }
+                                        hireAnimal();
                                     }, beHiredEndTime));
                                     Log.record(TAG, "添加蹲点雇佣👷在[" + TimeUtil.getCommonDate(beHiredEndTime) + "]执行");
                                     break;
@@ -2622,7 +2627,7 @@ public class AntFarm extends ModelTask {
     }
 
     public enum AnimalFeedStatus {
-        HUNGRY, EATING, SLEEPY
+        HUNGRY, EATING, SLEEPY, NONE
     }
 
     public enum AnimalInteractStatus { //小鸡关互动状态
@@ -2634,9 +2639,9 @@ public class AntFarm extends ModelTask {
     }
 
     public enum ToolType {
-        STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL, BIG_EATER_TOOL;
+        STEALTOOL, ACCELERATETOOL, SHARETOOL, FENCETOOL, NEWEGGTOOL, DOLLTOOL, ORDINARY_ORNAMENT_TOOL, ADVANCE_ORNAMENT_TOOL, BIG_EATER_TOOL,RARE_ORNAMENT_TOOL;
 
-        public static final CharSequence[] nickNames = {"蹭饭卡", "加速卡", "救济卡", "篱笆卡", "新蛋卡", "公仔补签卡", "普通装扮补签卡", "高级装扮补签卡", "加饭卡"};
+        public static final CharSequence[] nickNames = {"蹭饭卡", "加速卡", "救济卡", "篱笆卡", "新蛋卡", "公仔补签卡", "普通装扮补签卡", "高级装扮补签卡", "加饭卡", "稀有装扮补签卡"};
 
         public CharSequence nickName() {
             return nickNames[ordinal()];

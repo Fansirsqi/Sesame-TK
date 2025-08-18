@@ -39,12 +39,8 @@ public class AntBookRead extends ModelTask {
     }
     @Override
     public void run() {
-        if(getRunCnts() <= 1) {
-            Log.record(TAG,"第一轮跳过");
-            return;
-        }
         try {
-            Log.record("执行开始-" + getName()+ " 执行次数:" +getRunCnts());
+            Log.record("执行开始-" + getName());
             RuntimeInfo.getInstance().put("consumeGold", System.currentTimeMillis());
             queryTaskCenterPage();
             queryTask();

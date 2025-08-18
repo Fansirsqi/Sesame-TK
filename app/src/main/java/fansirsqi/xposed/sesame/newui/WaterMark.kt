@@ -76,51 +76,51 @@ class WatermarkView(context: android.content.Context) : android.view.View(contex
     }
 
     override fun onDraw(canvas: Canvas) {
-//        super.onDraw(canvas)
-//        if (width == 0 || height == 0 || textLines.isEmpty()) return
-//
-//        val maxLineWidth = textLines.maxOfOrNull { paint.measureText(it) } ?: 0f
-//        val lineHeight = paint.fontSpacing
-//        val totalTextHeight = lineHeight * textLines.size
-//
-//        val horizontalSpacing = (maxLineWidth * horizontalSpacingScale).toInt()
-//        val verticalSpacing = (totalTextHeight * verticalSpacingScale).toInt()
-//
-//        var count = 0
-//        var yIndex = 0
-//
-//        canvas.withRotation(rotationAngle) {
-//            var y = -height.toFloat()
-//            while (y < height * 2 && count < maxDrawCount) {
-//                var x = -width.toFloat()
-//
-//                // 偶数行交错位移
-//                if (yIndex % 2 == 1) {
-//                    x += horizontalSpacing / 2
-//                }
-//
-//                while (x < width * 2 && count < maxDrawCount) {
-//                    paint.color = colorCache.getOrElse(count) { colorCache.lastOrNull() ?: 0x66FFFFFF.toInt() }
-//
-//                    val centerX = x
-//                    val baseY = y - totalTextHeight / 2
-//
-//                    for ((i, line) in textLines.withIndex()) {
-//                        drawText(
-//                            line,
-//                            centerX,
-//                            baseY + i * lineHeight,
-//                            paint
-//                        )
-//                    }
-//
-//                    count++
-//                    x += horizontalSpacing
-//                }
-//                y += verticalSpacing
-//                yIndex++
-//            }
-//        }
+        super.onDraw(canvas)
+        if (width == 0 || height == 0 || textLines.isEmpty()) return
+
+        val maxLineWidth = textLines.maxOfOrNull { paint.measureText(it) } ?: 0f
+        val lineHeight = paint.fontSpacing
+        val totalTextHeight = lineHeight * textLines.size
+
+        val horizontalSpacing = (maxLineWidth * horizontalSpacingScale).toInt()
+        val verticalSpacing = (totalTextHeight * verticalSpacingScale).toInt()
+
+        var count = 0
+        var yIndex = 0
+
+        canvas.withRotation(rotationAngle) {
+            var y = -height.toFloat()
+            while (y < height * 2 && count < maxDrawCount) {
+                var x = -width.toFloat()
+
+                // 偶数行交错位移
+                if (yIndex % 2 == 1) {
+                    x += horizontalSpacing / 2
+                }
+
+                while (x < width * 2 && count < maxDrawCount) {
+                    paint.color = colorCache.getOrElse(count) { colorCache.lastOrNull() ?: 0x66FFFFFF.toInt() }
+
+                    val centerX = x
+                    val baseY = y - totalTextHeight / 2
+
+                    for ((i, line) in textLines.withIndex()) {
+                        drawText(
+                            line,
+                            centerX,
+                            baseY + i * lineHeight,
+                            paint
+                        )
+                    }
+
+                    count++
+                    x += horizontalSpacing
+                }
+                y += verticalSpacing
+                yIndex++
+            }
+        }
     }
 
     companion object {

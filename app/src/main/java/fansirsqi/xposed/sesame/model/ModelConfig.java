@@ -3,6 +3,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
 import fansirsqi.xposed.sesame.model.modelFieldExt.BooleanModelField;
+import fansirsqi.xposed.sesame.model.modelFieldExt.PriorityModelField;
 import lombok.Data;
 /**
  * 模型配置类，用于保存每个模型的配置信息。
@@ -46,7 +47,7 @@ public final class ModelConfig implements Serializable {
         // 无图标定义时使用default.svg
         this.icon = model.getIcon();
         // 获取模型的启用字段，并将其加入到字段列表中
-        BooleanModelField enableField = model.getEnableField();
+        PriorityModelField enableField = model.getEnableField();
         fields.put(enableField.getCode(), enableField);
         // 获取模型的其他字段，并将其加入到字段列表中
         ModelFields modelFields = model.getFields();

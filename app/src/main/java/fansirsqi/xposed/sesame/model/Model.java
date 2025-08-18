@@ -8,7 +8,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import fansirsqi.xposed.sesame.model.modelFieldExt.BooleanModelField;
+import fansirsqi.xposed.sesame.model.modelFieldExt.PriorityModelField;
 import fansirsqi.xposed.sesame.task.ModelTask;
+import fansirsqi.xposed.sesame.task.antForest.AntForest;
 import fansirsqi.xposed.sesame.util.Log;
 import lombok.Getter;
 
@@ -22,14 +24,31 @@ public abstract class Model {
     private static final List<Class<? extends Model>> modelClazzList = ModelOrder.INSTANCE.getAllConfig();
     @Getter
     private static final Model[] modelArray = new Model[modelClazzList.size()];
-    private final BooleanModelField enableField;
+    private final PriorityModelField enableField;
 
-    public final BooleanModelField getEnableField() {
+    public final PriorityModelField getEnableField() {
         return enableField;
     }
 
+    public interface priorityType {
+        int CLOSE = 0;
+        int PRIORITY_1 = 1;
+        int PRIORITY_2 = 2;
+        String[] nickNames = {"关闭", "第一优先级", "第二优先级"};
+    }
+
+    String[] baseNames = {"关闭", "开启"};
+
     public Model() {
-        this.enableField = new BooleanModelField("enable", getEnableFieldName(), false);
+        if("基础".equals(getName())) {
+            this.enableField = new PriorityModelField("enable", getEnableFieldName(), priorityType.PRIORITY_1, baseNames);
+        } else {
+            this.enableField = new PriorityModelField("enable", getEnableFieldName(), getPriority(), priorityType.nickNames);
+        }
+    }
+
+    public int getPriority() {
+        return 2;
     }
 
     public String getEnableFieldName() {
@@ -37,7 +56,7 @@ public abstract class Model {
     }
 
     public final Boolean isEnable() {
-        return enableField.getValue();
+        return (enableField.getValue() > 0);
     }
 
     public ModelType getType() {
@@ -113,7 +132,7 @@ public abstract class Model {
                 Log.printStackTrace(e);
             }
             try {
-                if (model.getEnableField().getValue()) {
+                if ((model.getEnableField().getValue() > 0)) {
                     model.boot(classLoader);
                 }
             } catch (Exception e) {

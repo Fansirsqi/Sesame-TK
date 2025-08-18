@@ -176,12 +176,8 @@ public class AntOcean extends ModelTask {
 
     @Override
     public void run() {
-        if(getRunCnts() <= 1) {
-            Log.record(TAG,"第一轮跳过");
-            return;
-        }        
         try {
-            Log.record(TAG, "执行开始-" + getName()+ " 执行次数:" +getRunCnts());
+            Log.record(TAG, "执行开始-" + getName());
 
             if (!queryOceanStatus()) {
                 return;
@@ -276,7 +272,7 @@ public class AntOcean extends ModelTask {
             JSONObject jo = new JSONObject(AntOceanRpcCall.queryOceanStatus());
             if (ResChecker.checkRes(TAG, jo)) {
                 if (!jo.getBoolean("opened")) {
-                    getEnableField().setValue(false);
+                    getEnableField().setValue(0);
                     Log.record("请先开启神奇海洋，并完成引导教程");
                     return false;
                 }

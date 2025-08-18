@@ -63,12 +63,8 @@ public class Reserve extends ModelTask {
     }
 
     public void run() {
-        if(getRunCnts() <= 1) {
-            Log.record(TAG,"第一轮跳过");
-            return;
-        }        
         try {
-            Log.record(TAG, "开始保护地任务"+ " 执行次数:" +getRunCnts());
+            Log.record(TAG, "开始保护地任务");
             initReserve();
             animalReserve();
         } catch (Throwable t) {

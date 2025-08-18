@@ -170,6 +170,7 @@ public class AntForest extends ModelTask {
     private PriorityModelField youthPrivilege;//青春特权 森林道具
     public static SelectModelField ecoLifeOption;
     private PriorityModelField ecoLife;
+    private PriorityModelField giveProp;
 
     private ChoiceModelField robExpandCard;//1.1倍能量卡
     private ListModelField robExpandCardTime; //1.1倍能量卡时间
@@ -238,13 +239,6 @@ public class AntForest extends ModelTask {
         String[] nickNames = {"关闭", "所有道具", "限时道具"};
     }
 
-    public interface priorityType {
-        int CLOSE = 0;
-        int PRIORITY_1 = 1;
-        int PRIORITY_2 = 2;
-        String[] nickNames = {"关闭", "第一优先级", "第二优先级"};
-    }
-
     public interface HelpFriendCollectType {
         int NONE = 0;
         int HELP = 1;
@@ -293,6 +287,7 @@ public class AntForest extends ModelTask {
         modelFields.addField(returnWater33 = new IntegerModelField("returnWater33", "返水 | 33克需收能量(关闭:0)", 0));
         modelFields.addField(waterFriendList = new SelectAndCountModelField("waterFriendList", "浇水 | 好友列表", new LinkedHashMap<>(), AlipayUser::getList, "设置浇水次数"));
         modelFields.addField(waterFriendCount = new IntegerModelField("waterFriendCount", "浇水 | 克数(10 18 33 66)", 66));
+        modelFields.addField(giveProp = new PriorityModelField("giveProp", "赠送道具", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(whoYouWantToGiveTo = new SelectModelField("whoYouWantToGiveTo", "赠送 | 道具", new LinkedHashSet<>(), AlipayUser::getList, "所有可赠送的道具将全部赠"));
         modelFields.addField(collectProp = new PriorityModelField("collectProp", "收集道具", priorityType.PRIORITY_2, priorityType.nickNames));
         modelFields.addField(helpFriendCollectType = new ChoiceModelField("helpFriendCollectType", "复活能量 | 选项", HelpFriendCollectType.NONE, HelpFriendCollectType.nickNames));
@@ -322,7 +317,6 @@ public class AntForest extends ModelTask {
         modelFields.addField(ecoLifeOpen = new BooleanModelField("ecoLifeOpen", "绿色任务 |  自动开通", false));
         modelFields.addField(ecoLifeOption = new SelectModelField("ecoLifeOption", "绿色行动 | 选项", new LinkedHashSet<>(), OtherEntityProvider.listEcoLifeOptions(), "光盘行动需要先完成一次光盘打卡"));
 
-
         modelFields.addField(queryInterval = new StringModelField("queryInterval", "查询间隔(毫秒或毫秒范围)", "1000-2000"));
         modelFields.addField(collectInterval = new StringModelField("collectInterval", "收取间隔(毫秒或毫秒范围)", "1000-1500"));
         modelFields.addField(doubleCollectInterval = new StringModelField("doubleCollectInterval", "双击间隔(毫秒或毫秒范围)", "800-2400"));
@@ -349,6 +343,11 @@ public class AntForest extends ModelTask {
     @Override
     public Boolean isSync() {
         return true;
+    }
+
+    @Override
+    public int getPriority() {
+        return 1;
     }
 
     @Override
@@ -381,7 +380,7 @@ public class AntForest extends ModelTask {
             }
             TimeCounter tc = new TimeCounter(TAG);
 /// lzw add end			
-            Log.record(TAG, "执行开始-蚂蚁" + getName() + " 执行次数:" +getRunCnts());
+            Log.record(TAG, "执行开始-蚂蚁" + getName() );
             taskCount.set(0);
             selfId = UserMap.getCurrentUid();
             usePropBeforeCollectEnergy(selfId);
@@ -445,7 +444,7 @@ public class AntForest extends ModelTask {
                 waterFriends();
                 tc.countDebug("给好友浇水");
                 //赠送道具
-                if(getRunCnts() >= 2) {
+                if(getRunCnts() >= giveProp.getValue()) {
                     giveProp();
                     tc.countDebug("赠送道具");
                 }
@@ -1866,6 +1865,7 @@ public class AntForest extends ModelTask {
                                 Log.error(TAG, "领取失败: " + taskTitle); // 记录领取失败信息
                                 Log.runtime(joAward.toString()); // 打印奖励响应
                             }
+                            GlobalThreadPools.sleep(500);
                         } else if (TaskStatus.TODO.name().equals(taskStatus)) {
                             if (badTaskSet.contains(taskType)) continue;
                             if (!badTaskSet.contains(taskType)) {
@@ -1886,7 +1886,6 @@ public class AntForest extends ModelTask {
                             }
 
                         }
-                        GlobalThreadPools.sleep(500);
                     }
                 }
                 if (!doubleCheck) break;

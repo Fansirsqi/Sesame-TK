@@ -147,13 +147,9 @@ public class AntStall extends ModelTask {
     }
     @Override
     public void run() {
-        if(getRunCnts() <= 1) {
-            Log.record(TAG,"第一轮跳过");
-            return;
-        }        
         try {
             TimeCounter tc = new TimeCounter(TAG);
-            Log.record(TAG,"执行开始-" + getName()+ " 执行次数:" +getRunCnts());
+            Log.record(TAG,"执行开始-" + getName());
             String s = AntStallRpcCall.home();
             JSONObject jo = new JSONObject(s);
             if (ResChecker.checkRes(TAG,jo)) {
@@ -603,12 +599,13 @@ public class AntStall extends ModelTask {
                             if (jsonArray == null || jsonArray.length() == 0) {
                                 continue;
                             }
-                            Log.record("延时5S 木兰市集");
-                            GlobalThreadPools.sleep(5000);
+//                            Log.record("延时5S 木兰市集");
+//                            GlobalThreadPools.sleep(5000);
                             for (int j = 0; j < jsonArray.length(); j++) {
                                 try{
                                     JSONObject jsonObject = jsonArray.getJSONObject(j);
                                     s = AntStallRpcCall.finish(pid, jsonObject);
+                                    Log.record("延时5S 木兰市集");
                                     GlobalThreadPools.sleep(5000);
                                     jo = new JSONObject(s);
                                     if (!jo.optBoolean("success")) {

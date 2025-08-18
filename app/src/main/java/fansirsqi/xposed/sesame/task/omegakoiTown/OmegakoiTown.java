@@ -127,12 +127,8 @@ public class OmegakoiTown extends ModelTask {
 
     }
     public void run() {
-        if(getRunCnts() <= 1) {
-            Log.record(TAG,"第一轮跳过");
-            return;
-        }        
         try {
-            Log.record("开始执行-" + getName()+ " 执行次数:" +getRunCnts());
+            Log.record("开始执行-" + getName());
             RuntimeInfo.getInstance().put("omegakoiTown", System.currentTimeMillis());
             getUserTasks();
             getSignInStatus();
