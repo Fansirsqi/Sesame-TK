@@ -90,6 +90,11 @@ public class RandomUtil {
         return sb.toString();
     }
 
+    /**
+     * 生成一个随机标签，包含时间戳和随机字符串。
+     *
+     * @return 生成的随机标签，格式为 "_时间戳_随机字符串"。
+     */
     public static String getRandomTag() {
         return "_" + System.currentTimeMillis() + "_" + RandomUtil.getRandomString(8);
     }

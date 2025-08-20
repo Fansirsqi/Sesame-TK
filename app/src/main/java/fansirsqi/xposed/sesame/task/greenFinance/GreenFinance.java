@@ -39,14 +39,29 @@ public class GreenFinance extends ModelTask {
      * 是否收取好友金币
      */
     private BooleanModelField greenFinancePointFriend;
+    /**
+     * 获取任务名称
+     *
+     * @return 绿色经营任务名称
+     */
     @Override
     public String getName() {
         return "绿色经营";
     }
+    /**
+     * 获取任务分组
+     *
+     * @return 其他分组
+     */
     @Override
     public ModelGroup getGroup() {
         return ModelGroup.OTHER;
     }
+    /**
+     * 获取任务图标
+     *
+     * @return 绿色经营任务图标文件名
+     */
     @Override
     public String getIcon() {
         return "GreenFinance.png";
@@ -63,6 +78,11 @@ public class GreenFinance extends ModelTask {
         modelFields.addField(greenFinanceDonation = new BooleanModelField("greenFinanceDonation", "捐助 | 快过期金币", false));
         return modelFields;
     }
+    /**
+     * 检查任务是否可以执行
+     *
+     * @return 是否可以执行绿色经营任务
+     */
     @Override
     public Boolean check() {
         if (TaskCommon.IS_ENERGY_TIME){
@@ -75,6 +95,9 @@ public class GreenFinance extends ModelTask {
             return true;
         }
     }
+    /**
+     * 执行绿色经营任务的主要逻辑
+     */
     @Override
     public void  run() {
         try {

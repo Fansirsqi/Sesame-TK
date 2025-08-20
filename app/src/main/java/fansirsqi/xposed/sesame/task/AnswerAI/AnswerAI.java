@@ -20,16 +20,31 @@ public class AnswerAI extends Model {
     private static Boolean enable = false;
     private static AnswerAIInterface answerAIInterface = AnswerAIInterface.getInstance();
 
+    /**
+     * 获取任务名称
+     *
+     * @return AI答题任务名称
+     */
     @Override
     public String getName() {
         return "AI答题";
     }
 
+    /**
+     * 获取任务分组
+     *
+     * @return 其他分组
+     */
     @Override
     public ModelGroup getGroup() {
         return ModelGroup.OTHER;
     }
 
+    /**
+     * 获取任务图标
+     *
+     * @return AI答题任务图标文件名
+     */
     @Override
     public String getIcon() {
         return "AnswerAI.svg";
@@ -79,6 +94,11 @@ public class AnswerAI extends Model {
         return modelFields;
     }
 
+    /**
+     * 启动AI答题服务，进行必要的初始化操作
+     *
+     * @param classLoader 类加载器
+     */
     @Override
     public void boot(ClassLoader classLoader) {
         try {
@@ -92,6 +112,11 @@ public class AnswerAI extends Model {
         }
     }
 
+    /**
+     * 初始化AI服务
+     *
+     * @param selectedType 选择的AI类型
+     */
     private void initializeAIService(int selectedType) {
         // 先释放旧的服务资源
         if (answerAIInterface != null) {

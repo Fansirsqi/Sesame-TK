@@ -36,14 +36,29 @@ public class AntOrchard extends ModelTask {
   private SelectModelField dontWeedingList;
   // 助力好友列表
   private SelectModelField assistFriendList;
+  /**
+   * 获取任务名称
+   *
+   * @return 农场任务名称
+   */
   @Override
   public String getName() {
     return "农场";
   }
+  /**
+   * 获取任务分组
+   *
+   * @return 果园分组
+   */
   @Override
   public ModelGroup getGroup() {
     return ModelGroup.ORCHARD;
   }
+  /**
+   * 获取任务图标
+   *
+   * @return 农场任务图标文件名
+   */
   @Override
   public String getIcon() {
     return "AntOrchard.png";
@@ -60,6 +75,11 @@ public class AntOrchard extends ModelTask {
     modelFields.addField(dontWeedingList = new SelectModelField("dontWeedingList", "除草 | 不除草好友列表", new LinkedHashSet<>(), AlipayUser::getList));
     return modelFields;
   }
+  /**
+   * 检查任务是否可以执行
+   *
+   * @return 是否可以执行农场任务
+   */
   @Override
   public Boolean check() {
     if (TaskCommon.IS_ENERGY_TIME){
@@ -72,6 +92,9 @@ public class AntOrchard extends ModelTask {
       return true;
     }
   }
+  /**
+   * 执行农场任务的主要逻辑
+   */
   @Override
   public void run() {
     try {

@@ -27,7 +27,7 @@ public class Vitality {
         JSONArray itemInfoVOList = null;
         try {
             JSONObject jo = new JSONObject(AntForestRpcCall.itemList(labelType));
-            if (ResChecker.checkRes(TAG, jo)) {
+            if (ResChecker.checkRes(TAG + "查询森林活力值商品列表失败:", jo)) {
                 itemInfoVOList = jo.optJSONArray("itemInfoVOList");
             }
         } catch (Throwable th) {
@@ -40,7 +40,7 @@ public class Vitality {
     public static void ItemDetailBySpuId(String spuId) {
         try {
             JSONObject jo = new JSONObject(AntForestRpcCall.itemDetail(spuId));
-            if (ResChecker.checkRes(TAG, jo)) {
+            if (ResChecker.checkRes(TAG + "查询森林活力值商品详情失败:", jo)) {
                 JSONObject ItemDetail = jo.getJSONObject("spuItemInfoVO");
                 handleItemDetail(ItemDetail);
             }
@@ -181,7 +181,7 @@ public class Vitality {
     private static Boolean VitalityExchange(String spuId, String skuId) {
         try {
             JSONObject jo = new JSONObject(AntForestRpcCall.exchangeBenefit(spuId, skuId));
-            return ResChecker.checkRes(TAG, jo);
+            return ResChecker.checkRes(TAG + "森林活力值兑换失败:", jo);
         } catch (Throwable th) {
             Log.runtime(TAG, "VitalityExchange err:" + spuId + "," + skuId);
             Log.printStackTrace(TAG, th);

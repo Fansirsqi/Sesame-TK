@@ -115,7 +115,7 @@ public class ApplicationHook implements IXposedHookLoadPackage {
     @Getter
     static Handler mainHandler;
     static BaseTask mainTask;
-    static RpcBridge rpcBridge;
+    public static RpcBridge rpcBridge;
     @Getter
     private static RpcVersion rpcVersion;
     private static PowerManager.WakeLock wakeLock;

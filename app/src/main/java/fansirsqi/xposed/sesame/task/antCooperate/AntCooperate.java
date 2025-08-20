@@ -27,16 +27,31 @@ public class AntCooperate extends ModelTask {
     private static int num;
     private static int limitNum;
 
+    /**
+     * 获取任务名称
+     *
+     * @return 合种任务名称
+     */
     @Override
     public String getName() {
         return "合种";
     }
 
+    /**
+     * 获取任务分组
+     *
+     * @return 森林分组
+     */
     @Override
     public ModelGroup getGroup() {
         return ModelGroup.FOREST;
     }
 
+    /**
+     * 获取任务图标
+     *
+     * @return 合种任务图标文件名
+     */
     @Override
     public String getIcon() {
         return "AntCooperate.png";
@@ -57,6 +72,11 @@ public class AntCooperate extends ModelTask {
         return modelFields;
     }
 
+    /**
+     * 检查任务是否可以执行
+     *
+     * @return 是否可以执行合种任务
+     */
     @Override
     public Boolean check() {
         if (TaskCommon.IS_ENERGY_TIME) {
@@ -70,6 +90,9 @@ public class AntCooperate extends ModelTask {
         }
     }
 
+    /**
+     * 执行合种任务的主要逻辑
+     */
     @Override
     public void run() {
         try {

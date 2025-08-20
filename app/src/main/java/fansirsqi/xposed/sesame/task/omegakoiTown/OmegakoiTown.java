@@ -15,18 +15,38 @@ import fansirsqi.xposed.sesame.task.TaskCommon;
 import fansirsqi.xposed.sesame.util.Log;
 public class OmegakoiTown extends ModelTask {
     private static final String TAG = OmegakoiTown.class.getSimpleName();
+    /**
+     * 获取任务名称
+     *
+     * @return 小镇任务名称
+     */
     @Override
     public String getName() {
         return "小镇";
     }
+    /**
+     * 获取任务分组
+     *
+     * @return 其他分组
+     */
     @Override
     public ModelGroup getGroup() {
         return ModelGroup.OTHER;
     }
+    /**
+     * 获取任务字段配置
+     *
+     * @return 任务字段配置
+     */
     @Override
     public ModelFields getFields() {
         return new ModelFields();
     }
+    /**
+     * 获取任务图标
+     *
+     * @return 小镇任务图标文件名
+     */
     @Override
     public String getIcon() {
         return "OmegakoiTown.png";
