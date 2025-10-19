@@ -6,6 +6,7 @@ import fansirsqi.xposed.sesame.entity.RpcEntity
 import fansirsqi.xposed.sesame.hook.rpc.bridge.RpcBridge
 import fansirsqi.xposed.sesame.util.Log
 import fansirsqi.xposed.sesame.util.NetworkUtils
+import org.json.JSONObject
 
 /**
  * @author Byseven
@@ -13,17 +14,67 @@ import fansirsqi.xposed.sesame.util.NetworkUtils
  * @apiNote
  */
 object RequestManager {
+    private const val TAG = "RequestManager"
+    
+    /**
+     * 检查并处理RPC响应结果
+     * 集成RpcErrorHandler进行错误统计和退避控制
+     */
     private fun checkResult(result: String?, method: String?): String {
-        // 处理 null 返回值，避免 NullPointerException
-        if (result == null) {
-            Log.runtime("RequestManager", "RPC 返回 null: $method")
+        val methodName = method ?: "unknown"
+        
+        // 检查接口是否被暂停（1009错误退避）
+        if (RpcErrorHandler.isApiSuspended(methodName)) {
+            Log.debug(TAG, "接口[$methodName]被暂停中，跳过调用")
             return ""
         }
+        
+        // 处理 null 返回值
+        if (result == null) {
+            Log.runtime(TAG, "RPC 返回 null: $methodName")
+            RpcErrorHandler.recordApiFailure(methodName)
+            return ""
+        }
+        
         // 检查是否为空字符串
         if (result.trim { it <= ' ' }.isEmpty()) {
-            Log.runtime("RequestManager", "RPC 返回空字符串: $method")
+            Log.runtime(TAG, "RPC 返回空字符串: $methodName")
+            RpcErrorHandler.recordApiFailure(methodName)
             return ""
         }
+        
+        // 尝试解析响应，检查错误码
+        try {
+            val jo = JSONObject(result)
+            if (jo.has("error")) {
+                val errorCode = jo.optString("error")
+                when (errorCode) {
+                    "1009" -> {
+                        Log.error(TAG, "接口[$methodName]触发1009错误，暂停10分钟")
+                        RpcErrorHandler.recordApiFailure(methodName, 1009)
+                        return ""
+                    }
+                    "1004" -> {
+                        Log.error(TAG, "接口[$methodName]触发1004错误（系统繁忙）")
+                        RpcErrorHandler.recordApiFailure(methodName, 1004)
+                        return result // 1004返回结果，由上层处理
+                    }
+                    else -> {
+                        if (errorCode.isNotEmpty()) {
+                            Log.error(TAG, "接口[$methodName]返回错误: $errorCode")
+                            RpcErrorHandler.recordApiFailure(methodName)
+                        }
+                    }
+                }
+            } else {
+                // 无错误，记录成功
+                RpcErrorHandler.recordApiSuccess(methodName)
+            }
+        } catch (e: Exception) {
+            // JSON解析失败，可能不是JSON格式或格式不标准，视为成功
+            RpcErrorHandler.recordApiSuccess(methodName)
+        }
+        
         return result
     }
 

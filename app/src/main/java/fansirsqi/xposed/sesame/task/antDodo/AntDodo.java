@@ -275,7 +275,13 @@ public class AntDodo extends ModelTask {
         try {
             th:
             do {
-                JSONObject jo = new JSONObject(AntDodoRpcCall.propList());
+                String response = AntDodoRpcCall.propList();
+                // 增加空响应检查，避免JSON解析错误
+                if (response == null || response.trim().isEmpty()) {
+                    Log.error(TAG, "道具列表查询失败：响应为空");
+                    break;
+                }
+                JSONObject jo = new JSONObject(response);
                 if (ResChecker.checkRes(TAG,jo)) {
                     JSONArray propList = jo.getJSONObject("data").optJSONArray("propList");
                     if (propList == null) {

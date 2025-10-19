@@ -350,6 +350,11 @@ public class AntOcean extends ModelTask {
                     long bubbleId = bubble.getLong("id");
                     String userId = bubble.getString("userId");
                     String s = AntForestRpcCall.collectEnergy("", userId, bubbleId);
+                    // 增加空响应检查，避免JSON解析错误
+                    if (s == null || s.trim().isEmpty()) {
+                        Log.error(TAG, "收取海洋能量失败：响应为空");
+                        continue;
+                    }
                     JSONObject jo = new JSONObject(s);
                     if (ResChecker.checkRes(TAG,jo)) {
                         JSONArray retBubbles = jo.optJSONArray("bubbles");
@@ -378,6 +383,11 @@ public class AntOcean extends ModelTask {
         try {
             for (int i = 0; i < rubbishNumber; i++) {
                 String s = AntOceanRpcCall.cleanOcean(userId);
+                // 增加空响应检查，避免JSON解析错误
+                if (s == null || s.trim().isEmpty()) {
+                    Log.error(TAG, "清理海洋失败：响应为空");
+                    continue;
+                }
                 JSONObject jo = new JSONObject(s);
                 if (ResChecker.checkRes(TAG,jo)) {
                     JSONArray cleanRewardVOS = jo.getJSONArray("cleanRewardVOS");

@@ -106,6 +106,16 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        
+        // 自动唤醒支付宝（使用try-catch确保不影响主流程）
+        if (hasPermissions) {
+            try {
+                fansirsqi.xposed.sesame.util.AlipayAutoLauncher.autoLaunchOnAppStart(this)
+            } catch (e: Exception) {
+                Log.error(TAG, "自动唤醒支付宝失败: ${e.message}")
+            }
+        }
+        
         if (hasPermissions) {
             try {
                 UIConfig.load()

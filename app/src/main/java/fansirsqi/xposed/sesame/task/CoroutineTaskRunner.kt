@@ -15,6 +15,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -105,6 +106,13 @@ class CoroutineTaskRunner(allModels: List<Model>) {
                 printExecutionSummary(startTime, endTime)
                 // 清空恢复尝试计数
                 recoveryAttempts.clear()
+                
+                // 打印RPC统计报告
+                try {
+                    fansirsqi.xposed.sesame.hook.RpcErrorHandler.printReport()
+                } catch (e: Exception) {
+                    Log.printStackTrace(TAG, "打印RPC统计报告失败", e)
+                }
             }
         }
     }
@@ -127,19 +135,38 @@ class CoroutineTaskRunner(allModels: List<Model>) {
         Log.record(TAG, "⚙️ 任务执行配置：传入${rounds}轮，BaseModel配置${configuredRounds}轮（用户可在基础设置中调整）")
         
         for (round in 1..rounds) {
+            executeRound(round, rounds)
+        }
+    }
+
+    private suspend fun executeRound(round: Int, rounds: Int) = withContext(Dispatchers.Default) {
             val roundStartTime = System.currentTimeMillis()
             val enabledTasksInRound = taskList.filter { it.isEnable }
             
-            Log.record(TAG, "🔄 开始顺序执行第${round}/${rounds}轮任务，共${enabledTasksInRound.size}个启用任务")
+            // 优化：智能任务优先级排序
+            // 1. 蚂蚁森林（能量收取）
+            // 2. 能量相关任务（庄园、海洋、神奇物种）
+            // 3. 其他任务
+            val sortedTasks = enabledTasksInRound.sortedBy { task ->
+                when (task.getName()) {
+                    "森林" -> 0       // 最高优先级：森林能量收取
+                    "庄园" -> 1       // 能量相关：庄园喂鸡收蛋
+                    "海洋" -> 2       // 能量相关：神奇海洋
+                    "神奇物种" -> 3   // 能量相关：神奇物种
+                    "运动" -> 4       // 能量相关：运动
+                    else -> 10        // 其他任务：会员、农场等
+                }
+            }
             
-            for ((index, task) in enabledTasksInRound.withIndex()) {
-                Log.record(TAG, "📍 第${round}轮任务进度: ${index + 1}/${enabledTasksInRound.size} - ${task.getName()}")
+            Log.record(TAG, "🔄 开始顺序执行第${round}/${rounds}轮任务，共${sortedTasks.size}个启用任务")
+            
+            for ((index, task) in sortedTasks.withIndex()) {
+                Log.record(TAG, "📍 第${round}轮任务进度: ${index + 1}/${sortedTasks.size} - ${task.getName()}")
                 executeTaskWithTimeout(task, round)
             }
             
-            val roundTime = System.currentTimeMillis() - roundStartTime
-            Log.record(TAG, "✅ 第${round}/${rounds}轮任务完成，耗时: ${roundTime}ms")
-        }
+        val roundTime = System.currentTimeMillis() - roundStartTime
+        Log.record(TAG, "✅ 第${round}/${rounds}轮任务完成，耗时: ${roundTime}ms")
     }
 
 

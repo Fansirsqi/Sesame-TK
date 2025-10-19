@@ -58,6 +58,7 @@ object RpcIntervalLimit {
 
     /**
      * 进入指定方法的间隔限制，确保调用间隔时间不小于设定值。
+     * 优化：减少锁持有时间，仅在必要时等待
      *
      * @param method 方法名称
      */
@@ -65,18 +66,22 @@ object RpcIntervalLimit {
         val intervalLimit = intervalLimitMap.getOrDefault(method, DEFAULT_INTERVAL_LIMIT)
         val lock = requireNotNull(intervalLimit) { "间隔限制对象不能为空" }
 
-        synchronized(lock) {
-            // 解决 Int? 的问题，使用默认值兜底
+        // 优化：先在锁外计算需要等待的时间，减少锁持有时间
+        val sleepTime = synchronized(lock) {
             val interval = intervalLimit.interval ?: DEFAULT_INTERVAL
             val now = System.currentTimeMillis()
             val lastTime = intervalLimit.time
-            val sleep = interval - (now - lastTime)
+            interval - (now - lastTime)
+        }
 
-            if (sleep > 0) {
-                GlobalThreadPools.sleepCompat(sleep)
-            }
+        // 优化：在锁外进行sleep，避免阻塞其他线程
+        if (sleepTime > 0) {
+            GlobalThreadPools.sleepCompat(sleepTime)
+        }
 
-            intervalLimit.time = now
+        // 优化：仅在需要时更新时间戳
+        synchronized(lock) {
+            intervalLimit.time = System.currentTimeMillis()
         }
     }
 

@@ -8,7 +8,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import de.robv.android.xposed.XposedHelpers;
 import fansirsqi.xposed.sesame.data.General;
@@ -47,6 +50,52 @@ public class NewRpcBridge implements RpcBridge {
             "com.alipay.adexchange.ad.facade.xlightPlugin",  //木兰集市 第一次
             "alipay.antforest.forest.h5.takeLook"  //找能量
     ));
+
+    // 优化：RPC请求去重机制
+    // 存储正在进行的请求，Key: 请求签名，Value: 请求实体
+    private final ConcurrentHashMap<String, RpcEntity> pendingRequests = new ConcurrentHashMap<>();
+    // 请求锁映射，确保同一请求的串行化
+    private final ConcurrentHashMap<String, Lock> requestLocks = new ConcurrentHashMap<>();
+
+    /**
+     * 生成请求签名用于去重
+     * 
+     * @param rpcEntity RPC请求实体
+     * @return 请求签名字符串
+     */
+    private String generateRequestSignature(RpcEntity rpcEntity) {
+        String method = rpcEntity.getRequestMethod();
+        String data = rpcEntity.getRequestData();
+        return method + ":" + (data != null ? data.hashCode() : 0);
+    }
+
+    /**
+     * 获取或创建请求锁
+     * 
+     * @param requestKey 请求签名
+     * @return 请求锁
+     */
+    private Lock getOrCreateLock(String requestKey) {
+        return requestLocks.computeIfAbsent(requestKey, k -> new ReentrantLock());
+    }
+
+    /**
+     * 清理已完成的请求
+     * 
+     * @param requestKey 请求签名
+     */
+    private void cleanupRequest(String requestKey) {
+        pendingRequests.remove(requestKey);
+        // 延迟清理锁，避免立即重复请求时频繁创建锁
+        GlobalThreadPools.INSTANCE.execute(() -> {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            requestLocks.remove(requestKey);
+        });
+    }
 
     /**
      * 检查指定的RPC方法是否应该显示错误日志
@@ -183,16 +232,52 @@ public class NewRpcBridge implements RpcBridge {
      */
     @Override
     public RpcEntity requestObject(RpcEntity rpcEntity, int tryCount, int retryInterval) {
-        // 方法开始时，将成员变量赋值给局部变量，以避免在方法执行期间因其他线程的unload()调用而导致成员变量变为null
-        Method localNewRpcCallMethod = newRpcCallMethod;
-        Method localParseObjectMethod = parseObjectMethod;
-        Object localNewRpcInstance = newRpcInstance;
-        ClassLoader localLoader = loader;
-        Class<?>[] localBridgeCallbackClazzArray = bridgeCallbackClazzArray;
-
-        if (ApplicationHook.isOffline()) {
-            return null;
+        // 优化：RPC请求去重 - 生成请求签名
+        String requestKey = generateRequestSignature(rpcEntity);
+        Lock requestLock = getOrCreateLock(requestKey);
+        
+        // 使用锁确保同一请求不会并发执行
+        requestLock.lock();
+        try {
+            // 检查是否有相同的请求正在进行
+            RpcEntity pendingEntity = pendingRequests.get(requestKey);
+            if (pendingEntity != null && !pendingEntity.getHasResult()) {
+                // 有相同请求正在进行，等待其完成
+                Log.debug(TAG, "检测到重复RPC请求，等待进行中的请求: " + rpcEntity.getRequestMethod());
+                long startWait = System.currentTimeMillis();
+                // 最多等待3秒
+                while (!pendingEntity.getHasResult() && (System.currentTimeMillis() - startWait) < 3000) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+                // 如果请求已完成，直接返回结果
+                if (pendingEntity.getHasResult()) {
+                    Log.debug(TAG, "复用RPC请求结果: " + rpcEntity.getRequestMethod());
+                    return pendingEntity;
+                }
+            }
+            
+            // 标记该请求正在进行
+            pendingRequests.put(requestKey, rpcEntity);
+        } finally {
+            requestLock.unlock();
         }
+        
+        try {
+            // 方法开始时，将成员变量赋值给局部变量，以避免在方法执行期间因其他线程的unload()调用而导致成员变量变为null
+            Method localNewRpcCallMethod = newRpcCallMethod;
+            Method localParseObjectMethod = parseObjectMethod;
+            Object localNewRpcInstance = newRpcInstance;
+            ClassLoader localLoader = loader;
+            Class<?>[] localBridgeCallbackClazzArray = bridgeCallbackClazzArray;
+
+            if (ApplicationHook.isOffline()) {
+                return null;
+            }
 
         // 如果RPC组件未准备好，尝试重新初始化一次
         if (localNewRpcCallMethod == null) {
@@ -318,16 +403,21 @@ public class NewRpcBridge implements RpcBridge {
                         Log.error(TAG, "new rpc response | id: " + rpcEntity.hashCode() + " | method: " + rpcEntity.getRequestMethod() + " get err:");
                         Log.printStackTrace(e);
                     }
+                    // 优化：使用指数退避策略减少无效重试
                     if (retryInterval < 0) {
-                        CoroutineUtils.sleepCompat(600 + RandomUtil.delay());
+                        // 第1次重试：600ms，第2次：900ms，第3次：1350ms
+                        long backoffDelay = (long) (600 * Math.pow(1.5, count - 1)) + RandomUtil.delay();
+                        CoroutineUtils.sleepCompat(Math.min(backoffDelay, 5000)); // 最多5秒
                     } else if (retryInterval > 0) {
                         CoroutineUtils.sleepCompat(retryInterval);
                     }
                 } catch (Throwable t) {
                     Log.error(TAG, "new rpc request | id: " + rpcEntity.hashCode() + " | method: " + rpcEntity.getRequestMethod() + " err:");
                     Log.printStackTrace(t);
+                    // 优化：使用指数退避策略
                     if (retryInterval < 0) {
-                        CoroutineUtils.sleepCompat(600 + RandomUtil.delay());
+                        long backoffDelay = (long) (600 * Math.pow(1.5, count - 1)) + RandomUtil.delay();
+                        CoroutineUtils.sleepCompat(Math.min(backoffDelay, 5000));
                     } else if (retryInterval > 0) {
                         CoroutineUtils.sleepCompat(retryInterval);
                     }
@@ -336,9 +426,16 @@ public class NewRpcBridge implements RpcBridge {
             logNullResponse(rpcEntity, "重试次数耗尽", tryCount);
             return null;
         } finally {
+            // 优化：清理请求缓存
+            cleanupRequest(requestKey);
+            
             Log.system(TAG, "New RPC\n方法: " + rpcEntity.getRequestMethod() + "\n参数: " + rpcEntity.getRequestData() + "\n数据: " + rpcEntity.getResponseString() + "\n" + "\n" + "堆栈:" + new Exception().getStackTrace()[1].toString());
             Log.printStack(TAG);
-
+        }
+        } catch (Exception e) {
+            Log.error(TAG, "RPC请求异常: " + rpcEntity.getRequestMethod());
+            Log.printStackTrace(e);
+            return null;
         }
     }
 }

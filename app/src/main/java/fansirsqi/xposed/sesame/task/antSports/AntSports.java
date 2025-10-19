@@ -489,23 +489,51 @@ public class AntSports extends ModelTask {
             if (!user.optBoolean("success")) {
                 return;
             }
-            String joinedPathId = user.getJSONObject("data").getString("joinedPathId");
+            JSONObject data = user.optJSONObject("data");
+            if (data == null) {
+                Log.record(TAG, "行走路线🚶🏿‍♂️未获取到用户数据");
+                return;
+            }
+            String joinedPathId = data.optString("joinedPathId");
+            if (joinedPathId == null || joinedPathId.isEmpty()) {
+                Log.record(TAG, "行走路线🚶🏿‍♂️未加入任何路线，尝试加入新路线");
+                String pathId = queryJoinPath(walkPathThemeId);
+                if (pathId != null && !pathId.isEmpty()) {
+                    joinPath(pathId);
+                }
+                return;
+            }
+            // 增加null检查，防止queryPath返回null导致崩溃
             JSONObject path = queryPath(joinedPathId);
-            JSONObject userPathStep = path.getJSONObject("userPathStep");
-            if ("COMPLETED".equals(userPathStep.getString("pathCompleteStatus"))) {
-                Log.record(TAG, "行走路线🚶🏻‍♂️路线[" + userPathStep.getString("pathName") + "]已完成");
+            if (path == null) {
+                Log.error(TAG, "行走路线🚶🏿‍♂️获取路线信息失败，pathId: " + joinedPathId);
+                return;
+            }
+            JSONObject userPathStep = path.optJSONObject("userPathStep");
+            if (userPathStep == null) {
+                Log.error(TAG, "行走路线🚶🏿‍♂️路线数据异常，缺少userPathStep字段");
+                return;
+            }
+            if ("COMPLETED".equals(userPathStep.optString("pathCompleteStatus"))) {
+                Log.record(TAG, "行走路线🚶🏻‍♂️路线[" + userPathStep.optString("pathName", "未知") + "]已完成");
                 String pathId = queryJoinPath(walkPathThemeId);
                 joinPath(pathId);
                 return;
             }
-            int minGoStepCount = path.getJSONObject("path").getInt("minGoStepCount");
-            int pathStepCount = path.getJSONObject("path").getInt("pathStepCount");
+            // 检查path字段是否存在
+            JSONObject pathInfo = path.optJSONObject("path");
+            if (pathInfo == null) {
+                Log.error(TAG, "行走路线🚶🏿‍♂️路线数据异常，缺少path字段");
+                return;
+            }
+            int minGoStepCount = pathInfo.getInt("minGoStepCount");
+            int pathStepCount = pathInfo.getInt("pathStepCount");
             int forwardStepCount = userPathStep.getInt("forwardStepCount");
             int remainStepCount = userPathStep.getInt("remainStepCount");
             int needStepCount = pathStepCount - forwardStepCount;
             if (remainStepCount >= minGoStepCount) {
                 int useStepCount = Math.min(remainStepCount, needStepCount);
-                walkGo(userPathStep.getString("pathId"), useStepCount, userPathStep.getString("pathName"));
+                walkGo(userPathStep.getString("pathId"), useStepCount, userPathStep.optString("pathName", "未知路线"));
             }
         } catch (Throwable t) {
             Log.runtime(TAG, "walk err:");
@@ -559,19 +587,35 @@ public class AntSports extends ModelTask {
     private JSONObject queryPath(String pathId) {
         JSONObject path = null;
         try {
+            // 检查pathId是否有效
+            if (pathId == null || pathId.isEmpty()) {
+                Log.error(TAG, "queryPath失败：pathId为空");
+                return null;
+            }
             Date date = new Date();
             @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            JSONObject jo = new JSONObject(AntSportsRpcCall.queryPath("202312191135", sdf.format(date), pathId));
+            String response = AntSportsRpcCall.queryPath("202312191135", sdf.format(date), pathId);
+            if (response == null || response.isEmpty()) {
+                Log.error(TAG, "queryPath失败：RPC响应为空，pathId: " + pathId);
+                return null;
+            }
+            JSONObject jo = new JSONObject(response);
             if (jo.optBoolean("success")) {
-                path = jo.getJSONObject("data");
-                JSONArray ja = jo.getJSONObject("data").getJSONArray("treasureBoxList");
-                for (int i = 0; i < ja.length(); i++) {
-                    JSONObject treasureBox = ja.getJSONObject(i);
-                    receiveEvent(treasureBox.getString("boxNo"));
+                path = jo.optJSONObject("data");
+                if (path != null) {
+                    JSONArray ja = path.optJSONArray("treasureBoxList");
+                    if (ja != null) {
+                        for (int i = 0; i < ja.length(); i++) {
+                            JSONObject treasureBox = ja.getJSONObject(i);
+                            receiveEvent(treasureBox.getString("boxNo"));
+                        }
+                    }
                 }
+            } else {
+                Log.error(TAG, "queryPath失败：" + jo.optString("errorMsg", "未知错误"));
             }
         } catch (Throwable t) {
-            Log.runtime(TAG, "queryPath err:");
+            Log.error(TAG, "queryPath异常，pathId: " + pathId);
             Log.printStackTrace(TAG, t);
         }
         return path;
@@ -627,18 +671,52 @@ public class AntSports extends ModelTask {
         return pathId;
     }
 
+    // 备用路线列表（当主路线加入失败时尝试）
+    private static final String[] BACKUP_PATH_IDS = {
+        "p0002023122214520001",  // 龙年祈福线
+        "P20221117110010160002500001001",  // 备用路线1
+        "M202308082226",         // 大美中国
+        "M202401042147",         // 公益一小步
+        "V202405271625"          // 登顶芝麻山
+    };
+    
     private void joinPath(String pathId) {
         if (pathId == null) {
             // 龙年祈福线
             pathId = "p0002023122214520001";
         }
+        
         try {
             JSONObject jo = new JSONObject(AntSportsRpcCall.joinPath(pathId));
             if (jo.optBoolean("success")) {
                 JSONObject path = queryPath(pathId);
                 Log.record(TAG, "行走路线🚶🏻‍♂️路线[" + path.getJSONObject("path").getString("name") + "]已加入");
+                return; // 成功加入，直接返回
             } else {
-                Log.record(TAG, "行走路线🚶🏻‍♂️路线[" + pathId + "]有误，无法加入！");
+                String errorMsg = jo.optString("resultDesc", "未知错误");
+                Log.record(TAG, "行走路线🚶🏻‍♂️路线[" + pathId + "]加入失败: " + errorMsg);
+                
+                // 尝试备用路线
+                Log.record(TAG, "🔄 尝试加入备用路线...");
+                for (String backupPathId : BACKUP_PATH_IDS) {
+                    // 跳过已经失败的路线
+                    if (backupPathId.equals(pathId)) {
+                        continue;
+                    }
+                    
+                    try {
+                        JSONObject backupJo = new JSONObject(AntSportsRpcCall.joinPath(backupPathId));
+                        if (backupJo.optBoolean("success")) {
+                            JSONObject path = queryPath(backupPathId);
+                            Log.record(TAG, "✅ 行走路线🚶🏻‍♂️备用路线[" + path.getJSONObject("path").getString("name") + "]加入成功");
+                            return; // 成功加入备用路线，返回
+                        }
+                    } catch (Throwable e) {
+                        Log.debug(TAG, "备用路线[" + backupPathId + "]尝试失败: " + e.getMessage());
+                    }
+                }
+                
+                Log.record(TAG, "❌ 所有路线尝试失败，请稍后重试或手动加入路线");
             }
         } catch (Throwable t) {
             Log.runtime(TAG, "joinPath err:");

@@ -3056,16 +3056,28 @@ class AntFarm : ModelTask() {
                 return
             }
             
-            // 前置检查：是否配置了雇佣好友列表
+            // 前置检查：根据雇佣类型检查配置
             val hireAnimalSet = hireAnimalList!!.value
-            if (hireAnimalSet.isEmpty()) {
-                Log.record(TAG, "❌ 雇佣失败：未配置雇佣好友列表")
+            val hireType = hireAnimalType!!.value
+            
+            if (hireType == HireAnimalType.HIRE && hireAnimalSet.isEmpty()) {
+                // 「选中雇佣」模式：必须配置好友列表
+                Log.record(TAG, "❌ 雇佣失败：「选中雇佣」模式未配置好友列表")
                 Toast.show(
                     "⚠️ 雇佣小鸡配置错误\n" +
-                    "已开启「雇佣小鸡」但未配置好友列表\n" +
-                    "请在「雇佣小鸡 | 好友列表」中勾选好友"
+                    "已选择「选中雇佣」但未配置好友列表\n" +
+                    "请在「雇佣小鸡 | 好友列表」中勾选好友\n" +
+                    "或切换为「选中不雇佣」模式"
                 )
                 return
+            }
+            
+            if (hireType == HireAnimalType.DONT_HIRE) {
+                // 「选中不雇佣」模式：自动雇佣除列表外的其他好友
+                Log.record(TAG, "🎯 雇佣模式：「选中不雇佣」，将自动雇佣除列表外的好友")
+            } else {
+                // 「选中雇佣」模式：只雇佣列表中的好友
+                Log.record(TAG, "🎯 雇佣模式：「选中雇佣」，只雇佣列表中的${hireAnimalSet.size}位好友")
             }
             
             var hasNext: Boolean

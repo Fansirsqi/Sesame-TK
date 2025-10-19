@@ -23,7 +23,10 @@ public class AntForestRpcCall {
 
     public static void init() {
         AlipayVersion alipayVersion = ApplicationHook.getAlipayVersion();
-        Log.record("AntForestRpcCall", "当前支付宝版本: " + alipayVersion.toString());
+        String versionStr = alipayVersion != null && alipayVersion.getVersionString() != null && !alipayVersion.getVersionString().isEmpty() 
+            ? alipayVersion.getVersionString() 
+            : "未知";
+        Log.record("AntForestRpcCall", "当前支付宝版本: " + versionStr);
         try {
             switch (alipayVersion.getVersionString()) {
                 case "10.7.30.8000":

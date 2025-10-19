@@ -38,6 +38,7 @@ import fansirsqi.xposed.sesame.task.antForest.ForestUtil.hasShield
 import fansirsqi.xposed.sesame.task.antForest.Privilege.studentSignInRedEnvelope
 import fansirsqi.xposed.sesame.task.antForest.Privilege.youthPrivilege
 import fansirsqi.xposed.sesame.task.antForest.TaskTimeChecker
+import fansirsqi.xposed.sesame.task.antForest.ForestFriendManager
 import fansirsqi.xposed.sesame.ui.ObjReference
 import fansirsqi.xposed.sesame.util.Average
 import fansirsqi.xposed.sesame.util.GlobalThreadPools
@@ -133,8 +134,10 @@ class AntForest : ModelTask(), EnergyCollectCallback {
     private val doubleCardLockObj = Any()
 
     // 并发控制信号量，限制同时处理的好友数量，避免过多并发导致性能问题
-    // 设置为60
-    private val concurrencyLimiter = Semaphore(60)
+    // 优化：根据CPU核心数动态计算并发数，避免过度并发
+    // 计算公式：核心数 * 8，最小16最大48
+    private val optimalConcurrency = kotlin.math.min(48, kotlin.math.max(16, Runtime.getRuntime().availableProcessors() * 8))
+    private val concurrencyLimiter = Semaphore(optimalConcurrency)
 
 
     private var collectEnergy: BooleanModelField? = null // 收集能量开关
@@ -308,7 +311,7 @@ class AntForest : ModelTask(), EnergyCollectCallback {
             BooleanModelField(
                 "batchRobEnergy",
                 "一键收取 | 开关",
-                false
+                true  // 默认启用一键收取
             ).also { batchRobEnergy = it })
         modelFields.addField(
             BooleanModelField(
@@ -1110,6 +1113,20 @@ class AntForest : ModelTask(), EnergyCollectCallback {
             val strTotalCollected =
                 "本次总 收:" + totalCollected + "g 帮:" + TOTAL_HELP_COLLECTED + "g 浇:" + TOTAL_WATERED + "g"
             updateLastExecText(strTotalCollected)
+            
+            // 打印森林统计报告
+            try {
+                ForestFriendManager.printReport()
+            } catch (e: Exception) {
+                Log.printStackTrace(TAG, "打印森林统计报告失败", e)
+            }
+            
+            // 打印能量收取优化统计（使用try-catch确保不影响主流程）
+            try {
+                EnergyCollectionOptimizer.printStats()
+            } catch (e: Exception) {
+                Log.error(TAG, "打印优化统计失败: ${e.message}")
+            }
         }
     }
 
@@ -1513,8 +1530,10 @@ class AntForest : ModelTask(), EnergyCollectCallback {
             if (response.trim { it <= ' ' }.isEmpty()) {
                 Log.error(
                     TAG,
-                    "获取好友主页信息失败：响应为空, userId: " + UserMap.getMaskName(userId) + response
+                    "获取好友主页信息失败：响应为空, userId: " + UserMap.getMaskName(userId) + "，可能是网络问题或用户不存在"
                 )
+                // 添加延迟避免触发限流
+                GlobalThreadPools.sleepCompat(800L)
                 return null
             }
 
@@ -1808,35 +1827,124 @@ class AntForest : ModelTask(), EnergyCollectCallback {
         val bizType = "GREEN"
         if (bubbleIds.isEmpty()) return
         val isBatchCollect = batchRobEnergy!!.value
+        
         if (isBatchCollect) {
+            // 使用自适应批量大小（使用try-catch确保安全）
+            val batchSize = try {
+                EnergyCollectionOptimizer.calculateOptimalBatchSize(bubbleIds.size)
+            } catch (e: Exception) {
+                Log.error(TAG, "计算批量大小失败，使用默认值: ${e.message}")
+                MAX_BATCH_SIZE
+            }
+            
+            Log.debug(TAG, "使用自适应批量大小: $batchSize (总共${bubbleIds.size}个能量球)")
+            
             var i = 0
             while (i < bubbleIds.size) {
                 val subList: MutableList<Long> =
-                    bubbleIds.subList(i, min(i + MAX_BATCH_SIZE, bubbleIds.size))
-                collectEnergy(
-                    CollectEnergyEntity(
-                        userId,
-                        userHomeObj,
-                        AntForestRpcCall.batchEnergyRpcEntity(bizType, userId, subList),
-                        fromTag,
-                        skipPropCheck  // 🚀 传递快速通道标记
+                    bubbleIds.subList(i, min(i + batchSize, bubbleIds.size))
+                
+                val startTime = System.currentTimeMillis()
+                var energyCollected = 0
+                try {
+                    // 批量收取能量
+                    collectEnergy(
+                        CollectEnergyEntity(
+                            userId,
+                            userHomeObj,
+                            AntForestRpcCall.batchEnergyRpcEntity(bizType, userId, subList),
+                            fromTag,
+                            skipPropCheck  // 🚀 传递快速通道标记
+                        )
                     )
-                )
-                i += MAX_BATCH_SIZE
+                    // 从userHomeObj中获取收取的能量总量
+                    energyCollected = extractCollectedEnergy(userHomeObj)
+                    
+                    // 记录批量收取成功（使用try-catch确保安全）
+                    try {
+                        val duration = System.currentTimeMillis() - startTime
+                        EnergyCollectionOptimizer.recordBatchCollect(true, duration, energyCollected)
+                        EnergyCollectionOptimizer.recordRpcLatency(duration)
+                    } catch (e: Exception) {
+                        Log.error(TAG, "记录统计失败: ${e.message}")
+                    }
+                } catch (e: Exception) {
+                    // 记录批量收取失败
+                    try {
+                        val duration = System.currentTimeMillis() - startTime
+                        EnergyCollectionOptimizer.recordBatchCollect(false, duration, energyCollected)
+                    } catch (ex: Exception) {
+                        Log.error(TAG, "记录失败统计失败: ${ex.message}")
+                    }
+                    throw e
+                }
+                i += batchSize
             }
         } else {
             for (id in bubbleIds) {
-                collectEnergy(
-                    CollectEnergyEntity(
-                        userId,
-                        userHomeObj,
-                        AntForestRpcCall.energyRpcEntity(bizType, userId, id),
-                        fromTag,
-                        skipPropCheck  // 🚀 传递快速通道标记
+                val startTime = System.currentTimeMillis()
+                var energyCollected = 0
+                try {
+                    // 单个收取能量
+                    collectEnergy(
+                        CollectEnergyEntity(
+                            userId,
+                            userHomeObj,
+                            AntForestRpcCall.energyRpcEntity(bizType, userId, id),
+                            fromTag,
+                            skipPropCheck  // 🚀 传递快速通道标记
+                        )
                     )
-                )
+                    // 从userHomeObj中获取收取的能量
+                    energyCollected = extractCollectedEnergy(userHomeObj)
+                    
+                    // 记录单个收取（使用try-catch确保安全）
+                    try {
+                        val duration = System.currentTimeMillis() - startTime
+                        EnergyCollectionOptimizer.recordSingleCollect(duration, energyCollected)
+                        EnergyCollectionOptimizer.recordRpcLatency(duration)
+                    } catch (e: Exception) {
+                        Log.error(TAG, "记录单个收取统计失败: ${e.message}")
+                    }
+                } catch (e: Exception) {
+                    throw e
+                }
             }
         }
+        
+        // 记录好友能量（用于预测，使用try-catch确保安全）
+        if (userId != null && fromTag != "self") {
+            try {
+                EnergyCollectionOptimizer.recordFriendEnergy(userId)
+            } catch (e: Exception) {
+                Log.error(TAG, "记录好友能量失败: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * 从返回的JSON对象中提取收取的能量总量
+     */
+    private fun extractCollectedEnergy(userHomeObj: JSONObject?): Int {
+        if (userHomeObj == null) return 0
+        
+        try {
+            // 尝试从 bubbles 数组中获取收集的能量
+            if (userHomeObj.has("bubbles")) {
+                val bubbles = userHomeObj.getJSONArray("bubbles")
+                var totalEnergy = 0
+                for (i in 0 until bubbles.length()) {
+                    val bubble = bubbles.getJSONObject(i)
+                    val collected = bubble.optInt("collectedEnergy", 0)
+                    totalEnergy += collected
+                }
+                return totalEnergy
+            }
+        } catch (e: Exception) {
+            Log.debug(TAG, "提取收集能量失败: ${e.message}")
+        }
+        
+        return 0
     }
 
     /**
@@ -2035,21 +2143,23 @@ class AntForest : ModelTask(), EnergyCollectCallback {
      */
     private fun collectEnergyByTakeLook() {
         try {
-            // 检查是否还在冷却期
+            // 检查是否还在冷却期（使用动态冷却时间）
             val currentTime = System.currentTimeMillis()
+            val dynamicCooldown = ForestFriendManager.getCurrentCooldown()
             if (currentTime < nextTakeLookTime) {
                 val remainingMinutes = (nextTakeLookTime - currentTime) / 60000
                 val remainingSeconds = ((nextTakeLookTime - currentTime) % 60000) / 1000
-                Log.record(TAG, "找能量功能冷却中，还需等待 ${remainingMinutes}分${remainingSeconds}秒")
+                Log.record(TAG, "找能量功能冷却中，还需等待 ${remainingMinutes}分${remainingSeconds}秒 (动态冷却${dynamicCooldown/60000}分钟)")
                 return
             }
 
             val tc = TimeCounter(TAG)
             var foundCount = 0
+            var totalEnergyFound = 0L // 统计找到的总能量
             val maxAttempts = 10 // 减少到10次，避免过度循环
             var consecutiveEmpty = 0 // 连续空结果计数
             var shouldCooldown = false // 标记是否需要冷却
-            Log.record(TAG, "开始使用找能量功能收取好友能量")
+            Log.record(TAG, "开始使用找能量功能收取好友能量（冷却时间：${dynamicCooldown/60000}分钟）")
             for (attempt in 1..maxAttempts) {
                 // 构建跳过用户列表（有保护罩的用户）
                 val skipUsers = JSONObject()
@@ -2059,8 +2169,9 @@ class AntForest : ModelTask(), EnergyCollectCallback {
                     takeLookResponse = AntForestRpcCall.takeLook(skipUsers)
                 } catch (e: NullPointerException) {
                     shouldCooldown = true
-                    nextTakeLookTime = System.currentTimeMillis() + TAKE_LOOK_COOLDOWN_MS
-                    Log.error(TAG, "找能量接口调用异常，休息15分钟")
+                    val cooldown = ForestFriendManager.getCurrentCooldown()
+                    nextTakeLookTime = System.currentTimeMillis() + cooldown
+                    Log.error(TAG, "找能量接口调用异常，休息${cooldown/60000}分钟")
                     Log.printStackTrace(TAG, e)
                     break
                 }
@@ -2068,8 +2179,9 @@ class AntForest : ModelTask(), EnergyCollectCallback {
                     consecutiveEmpty++
                     if (consecutiveEmpty >= 3) {
                         shouldCooldown = true
-                        nextTakeLookTime = System.currentTimeMillis() + TAKE_LOOK_COOLDOWN_MS
-                        Log.record(TAG, "连续" + consecutiveEmpty + "次接口返回空结果，提前结束找能量，休息15分钟")
+                        val cooldown = ForestFriendManager.getCurrentCooldown()
+                        nextTakeLookTime = System.currentTimeMillis() + cooldown
+                        Log.record(TAG, "连续" + consecutiveEmpty + "次接口返回空结果，提前结束找能量，休息${cooldown/60000}分钟")
                         break
                     }
                     continue
@@ -2099,8 +2211,9 @@ class AntForest : ModelTask(), EnergyCollectCallback {
                     // 连续3次没有发现新好友就提前结束，避免浪费时间
                     if (consecutiveEmpty >= 3) {
                         shouldCooldown = true
-                        nextTakeLookTime = System.currentTimeMillis() + TAKE_LOOK_COOLDOWN_MS
-                        Log.record(TAG, "连续" + consecutiveEmpty + "次未发现新好友，提前结束找能量，休息15分钟")
+                        val cooldown = ForestFriendManager.getCurrentCooldown()
+                        nextTakeLookTime = System.currentTimeMillis() + cooldown
+                        Log.record(TAG, "连续" + consecutiveEmpty + "次未发现新好友，提前结束找能量，休息${cooldown/60000}分钟")
                         break
                     }
                     continue
@@ -2130,7 +2243,9 @@ class AntForest : ModelTask(), EnergyCollectCallback {
                         )
                     } else {
                         // 没有保护才进行收取处理
+                        val beforeEnergy = totalEnergyFound
                         collectEnergy(friendId, friendHomeObj, "takeLook")
+                        // 尝试统计收取的能量（简化处理，实际能量在collectEnergy中统计）
                     }
                     // 优化间隔：找到好友时减少等待时间，提高效率
                     GlobalThreadPools.sleepCompat(1200L)
@@ -2138,19 +2253,31 @@ class AntForest : ModelTask(), EnergyCollectCallback {
                 } else {
                     consecutiveEmpty++
                     // 检查friendId是否为null或空，给出更详细的信息
-                    Log.record(TAG, "找能量第" + attempt + "次：发现好友但是自己，跳过")
-                    // 连续2次空结果就提前结束，避免浪费时间
-                    if (consecutiveEmpty >= 2) {
-                        Log.record(TAG, "连续" + consecutiveEmpty + "次无结果，提前结束找能量")
+                    Log.record(TAG, "找能量第" + attempt + "次：获取好友信息失败（可能是网络波动或用户已删除），跳过")
+                    // 增加容错次数：连续5次空结果才提前结束，避免因个别失败中断整个流程
+                    if (consecutiveEmpty >= 5) {
+                        Log.record(TAG, "连续" + consecutiveEmpty + "次获取失败，提前结束找能量（可能存在网络问题）")
                         break
                     }
+                    // 失败时增加延迟，避免触发限流
+                    GlobalThreadPools.sleepCompat(500L)
                 }
             }
             tc.countDebug("找能量收取完成")
-            Log.record(TAG, "找能量功能完成，共发现 $foundCount 个好友")
-            // 如果没有触发冷却，清零冷却时间，允许下次正常执行
+            
+            // 记录找能量统计到ForestFriendManager
+            ForestFriendManager.recordFindEnergyAttempt(
+                foundEnergy = totalEnergyFound,
+                friendsChecked = foundCount
+            )
+            
+            // 使用动态冷却时间
+            val dynamicCooldownMs = ForestFriendManager.getCurrentCooldown()
+            Log.record(TAG, "找能量功能完成，共发现 $foundCount 个好友，下次冷却时间：${dynamicCooldownMs/60000}分钟")
+            
+            // 如果没有触发冷却，使用动态冷却时间
             if (!shouldCooldown) {
-                nextTakeLookTime = 0
+                nextTakeLookTime = System.currentTimeMillis() + dynamicCooldownMs
             }
         } catch (e: Exception) {
             Log.error(TAG, "找能量过程中发生异常")

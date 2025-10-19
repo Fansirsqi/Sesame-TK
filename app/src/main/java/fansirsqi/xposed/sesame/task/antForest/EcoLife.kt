@@ -44,7 +44,23 @@ object EcoLife {
             // 获取当天的积分和任务列表
             var dayPoint = data.optString("dayPoint", "0")
             if (dayPoint == "0") {
-                Log.error(TAG, "不知道什么B原因自己去绿色行动找")
+                // 详细分析原因
+                val hasData = data.has("dayPoint")
+                val openStatus = data.optBoolean("openStatus", false)
+                val errorMsg = jsonObject.optString("resultDesc", "未知")
+                
+                Log.error(TAG, "绿色行动🍃初始化失败，原因分析:")
+                Log.error(TAG, "  - dayPoint字段存在: $hasData")
+                Log.error(TAG, "  - dayPoint值: $dayPoint")
+                Log.error(TAG, "  - 开通状态: $openStatus")
+                Log.error(TAG, "  - 接口返回: $errorMsg")
+                Log.error(TAG, "  - 完整数据: ${data.toString()}")
+                
+                if (!openStatus) {
+                    Log.error(TAG, "💡 建议：请先在支付宝中手动打开绿色行动，完成首次开通")
+                } else {
+                    Log.error(TAG, "💡 建议：可能是接口异常，请稍后重试或联系开发者")
+                }
                 return
             }
 
